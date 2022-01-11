@@ -27,7 +27,11 @@ func NewMySQL(config MySQLConfig) (*gorm.DB, error) {
 	// this will create all tables
 	// and update all fields
 	db.AutoMigrate(&models.Cryptogotchi{})
-	db.AutoMigrate(&models.Record{})
-
+	db.AutoMigrate(&models.Event{})
+	db.AutoMigrate(&models.User{})
 	return db, nil
+}
+
+func IsNotFound(err error) bool {
+	return gorm.ErrRecordNotFound == err
 }

@@ -18,10 +18,12 @@ func NewGameserver(db *gorm.DB) Server {
 
 func (s *Gameserver) Start() {
 	cryptogotchiRepository := repositories.NewGormCryptogotchiRepository(s.db)
-	recordRepository := repositories.NewGormRecordRepository(s.db)
+	eventRepository := repositories.NewGormEventRepository(s.db)
+	userRepository := repositories.NewGormUserRepository(s.db)
 
-	cryptogotchiController := controller.NewCryptogotchiController(recordRepository, cryptogotchiRepository)
-	openseaController := controller.NewOpenseaController(recordRepository, cryptogotchiRepository)
+	authController := controller.NewAuthController(userRepository)
+	cryptogotchiController := controller.NewCryptogotchiController(eventRepository, cryptogotchiRepository)
+	openseaController := controller.NewOpenseaController(eventRepository, cryptogotchiRepository)
 
 	app := fiber.New()
 
@@ -30,8 +32,13 @@ func (s *Gameserver) Start() {
 	app.Use(cors.New())
 
 	// register the controller
-
+	app.Post("/auth/login", authController.Login)
 	// opensea.io integration.
 	// gets called by their API and wallet applications.
 	app.Get("integrations/opensea/:tokenId", openseaController.GetCryptogotchi)
+	// add the authentication middleware
+	app.Use(authController.AuthMiddleware())
+	app.Use(authController.CurrentUserMiddleware())
+	app.Get("/cryptogotchi", cryptogotchiController.GetCryptogotchi)
+	app.Post("/cryptogotchi", cryptogotchiController.HandleNewEvent)
 }

@@ -1,14 +1,22 @@
 package repositories
 
-import "gorm.io/gorm"
+import (
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
+	"gorm.io/gorm"
+)
 
-type RecordRepository interface {
+type EventRepository interface {
+	Save(record *models.Event) error
 }
 
-type GormRecordRepository struct {
+type GormEventRepository struct {
 	db *gorm.DB
 }
 
-func NewGormRecordRepository(db *gorm.DB) RecordRepository {
-	return &GormRecordRepository{db: db}
+func NewGormEventRepository(db *gorm.DB) EventRepository {
+	return &GormEventRepository{db: db}
+}
+
+func (rep *GormEventRepository) Save(record *models.Event) error {
+	return rep.db.Create(record).Error
 }

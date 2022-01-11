@@ -7,6 +7,7 @@ import (
 
 type CryptogotchiRepository interface {
 	GetCryptogotchiByTokenId(tokenId string) (models.Cryptogotchi, error)
+	GetCryptogotchiByUserId(userId string) (models.Cryptogotchi, error)
 }
 
 type GormCryptogotchiRepository struct {
@@ -19,6 +20,12 @@ func NewGormCryptogotchiRepository(db *gorm.DB) CryptogotchiRepository {
 
 func (rep *GormCryptogotchiRepository) GetCryptogotchiByTokenId(tokenId string) (models.Cryptogotchi, error) {
 	var cryptogotchi models.Cryptogotchi
-	err := rep.db.Where("token_id = ?", tokenId).First(&cryptogotchi).Error
+	err := rep.db.Preload("Records").Where("token_id = ?", tokenId).First(&cryptogotchi).Error
+	return cryptogotchi, err
+}
+
+func (rep *GormCryptogotchiRepository) GetCryptogotchiByUserId(userId string) (models.Cryptogotchi, error) {
+	var cryptogotchi models.Cryptogotchi
+	err := rep.db.Preload("Records").Where("user_id = ?", userId).First(&cryptogotchi).Error
 	return cryptogotchi, err
 }

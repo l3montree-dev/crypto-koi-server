@@ -6,13 +6,13 @@ import (
 )
 
 type OpenseaController struct {
-	recordRepository       repositories.RecordRepository
+	eventRepository        repositories.EventRepository
 	cryptogotchiRepository repositories.CryptogotchiRepository
 }
 
-func NewOpenseaController(recordRepository repositories.RecordRepository, cryptogotchiRepository repositories.CryptogotchiRepository) OpenseaController {
+func NewOpenseaController(eventRepository repositories.EventRepository, cryptogotchiRepository repositories.CryptogotchiRepository) OpenseaController {
 	return OpenseaController{
-		recordRepository:       recordRepository,
+		eventRepository:        eventRepository,
 		cryptogotchiRepository: cryptogotchiRepository,
 	}
 }
@@ -24,8 +24,9 @@ func (c *OpenseaController) GetCryptogotchi(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+	// mutates the cryptogotchi struct
+	cryptogotchi.ReplayEvents()
 	// transform the cryptogotchi to an opensea-NFT compatible json.
 	nft := cryptogotchi.ToOpenseaNFT()
-	ctx.JSON(nft)
-	return nil
+	return ctx.JSON(nft)
 }
