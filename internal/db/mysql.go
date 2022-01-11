@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/entities"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 	mysqlDriver "gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -24,14 +24,14 @@ func NewMySQL(config MySQLConfig) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	// automatic migrate all entities
+	// automatic migrate all models
 	// this will create all tables
 	// and update all fields
-	err = db.AutoMigrate(&entities.Cryptogotchi{})
+	err = db.AutoMigrate(&models.Cryptogotchi{})
 	orchardclient.FailOnError(err, "failed during automigrate")
-	err = db.AutoMigrate(&entities.Event{})
+	err = db.AutoMigrate(&models.Event{})
 	orchardclient.FailOnError(err, "failed during automigrate")
-	err = db.AutoMigrate(&entities.User{})
+	err = db.AutoMigrate(&models.User{})
 	orchardclient.FailOnError(err, "failed during automigrate")
 	return db, nil
 }

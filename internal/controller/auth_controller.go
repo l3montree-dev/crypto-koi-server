@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/dto"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/entities"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
@@ -68,7 +68,7 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	var user entities.User
+	var user models.User
 	switch loginRequest.Type {
 	case "deviceId":
 		user, err = c.userRepository.GetByDeviceId(loginRequest.DeviceId)
@@ -79,7 +79,7 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 	if db.IsNotFound(err) {
 		// first time the user logs in.
 		// create the user
-		user = entities.User{}
+		user = models.User{}
 		switch loginRequest.Type {
 		case "deviceId":
 			user.DeviceId = loginRequest.DeviceId

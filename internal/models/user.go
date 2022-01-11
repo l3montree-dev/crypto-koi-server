@@ -1,4 +1,4 @@
-package entities
+package models
 
 // the owner of a cryptogotchi.
 // there is a variety of possible authentication methods.
