@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
@@ -15,7 +16,13 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	db, err := db.NewMySQL(db.MySQLConfig{})
+	db, err := db.NewMySQL(db.MySQLConfig{
+		User:     os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		Port:     os.Getenv("DB_PORT"),
+		DBName:   os.Getenv("DB_NAME"),
+		Host:     os.Getenv("DB_HOST"),
+	})
 	orchardclient.FailOnError(err, "could not connect to database")
 
 	server := server.NewGameserver(db)

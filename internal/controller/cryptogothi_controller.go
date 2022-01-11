@@ -4,7 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/dto"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/entities"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
 )
 
@@ -21,11 +21,11 @@ func NewCryptogotchiController(eventRepository repositories.EventRepository, cry
 }
 
 func (c *CryptogotchiController) GetCryptogotchi(ctx *fiber.Ctx) error {
-	currentUser := ctx.Locals("currentUser").(*models.User)
+	currentUser := ctx.Locals("currentUser").(*entities.User)
 	cryptogotchi, err := c.cryptogotchiRepository.GetCryptogotchiByUserId(currentUser.Id.String())
 	if db.IsNotFound(err) {
 		// the user does not have a cryptogotchi yet.
-		cryptogotchi = models.NewCryptogotchi(currentUser)
+		cryptogotchi = entities.NewCryptogotchi(currentUser)
 	}
 
 	cryptogotchi.ReplayEvents()
@@ -41,7 +41,7 @@ func (c *CryptogotchiController) HandleNewEvent(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
 
-	currentUser := ctx.Locals("currentUser").(*models.User)
+	currentUser := ctx.Locals("currentUser").(*entities.User)
 	cryptogotchi, err := c.cryptogotchiRepository.GetCryptogotchiByUserId(currentUser.Id.String())
 
 	if err != nil {
@@ -55,7 +55,10 @@ func (c *CryptogotchiController) HandleNewEvent(ctx *fiber.Ctx) error {
 
 	// cryptogotchi is still alive.
 	// apply the new event and save it inside the database.
-	newEvent := body.ToEvent()
+	newEvent, err := body.ToEvent()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "could not convert event to entity")
+	}
 	c.eventRepository.Save(&newEvent)
 	newEvent.Apply(&cryptogotchi)
 

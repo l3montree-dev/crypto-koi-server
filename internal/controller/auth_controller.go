@@ -6,11 +6,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	jwtware "github.com/gofiber/jwt/v3"
 	"github.com/golang-jwt/jwt/v4"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/dto"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/entities"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
-	"gorm.io/gorm"
 )
 
 type AuthController struct {
@@ -68,7 +68,7 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	var user models.User
+	var user entities.User
 	switch loginRequest.Type {
 	case "deviceId":
 		user, err = c.userRepository.GetByDeviceId(loginRequest.DeviceId)
@@ -76,10 +76,10 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 		user, err = c.userRepository.GetByWalletAddress(loginRequest.WalletAddress)
 	}
 
-	if gorm.ErrRecordNotFound == err {
+	if db.IsNotFound(err) {
 		// first time the user logs in.
 		// create the user
-		user = models.User{}
+		user = entities.User{}
 		switch loginRequest.Type {
 		case "deviceId":
 			user.DeviceId = loginRequest.DeviceId

@@ -1,12 +1,12 @@
 package repositories
 
 import (
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/entities"
 	"gorm.io/gorm"
 )
 
 type EventRepository interface {
-	Save(record *models.Event) error
+	Save(record *entities.Event) error
 }
 
 type GormEventRepository struct {
@@ -17,6 +17,6 @@ func NewGormEventRepository(db *gorm.DB) EventRepository {
 	return &GormEventRepository{db: db}
 }
 
-func (rep *GormEventRepository) Save(record *models.Event) error {
+func (rep *GormEventRepository) Save(record *entities.Event) error {
 	return rep.db.Create(record).Error
 }

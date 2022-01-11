@@ -1,0 +1,19 @@
+# just for developing
+version: "3"
+
+services:
+  mysql:
+    image: mysql:8
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_PASSWORD: secret
+      MYSQL_USER: clodhopper
+      MYSQL_DATABASE: clodhopper
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - db:/var/lib/mysql
+
+volumes:
+  db:

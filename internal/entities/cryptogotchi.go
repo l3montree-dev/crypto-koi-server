@@ -1,7 +1,9 @@
-package models
+package entities
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Cryptogotchi struct {
@@ -9,20 +11,20 @@ type Cryptogotchi struct {
 	IsAlive bool `json:"isAlive"`
 
 	Base
-	Name string `json:"name"`
+	Name string `json:"name" gorm:"type:varchar(255) not null"`
 
-	Owner User `json:"owner"`
+	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36) not null"`
 
 	// values between 100 and 0.
 	Affection float64 `json:"affection"`
 	// values between 100 and 0.
-	Fun float64 `json:"boredness"`
+	Fun float64 `json:"fun"`
 	// values between 100 and 0.
-	Food float64 `json:"hunger"`
+	Food float64 `json:"food"`
 
 	// the id of the token - might be changed in the future.
 	// stored inside the blockchain
-	TokenId string `json:"token_id"`
+	TokenId string `json:"token_id" gorm:"type:varchar(255)"`
 	// mapping to the event struct.
 	Events []Event `json:"events"`
 
@@ -103,5 +105,5 @@ func (c *Cryptogotchi) ReplayEvents() (bool, time.Time) {
 }
 
 func NewCryptogotchi(user *User) Cryptogotchi {
-	return Cryptogotchi{Owner: *user}
+	return Cryptogotchi{OwnerId: user.Id}
 }

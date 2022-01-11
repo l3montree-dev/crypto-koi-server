@@ -5,7 +5,8 @@ go 1.17
 require (
 	github.com/gofiber/fiber/v2 v2.24.0
 	github.com/google/uuid v1.3.0
-	gorm.io/driver/mysql v1.2.3
+	gorm.io/datatypes v1.0.5
+	gorm.io/driver/mysql v1.2.2
 	gorm.io/gorm v1.22.4
 )
 
@@ -22,6 +23,9 @@ require (
 	go.elastic.co/ecslogrus v1.0.0 // indirect
 	golang.org/x/sys v0.0.0-20220111092808-5a964db01320 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gorm.io/driver/postgres v1.2.3 // indirect
+	gorm.io/driver/sqlite v1.2.6 // indirect
+	gorm.io/driver/sqlserver v1.2.1 // indirect
 )
 
 require (

@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/controller"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
+	"gitlab.com/l3montree/microservices/libs/orchardclient"
 	"gorm.io/gorm"
 )
 
@@ -41,4 +42,7 @@ func (s *Gameserver) Start() {
 	app.Use(authController.CurrentUserMiddleware())
 	app.Get("/cryptogotchi", cryptogotchiController.GetCryptogotchi)
 	app.Post("/cryptogotchi", cryptogotchiController.HandleNewEvent)
+
+	err := app.Listen(":8080")
+	orchardclient.FailOnError(err, "could not start server")
 }

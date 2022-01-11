@@ -1,6 +1,11 @@
-package models
+package entities
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/datatypes"
+)
 
 type EventType string
 
@@ -12,8 +17,9 @@ const (
 
 type Event struct {
 	Base
-	Type    EventType              `json:"type" gorm:"type:varchar(255)"`
-	Payload map[string]interface{} `json:"payload"`
+	Type           EventType      `json:"type" gorm:"type:varchar(255)"`
+	Payload        datatypes.JSON `json:"payload"`
+	CryptogotchiId uuid.UUID      `json:"cryptogotchiId" gorm:"type:char(36)"`
 }
 
 func (e Event) Apply(c *Cryptogotchi) (bool, time.Time) {
