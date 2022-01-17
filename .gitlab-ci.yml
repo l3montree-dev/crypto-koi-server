@@ -1,0 +1,94 @@
+image: golang:1.17
+
+stages:
+  #- test
+  - build
+  - publish
+  #- backup
+  - deploy
+
+#test:
+#  stage: test
+#  services:
+#    - mysql:8
+#  variables:
+#    MYSQL_PASSWORD: secret
+#    MYSQL_USER: billing
+#    MYSQL_DATABASE: billing
+#    MYSQL_ROOT_PASSWORD: secret
+#  script:
+#    - GIN_MODE=release go test -v -coverpkg=./... -coverprofile=profile.cov ./...
+#    - go tool cover -func profile.cov
+
+build:
+  stage: build
+  artifacts:
+    paths:
+      - ./clodhopper-server
+  script:
+    - go build -o clodhopper-server ./cmd/clodhopper-server
+
+publish:
+  image: docker:19.03.1
+  stage: publish
+  services:
+    - docker:19.03.1-dind
+  variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://localhost:2375
+  allow_failure: false
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $IMAGE_TAG || true
+    - docker build --cache-from $IMAGE_TAG -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+  only:
+    - master
+    - dev
+  when: manual
+
+#production-backup:
+#  stage: backup
+#  image:
+#    name: bitnami/kubectl:1.19.14
+#    entrypoint: [""]
+#  environment:
+#    name: production
+#    url: "https://l3montree.com"
+#  script:
+#    - echo "$K8S_CERTIFICATE" >> ca.pem
+#    - kubectl --server=$K8S_API_URL --token=$K8S_TOKEN --certificate-authority=ca.pem --namespace=stamplab create job --from=cronjob/mysql-backup mysql-backup-pipeline-"$(tr -dc a-z0-9 </dev/urandom | head -c 20)"
+#  only:
+#    - master
+#  when: manual
+
+development:
+  stage: deploy
+  image:
+    name: bitnami/kubectl:1.19.14
+    entrypoint: [""]
+  environment:
+    name: development
+    url: "https://l3montree.com"
+  script:
+    - echo "$K8S_DEVELOPMENT_CERTIFICATE" >> ca.pem
+    - kubectl --server=$K8S_DEVELOPMENT_API_URL --token=$K8S_DEVELOPMENT_TOKEN --certificate-authority=ca.pem --namespace=cryptogotchi rollout restart deployment/clodhopper-server
+  only:
+    - dev
+  when: manual
+
+production:
+  stage: deploy
+  image:
+    name: bitnami/kubectl:1.19.14
+    entrypoint: [""]
+  environment:
+    name: production
+    url: "https://l3montree.com"
+  script:
+    - echo "$K8S_CERTIFICATE" >> ca.pem
+    - kubectl --server=$K8S_API_URL --token=$K8S_TOKEN --certificate-authority=ca.pem --namespace=cryptogotchi rollout restart deployment/clodhopper-server
+  only:
+    - master
+  when: manual
