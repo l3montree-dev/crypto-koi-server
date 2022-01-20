@@ -70,9 +70,9 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 
 	var user models.User
 	switch loginRequest.Type {
-	case "deviceId":
+	case dto.LoginTypeDeviceId:
 		user, err = c.userRepository.GetByDeviceId(loginRequest.DeviceId)
-	case "walletAddress":
+	case dto.LoginTypeWalletAddress:
 		user, err = c.userRepository.GetByWalletAddress(loginRequest.WalletAddress)
 	}
 
@@ -81,9 +81,9 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 		// create the user
 		user = models.User{}
 		switch loginRequest.Type {
-		case "deviceId":
+		case dto.LoginTypeDeviceId:
 			user.DeviceId = loginRequest.DeviceId
-		case "walletAddress":
+		case dto.LoginTypeWalletAddress:
 			user.WalletAddress = loginRequest.WalletAddress
 		}
 		err := c.userRepository.Save(&user)
@@ -108,7 +108,8 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to sign token")
 	}
 
-	return ctx.JSON(fiber.Map{
-		"accessToken": t,
+	return ctx.JSON(dto.TokenResponse{
+		AccessToken:  t,
+		RefreshToken: "",
 	})
 }
