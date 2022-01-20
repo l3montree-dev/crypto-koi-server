@@ -3,24 +3,25 @@ package controller
 import (
 	"github.com/gofiber/fiber/v2"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
 )
 
 type OpenseaController struct {
-	eventRepository        repositories.EventRepository
-	cryptogotchiRepository repositories.CryptogotchiRepository
+	eventSvc        service.EventSvc
+	cryptogotchiSvc service.CryptogotchiSvc
 }
 
 func NewOpenseaController(eventRepository repositories.EventRepository, cryptogotchiRepository repositories.CryptogotchiRepository) OpenseaController {
 	return OpenseaController{
-		eventRepository:        eventRepository,
-		cryptogotchiRepository: cryptogotchiRepository,
+		eventSvc:        service.NewEventService(eventRepository),
+		cryptogotchiSvc: service.NewCryptogotchiService(cryptogotchiRepository),
 	}
 }
 
 func (c *OpenseaController) GetCryptogotchi(ctx *fiber.Ctx) error {
 	tokenId := ctx.Params("tokenId")
 	// fetch the correct cryptogotchi using the token.
-	cryptogotchi, err := c.cryptogotchiRepository.GetCryptogotchiByTokenId(tokenId)
+	cryptogotchi, err := c.cryptogotchiSvc.GetCryptogotchiByTokenId(tokenId)
 	if err != nil {
 		return err
 	}
