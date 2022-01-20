@@ -33,6 +33,8 @@ func NewMySQL(config MySQLConfig) (*gorm.DB, error) {
 	orchardclient.FailOnError(err, "failed during automigrate")
 	err = db.AutoMigrate(&models.User{})
 	orchardclient.FailOnError(err, "failed during automigrate")
+	err = db.AutoMigrate(&models.GameStat{})
+	orchardclient.FailOnError(err, "failed during automigrate")
 	return db, nil
 }
 

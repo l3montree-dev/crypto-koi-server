@@ -6,6 +6,7 @@ package models
 type User struct {
 	Base
 	Cryptogotchis []Cryptogotchi `json:"cryptogotchis" gorm:"foreignKey:OwnerId"`
+	GameStats     []GameStat     `json:"game_stats" gorm:"foreignKey:UserId"`
 	// never return the device id.
 	// this is a rather private information
 	DeviceId string `json:"-" gorm:"type:varchar(255) unique"`
