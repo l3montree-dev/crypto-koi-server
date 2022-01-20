@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"os"
-
 	"github.com/gofiber/fiber/v2"
 	jwtware "github.com/gofiber/jwt/v3"
 	"github.com/golang-jwt/jwt/v4"
@@ -10,34 +8,23 @@ import (
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/dto"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
-	"gitlab.com/l3montree/microservices/libs/orchardclient"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
 )
 
 type AuthController struct {
-	userRepository repositories.UserRepository
-	privateKey     []byte
+	authSvc service.AuthSvc
 }
 
 func NewAuthController(userRepository repositories.UserRepository) AuthController {
 
-	privateKeyPath := os.Getenv("PRIVATE_KEY_PATH")
-
-	privateKey, err := os.ReadFile(privateKeyPath)
-	orchardclient.FailOnError(err, "Failed to read private key")
-
 	return AuthController{
-		userRepository: userRepository,
-		privateKey:     privateKey,
+		authSvc: service.NewAuthService(userRepository),
 	}
-}
-
-func (c *AuthController) GetSigningKey() []byte {
-	return c.privateKey
 }
 
 func (c *AuthController) AuthMiddleware() fiber.Handler {
 	return jwtware.New(jwtware.Config{
-		SigningKey: c.privateKey,
+		SigningKey: c.authSvc.GetSigningKey(),
 	})
 }
 
@@ -49,7 +36,7 @@ func (c *AuthController) CurrentUserMiddleware() fiber.Handler {
 		}
 		claims := token.Claims.(jwt.MapClaims)
 		userId := claims["id"]
-		user, err := c.userRepository.GetById(userId.(string))
+		user, err := c.authSvc.GetById(userId.(string))
 		if err != nil {
 			return fiber.NewError(fiber.StatusInternalServerError, "Failed to get user")
 		}
@@ -57,6 +44,35 @@ func (c *AuthController) CurrentUserMiddleware() fiber.Handler {
 		ctx.Locals("currentUser", user)
 		return ctx.Next()
 	}
+}
+
+func (c *AuthController) Refresh(ctx *fiber.Ctx) error {
+	var refreshRequest dto.RefreshRequest
+	err := ctx.BodyParser(refreshRequest)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Failed to parse request body")
+	}
+
+	user, err := c.authSvc.GetByRefreshToken(refreshRequest.RefreshToken)
+
+	if db.IsNotFound(err) {
+		return fiber.NewError(fiber.StatusUnauthorized, "Refresh token not found")
+	}
+
+	if err != nil {
+		// TODO: Log it.
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get user (refreshing)")
+	}
+
+	// create new refresh token for user.
+	res, err := c.authSvc.CreateTokenForUser(&user)
+	if err != nil {
+		// TODO: Log it
+		return fiber.NewError(fiber.StatusInternalServerError, "Could not generate tokens")
+	}
+
+	return ctx.JSON(res)
 }
 
 func (c *AuthController) Login(ctx *fiber.Ctx) error {
@@ -71,9 +87,9 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 	var user models.User
 	switch loginRequest.Type {
 	case dto.LoginTypeDeviceId:
-		user, err = c.userRepository.GetByDeviceId(loginRequest.DeviceId)
+		user, err = c.authSvc.GetByDeviceId(loginRequest.DeviceId)
 	case dto.LoginTypeWalletAddress:
-		user, err = c.userRepository.GetByWalletAddress(loginRequest.WalletAddress)
+		user, err = c.authSvc.GetByWalletAddress(loginRequest.WalletAddress)
 	}
 
 	if db.IsNotFound(err) {
@@ -86,7 +102,7 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 		case dto.LoginTypeWalletAddress:
 			user.WalletAddress = loginRequest.WalletAddress
 		}
-		err := c.userRepository.Save(&user)
+		err := c.authSvc.Save(&user)
 		if err != nil {
 			return fiber.NewError(fiber.StatusInternalServerError, "Failed to create user")
 		}
@@ -96,20 +112,10 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 
 	// the user is logged in.
 	// return a token for the user.
-	claims := jwt.MapClaims{
-		"id": user.Id,
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
-
-	t, err := token.SignedString(c.privateKey)
-
+	res, err := c.authSvc.CreateTokenForUser(&user)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to sign token")
 	}
 
-	return ctx.JSON(dto.TokenResponse{
-		AccessToken:  t,
-		RefreshToken: "",
-	})
+	return ctx.JSON(res)
 }

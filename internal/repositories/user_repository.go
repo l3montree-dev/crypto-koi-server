@@ -10,6 +10,7 @@ type UserRepository interface {
 	GetByWalletAddress(address string) (models.User, error)
 	GetById(id string) (models.User, error)
 	Save(*models.User) error
+	GetByRefreshToken(refreshToken string) (models.User, error)
 }
 
 type GormUserRepository struct {
@@ -40,4 +41,10 @@ func (rep *GormUserRepository) GetById(id string) (models.User, error) {
 
 func (rep *GormUserRepository) Save(user *models.User) error {
 	return rep.db.Create(user).Error
+}
+
+func (rep *GormUserRepository) GetByRefreshToken(refreshToken string) (models.User, error) {
+	var user models.User
+	err := rep.db.Where("refresh_token = ?", refreshToken).First(&user).Error
+	return user, err
 }

@@ -11,4 +11,5 @@ type User struct {
 	DeviceId string `json:"-" gorm:"type:varchar(255) unique"`
 	// never return the wallet address of the user.
 	WalletAddress string `json:"-" gorm:"type:varchar(255) unique"`
+	RefreshToken  string `json:"-" gorm:"type:varchar(255) unique"`
 }
