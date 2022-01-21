@@ -1,14 +1,11 @@
 package service
 
 import (
-	"os"
-
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/dto"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
-	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
 type AuthSvc interface {
@@ -19,23 +16,18 @@ type AuthSvc interface {
 
 type AuthService struct {
 	repositories.UserRepository
-	privateKey []byte
+	tokenSvc TokenSvc
 }
 
 func NewAuthService(rep repositories.UserRepository) AuthSvc {
-	privateKeyPath := os.Getenv("PRIVATE_KEY_PATH")
-
-	privateKey, err := os.ReadFile(privateKeyPath)
-	orchardclient.FailOnError(err, "Failed to read private key")
-
 	return &AuthService{
 		UserRepository: rep,
-		privateKey:     privateKey,
+		tokenSvc:       NewTokenService(),
 	}
 }
 
 func (svc *AuthService) GetSigningKey() []byte {
-	return svc.privateKey
+	return svc.tokenSvc.GetSigningKey()
 }
 
 func (svc *AuthService) generateRefreshToken() string {
@@ -43,13 +35,13 @@ func (svc *AuthService) generateRefreshToken() string {
 }
 
 func (svc *AuthService) CreateTokenForUser(user *models.User) (dto.TokenResponse, error) {
-	claims := jwt.MapClaims{
-		"id": user.Id,
+	claims := jwt.RegisteredClaims{
+		Subject:  user.Id.String(),
+		Issuer:   "clodhopper",
+		Audience: []string{"cattleshow-app"},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
-
-	t, err := token.SignedString(svc.privateKey)
+	t, err := svc.tokenSvc.CreateSignedToken(claims)
 
 	if err != nil {
 		return dto.TokenResponse{}, err
