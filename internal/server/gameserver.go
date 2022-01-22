@@ -36,7 +36,7 @@ func (s *Gameserver) Start() {
 	app.Post("/auth/login", authController.Login)
 	// opensea.io integration.
 	// gets called by their API and wallet applications.
-	app.Get("integrations/opensea/:tokenId", openseaController.GetCryptogotchi)
+	app.Get("/integrations/opensea/:tokenId", openseaController.GetCryptogotchi)
 	// add the authentication middleware
 	app.Use(authController.AuthMiddleware())
 	app.Use(authController.CurrentUserMiddleware())
