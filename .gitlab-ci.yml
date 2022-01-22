@@ -44,7 +44,7 @@ publish:
     - docker build --cache-from $IMAGE_TAG -t $IMAGE_TAG .
     - docker push $IMAGE_TAG
   only:
-    - master
+    - main
     - dev
   when: manual
 
@@ -90,5 +90,5 @@ production:
     - echo "$K8S_CERTIFICATE" >> ca.pem
     - kubectl --server=$K8S_API_URL --token=$K8S_TOKEN --certificate-authority=ca.pem --namespace=cryptogotchi rollout restart deployment/clodhopper-server
   only:
-    - master
+    - main
   when: manual
