@@ -5,10 +5,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/golang-jwt/jwt/v4"
 
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -28,6 +30,14 @@ type GraphqlGameserver struct {
 	db       *gorm.DB
 	tokenSvc service.TokenSvc
 	userSvc  service.UserSvc
+}
+
+func loggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		now := time.Now()
+		next.ServeHTTP(w, r)
+		orchardclient.Logger.WithField("method", r.Method).WithField("path", r.URL.Path).WithField("took", time.Since(now).String()).Info("handled request")
+	})
 }
 
 // the auth middleware will set the current logged in user into the context
@@ -78,9 +88,28 @@ func (s *GraphqlGameserver) Start() {
 	sentryMiddleware := sentryhttp.New(sentryhttp.Options{
 		Repanic: true,
 	})
+	// register all middlewares
+	router.Use(loggerMiddleware)
 
-	router.Use(middleware.Logger)
+	// allow cross origin request
+	router.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins: []string{"*"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"*"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"*"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
+
 	router.Use(middleware.Recoverer)
+	router.Use(middleware.AllowContentType("application/json"))
+	// make sure to stop processing after 30 seconds.
+	router.Use(middleware.Timeout(30 * time.Second))
+	router.Use(middleware.RealIP)
+	router.Use(middleware.RequestID)
+
 	router.Use(sentryMiddleware.Handle)
 
 	port := os.Getenv("PORT")
@@ -96,27 +125,29 @@ func (s *GraphqlGameserver) Start() {
 	// cryptogotchiController := controller.NewCryptogotchiController(eventRepository, cryptogotchiRepository)
 	openseaController := controller.NewOpenseaController(eventRepository, cryptogotchiRepository)
 
-	// register all middlewares
-	// allow cross origin request
-	// TODO: ADD cors middleware
+	router.Route("/auth", func(r chi.Router) {
+		r.Post("/login", authController.Login)
+		r.Post("/refresh", authController.Refresh)
+	})
 
-	// register the controller
-	router.Post("/auth/login", authController.Login)
-	router.Post("/auth/refresh", authController.Refresh)
-
-	// opensea.io integration.
-	// gets called by their API and wallet applications.
-	router.Get("/integrations/opensea/:tokenId", openseaController.GetCryptogotchi)
+	router.Route("/integrations", func(r chi.Router) {
+		// opensea.io integration.
+		// gets called by their API and wallet applications.
+		r.Get("/opensea/:tokenId", openseaController.GetCryptogotchi)
+	})
 
 	// attach the graphql handler to the router
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 
-	// attach the auth middleware to the router
-	router.Use(s.authMiddleware)
+	// authorized routes
+	router.Group(func(r chi.Router) {
+		// attach the auth middleware to the router
+		r.Use(s.authMiddleware)
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+		r.Handle("/", playground.Handler("GraphQL playground", "/query"))
+		r.Handle("/query", srv)
+	})
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
