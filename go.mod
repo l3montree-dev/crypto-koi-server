@@ -4,8 +4,11 @@ go 1.17
 
 require (
 	github.com/99designs/gqlgen v0.15.1
+	github.com/getsentry/sentry-go v0.12.0
+	github.com/go-chi/chi/v5 v5.0.7
 	github.com/gofiber/fiber/v2 v2.24.0
 	github.com/google/uuid v1.3.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/vektah/gqlparser/v2 v2.2.0
 	gorm.io/datatypes v1.0.5
 	gorm.io/driver/mysql v1.2.2
@@ -24,7 +27,6 @@ require (
 	github.com/matryer/moq v0.2.3 // indirect
 	github.com/mitchellh/mapstructure v1.2.3 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/streadway/amqp v1.0.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
@@ -43,7 +45,6 @@ require (
 )
 
 require (
-	github.com/gofiber/jwt/v3 v3.2.3
 	github.com/golang-jwt/jwt/v4 v4.2.0
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.4 // indirect

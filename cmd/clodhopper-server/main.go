@@ -4,17 +4,46 @@ import (
 	"log"
 	"os"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/server"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
+
+type SentryErrorLoggingHook struct {
+}
+
+func (hook *SentryErrorLoggingHook) Fire(entry *logrus.Entry) error {
+	sentry.CaptureMessage(entry.Message)
+	return nil
+}
+
+func (hook *SentryErrorLoggingHook) Levels() []logrus.Level {
+	return []logrus.Level{
+		logrus.PanicLevel,
+		logrus.FatalLevel,
+		logrus.ErrorLevel,
+		logrus.WarnLevel,
+	}
+}
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	err = sentry.Init(sentry.ClientOptions{
+		Dsn: "https://e56b8f4eedcf451e9b1cec93799f4443@sentry.l3montree.com/50",
+	})
+
+	if err != nil {
+		log.Fatalf("sentry.Init: %s", err)
+	}
+
+	orchardclient.Logger.AddHook(&SentryErrorLoggingHook{})
 
 	db, err := db.NewMySQL(db.MySQLConfig{
 		User:     os.Getenv("DB_USER"),
@@ -25,6 +54,6 @@ func main() {
 	})
 	orchardclient.FailOnError(err, "could not connect to database")
 
-	server := server.NewGameserver(db)
+	server := server.NewGraphqlGameserver(db)
 	server.Start()
 }

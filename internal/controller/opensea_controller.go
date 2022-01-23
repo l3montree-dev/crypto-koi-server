@@ -1,7 +1,10 @@
 package controller
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_util"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
 )
@@ -18,16 +21,17 @@ func NewOpenseaController(eventRepository repositories.EventRepository, cryptogo
 	}
 }
 
-func (c *OpenseaController) GetCryptogotchi(ctx *fiber.Ctx) error {
-	tokenId := ctx.Params("tokenId")
+func (c *OpenseaController) GetCryptogotchi(w http.ResponseWriter, req *http.Request) {
+	tokenId := chi.URLParam(req, "tokenId")
 	// fetch the correct cryptogotchi using the token.
 	cryptogotchi, err := c.cryptogotchiSvc.GetCryptogotchiByTokenId(tokenId)
 	if err != nil {
-		return err
+		http_util.WriteHttpError(w, http.StatusNotFound, "could not get cryptogotchi: %e", err)
+		return
 	}
 	// mutates the cryptogotchi struct
 	cryptogotchi.ReplayEvents()
 	// transform the cryptogotchi to an opensea-NFT compatible json.
 	nft := cryptogotchi.ToOpenseaNFT()
-	return ctx.JSON(nft)
+	http_util.WriteJSON(w, nft)
 }

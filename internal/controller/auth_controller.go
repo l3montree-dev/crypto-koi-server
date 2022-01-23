@@ -1,11 +1,11 @@
 package controller
 
 import (
-	"github.com/gofiber/fiber/v2"
-	jwtware "github.com/gofiber/jwt/v3"
-	"github.com/golang-jwt/jwt/v4"
+	"net/http"
+
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/dto"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_util"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
@@ -21,67 +21,42 @@ func NewAuthController(userRepository repositories.UserRepository) AuthControlle
 	}
 }
 
-func (c *AuthController) AuthMiddleware() fiber.Handler {
-	return jwtware.New(jwtware.Config{
-		SigningKey: c.authSvc.GetSigningKey(),
-	})
-}
-
-func (c *AuthController) CurrentUserMiddleware() fiber.Handler {
-	return func(ctx *fiber.Ctx) error {
-		token := ctx.Locals("user").(*jwt.Token)
-		if token == nil {
-			return fiber.NewError(fiber.StatusUnauthorized, "Unauthorized")
-		}
-		claims := token.Claims.(jwt.MapClaims)
-		userId := claims["id"]
-		user, err := c.authSvc.GetById(userId.(string))
-		if err != nil {
-			return fiber.NewError(fiber.StatusInternalServerError, "Failed to get user")
-		}
-		// set the current user in the locals
-		ctx.Locals("currentUser", user)
-		return ctx.Next()
-	}
-}
-
-func (c *AuthController) Refresh(ctx *fiber.Ctx) error {
+func (c *AuthController) Refresh(w http.ResponseWriter, req *http.Request) {
 	var refreshRequest dto.RefreshRequest
-	err := ctx.BodyParser(refreshRequest)
+	err := http_util.ParseBody(req, refreshRequest)
 
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Failed to parse request body")
+		http_util.WriteHttpError(w, http.StatusBadRequest, "could not parse body: %e", err)
+		return
 	}
 
 	user, err := c.authSvc.GetByRefreshToken(refreshRequest.RefreshToken)
 
 	if db.IsNotFound(err) {
-		return fiber.NewError(fiber.StatusUnauthorized, "Refresh token not found")
+		http_util.WriteHttpError(w, http.StatusForbidden, "refresh token not valid: %e", err)
+		return
 	}
 
 	if err != nil {
-		// TODO: Log it.
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get user (refreshing)")
+		http_util.WriteHttpError(w, http.StatusInternalServerError, "could not get user: %e", err)
+		return
 	}
 
 	// create new refresh token for user.
 	res, err := c.authSvc.CreateTokenForUser(&user)
 	if err != nil {
-		// TODO: Log it
-		return fiber.NewError(fiber.StatusInternalServerError, "Could not generate tokens")
+		http_util.WriteHttpError(w, http.StatusInternalServerError, "could not generate tokens: %e", err)
+		return
 	}
 
-	return ctx.JSON(res)
+	http_util.WriteJSON(w, res)
 }
 
-func (c *AuthController) Login(ctx *fiber.Ctx) error {
+func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 	// check if the user would
 	var loginRequest dto.LoginRequest
-	err := ctx.BodyParser(loginRequest)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
-	}
+	err := http_util.ParseBody(req, &loginRequest)
+	http_util.WriteHttpError(w, http.StatusBadRequest, "could not parse body: %e", err)
 
 	var user models.User
 	switch loginRequest.Type {
@@ -103,18 +78,21 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 		}
 		err := c.authSvc.Save(&user)
 		if err != nil {
-			return fiber.NewError(fiber.StatusInternalServerError, "Failed to create user")
+			http_util.WriteHttpError(w, http.StatusInternalServerError, "could not save user: %e", err)
+			return
 		}
 	} else if err != nil {
-		return fiber.NewError(fiber.StatusForbidden, "Invalid credentials")
+		http_util.WriteHttpError(w, http.StatusInternalServerError, "could not get user: %e", err)
+		return
 	}
 
 	// the user is logged in.
 	// return a token for the user.
 	res, err := c.authSvc.CreateTokenForUser(&user)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to sign token")
+		http_util.WriteHttpError(w, http.StatusInternalServerError, "could not generate tokens: %e", err)
+		return
 	}
 
-	return ctx.JSON(res)
+	http_util.WriteJSON(w, res)
 }
