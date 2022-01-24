@@ -21,6 +21,7 @@ import (
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/controller"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_util"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
+	resolver "gitlab.com/l3montree/cryptogotchi/clodhopper/internal/resolvers"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 	"gorm.io/gorm"
@@ -83,6 +84,12 @@ func NewGraphqlGameserver(db *gorm.DB) Server {
 
 func (s *GraphqlGameserver) Start() {
 	defaultPort := "8080"
+	isDev := os.Getenv("DEV") != ""
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = defaultPort
+	}
 
 	router := chi.NewRouter()
 	sentryMiddleware := sentryhttp.New(sentryhttp.Options{
@@ -112,19 +119,17 @@ func (s *GraphqlGameserver) Start() {
 
 	router.Use(sentryMiddleware.Handle)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
-
 	cryptogotchiRepository := repositories.NewGormCryptogotchiRepository(s.db)
 	eventRepository := repositories.NewGormEventRepository(s.db)
 	userRepository := repositories.NewGormUserRepository(s.db)
 
 	authController := controller.NewAuthController(userRepository)
-	// cryptogotchiController := controller.NewCryptogotchiController(eventRepository, cryptogotchiRepository)
+
 	openseaController := controller.NewOpenseaController(eventRepository, cryptogotchiRepository)
 
+	if isDev {
+		router.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	}
 	router.Route("/auth", func(r chi.Router) {
 		r.Post("/login", authController.Login)
 		r.Post("/refresh", authController.Refresh)
@@ -136,15 +141,16 @@ func (s *GraphqlGameserver) Start() {
 		r.Get("/opensea/:tokenId", openseaController.GetCryptogotchi)
 	})
 
+	cryptogotchiResolver := resolver.NewCryptogotchiResolver(eventRepository, cryptogotchiRepository)
+
 	// attach the graphql handler to the router
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	resolver := graph.NewResolver(&cryptogotchiResolver)
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver}))
 
 	// authorized routes
 	router.Group(func(r chi.Router) {
 		// attach the auth middleware to the router
 		r.Use(s.authMiddleware)
-
-		r.Handle("/", playground.Handler("GraphQL playground", "/query"))
 		r.Handle("/query", srv)
 	})
 

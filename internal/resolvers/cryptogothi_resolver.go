@@ -1,7 +1,11 @@
-package controller
+package resolver
 
 import (
+	"context"
+	"sync"
+
 	"github.com/gofiber/fiber/v2"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/config"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/dto"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
@@ -9,31 +13,45 @@ import (
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
 )
 
-type CryptogotchiController struct {
+type CryptogotchiResolver struct {
 	eventSvc        service.EventSvc
 	cryptogotchiSvc service.CryptogotchiSvc
 }
 
-func NewCryptogotchiController(eventRepository repositories.EventRepository, cryptogotchiRepository repositories.CryptogotchiRepository) CryptogotchiController {
-	return CryptogotchiController{
+func NewCryptogotchiResolver(eventRepository repositories.EventRepository, cryptogotchiRepository repositories.CryptogotchiRepository) CryptogotchiResolver {
+	return CryptogotchiResolver{
 		eventSvc:        service.NewEventService(eventRepository),
 		cryptogotchiSvc: service.NewCryptogotchiService(cryptogotchiRepository),
 	}
 }
 
-func (c *CryptogotchiController) GetCryptogotchi(ctx *fiber.Ctx) error {
-	currentUser := ctx.Locals("currentUser").(*models.User)
-	cryptogotchi, err := c.cryptogotchiSvc.GetCryptogotchiByUserId(currentUser.Id.String())
+func (c *CryptogotchiResolver) Cryptogotchis(ctx context.Context) ([]*models.Cryptogotchi, error) {
+	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
+	cryptogotchies, err := c.cryptogotchiSvc.GetCryptogotchiesByUserId(currentUser.Id.String())
 	if db.IsNotFound(err) {
 		// the user does not have a cryptogotchi yet.
-		cryptogotchi = models.NewCryptogotchi(currentUser)
+		cryptogotchies = []models.Cryptogotchi{models.NewCryptogotchi(currentUser)}
 	}
 
-	cryptogotchi.ReplayEvents()
-	return ctx.JSON(cryptogotchi)
+	res := make([]*models.Cryptogotchi, len(cryptogotchies))
+
+	// replay all events concurrently
+	wg := sync.WaitGroup{}
+	for i, cryptogotchi := range cryptogotchies {
+		wg.Add(1)
+		go func(cryptogotchi models.Cryptogotchi, index int) {
+			defer wg.Done()
+			res[i] = &cryptogotchi
+			res[i].ReplayEvents()
+		}(cryptogotchi, i)
+	}
+
+	wg.Wait()
+
+	return res, nil
 }
 
-func (c *CryptogotchiController) HandleNewEvent(ctx *fiber.Ctx) error {
+func (c *CryptogotchiResolver) HandleNewEvent(ctx *fiber.Ctx) error {
 	var body dto.EventDTO
 
 	err := ctx.BodyParser(body)

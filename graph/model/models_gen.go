@@ -2,19 +2,54 @@
 
 package model
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+import (
+	"time"
+)
+
+type Cryptogotchi struct {
+	ID        string      `json:"id"`
+	IsAlive   bool        `json:"isAlive"`
+	Name      string      `json:"name"`
+	Affection float64     `json:"affection"`
+	Fun       float64     `json:"fun"`
+	Food      float64     `json:"food"`
+	TokenID   string      `json:"tokenId"`
+	Events    []*Event    `json:"events"`
+	OwnerID   string      `json:"ownerId"`
+	CreatedAt time.Time   `json:"createdAt"`
+	UpdatedAt time.Time   `json:"updatedAt"`
+	GameStats []*GameStat `json:"gameStats"`
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+type Event struct {
+	ID             string                 `json:"id"`
+	Type           string                 `json:"type"`
+	Payload        map[string]interface{} `json:"payload"`
+	CreatedAt      time.Time              `json:"createdAt"`
+	UpdatedAt      time.Time              `json:"updatedAt"`
+	CryptogotchiID string                 `json:"cryptogotchiId"`
+}
+
+type GameStat struct {
+	ID             string    `json:"id"`
+	Type           string    `json:"type"`
+	Score          float64   `json:"score"`
+	CryptogotchiID string    `json:"cryptogotchiId"`
+	GameFinished   time.Time `json:"gameFinished"`
+}
+
+type NewEvent struct {
+	CryptogotchiID string                 `json:"cryptogotchiId"`
+	Type           string                 `json:"type"`
+	Payload        map[string]interface{} `json:"payload"`
+	CreatedAt      time.Time              `json:"createdAt"`
+	UpdatedAt      time.Time              `json:"updatedAt"`
 }
 
 type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID            string          `json:"id"`
+	Name          string          `json:"name"`
+	Cryptogotchis []*Cryptogotchi `json:"cryptogotchis"`
+	CreatedAt     time.Time       `json:"createdAt"`
+	UpdatedAt     time.Time       `json:"updatedAt"`
 }

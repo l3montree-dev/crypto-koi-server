@@ -8,8 +8,9 @@ import (
 )
 
 type EventDTO struct {
-	Type    models.EventType       `json:"type"`
-	Payload map[string]interface{} `json:"payload"`
+	Type           models.EventType       `json:"type"`
+	Payload        map[string]interface{} `json:"payload"`
+	CryptogotchiId string                 `json:"cryptogotchiId"`
 }
 
 func (e *EventDTO) ToEvent() (models.Event, error) {

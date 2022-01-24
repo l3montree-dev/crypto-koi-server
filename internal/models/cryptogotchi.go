@@ -28,7 +28,9 @@ type Cryptogotchi struct {
 	// mapping to the event struct.
 	Events []Event `json:"events"`
 
-	LastAggregated time.Time
+	GameStats []GameStat `json:"game_stats" gorm:"foreignKey:cryptogotchi_id"`
+
+	LastAggregated time.Time `json:"-"`
 }
 
 func (c *Cryptogotchi) ToOpenseaNFT() OpenseaNFT {

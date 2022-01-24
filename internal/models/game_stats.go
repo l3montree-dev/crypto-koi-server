@@ -11,8 +11,8 @@ const (
 
 type GameStat struct {
 	Base
-	UserId       string    `json:"user_id" gorm:"type:varchar(255)"`
-	Type         GameType  `json:"type" gorm:"type:varchar(255)"`
-	Score        int       `json:"score" gorm:"type:int"`
-	GameFinished time.Time `json:"gameFinished" gorm:"type:datetime;nullable"`
+	CryptogotchiId string    `json:"cryptogotchiId" gorm:"type:varchar(255)"`
+	Type           GameType  `json:"type" gorm:"type:varchar(255)"`
+	Score          float64   `json:"score" gorm:"type:int"`
+	GameFinished   time.Time `json:"gameFinished" gorm:"type:datetime;nullable"`
 }

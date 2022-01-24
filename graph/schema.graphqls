@@ -2,27 +2,67 @@
 #
 # https://gqlgen.com/getting-started/
 
-type Todo {
+scalar Map
+scalar Time
+
+
+type GameStat {
+    id: ID!
+    type: String!
+    score: Float!
+    cryptogotchiId: String!
+    gameFinished: Time!
+}
+
+type Event {
   id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
+  type: String!
+  payload: Map!
+  # unix timestamp
+  createdAt: Time!
+  updatedAt: Time!
+  cryptogotchiId: String!
+}
+
+type Cryptogotchi {
+  id: ID!
+  isAlive: Boolean!
+  name: String!
+  affection: Float!
+  fun : Float!
+  food: Float!
+  tokenId: String!
+  events: [Event!]!
+  ownerId: String!
+  # unix timestamp
+  createdAt: Time!
+  updatedAt: Time!
+  gameStats: [GameStat]
 }
 
 type User {
-  id: ID!
-  name: String!
+    id: ID!
+    name: String!
+    cryptogotchis: [Cryptogotchi]
+    createdAt: Time!
+    updatedAt: Time!
+}
+
+
+input NewEvent {
+    cryptogotchiId: String!
+    type: String!
+    payload: Map!
+    createdAt: Time!
+    updatedAt: Time!
+}
+
+
+
+type Mutation {
+  handleNewEvent(event: NewEvent!): Cryptogotchi!
 }
 
 type Query {
-  todos: [Todo!]!
-}
-
-input NewTodo {
-  text: String!
-  userId: String!
-}
-
-type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  cryptogotchis: [Cryptogotchi]!
 }

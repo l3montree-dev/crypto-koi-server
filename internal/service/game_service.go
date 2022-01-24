@@ -14,9 +14,9 @@ type GameSvc interface {
 	// starting a game will generate a new GameStat instance
 	// the GameStat instance is populated with a generated token.
 	// the token needs to get resend.
-	StartGame(user *models.User, gameType models.GameType) (models.GameStat, string, error)
+	StartGame(cryptogotchi *models.Cryptogotchi, gameType models.GameType) (models.GameStat, string, error)
 	GetGameByToken(token string) (models.GameStat, error)
-	StopGame(token string, score int) error
+	StopGame(token string, score float64) error
 }
 
 type GameService struct {
@@ -31,11 +31,11 @@ func NewGameService(rep repositories.GameStatRepository, tokenSvc TokenSvc) Game
 	}
 }
 
-func (svc *GameService) StartGame(user *models.User, gameType models.GameType) (models.GameStat, string, error) {
+func (svc *GameService) StartGame(cryptogotchi *models.Cryptogotchi, gameType models.GameType) (models.GameStat, string, error) {
 	// generate a new token.
 	gameStat := models.GameStat{
-		UserId: user.Id.String(),
-		Type:   gameType,
+		CryptogotchiId: cryptogotchi.Id.String(),
+		Type:           gameType,
 	}
 	err := svc.Save(&gameStat)
 
@@ -81,7 +81,7 @@ func (svc *GameService) GetGameByToken(token string) (models.GameStat, error) {
 	return gameStat, err
 }
 
-func (svc *GameService) StopGame(token string, score int) error {
+func (svc *GameService) StopGame(token string, score float64) error {
 	game, err := svc.GetGameByToken(token)
 	if err != nil {
 		return err

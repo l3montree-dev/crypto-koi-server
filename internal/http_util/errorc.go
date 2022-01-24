@@ -10,7 +10,7 @@ import (
 
 // ErrorC - Custom error.
 type ErrorC struct {
-	Status int
+	Status int    `json:"status"`
 	Err    string `json:"error"`
 }
 
