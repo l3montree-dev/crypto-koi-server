@@ -1,4 +1,4 @@
-package dto
+package http_dto
 
 type LoginType string
 

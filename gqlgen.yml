@@ -14,14 +14,15 @@ exec:
 
 # Where should any generated models go?
 model:
-  filename: graph/model/models_gen.go
-  package: model
+  filename: graph/input/input_gen.go
+  package: input
 
 # Where should the resolver implementations go?
 resolver:
   layout: follow-schema
   dir: graph
   package: graph
+  filename_template: "{name}.resolvers.go"
 
 # Optional: turn on use `gqlgen:"fieldName"` tags in your models
 # struct_tag: json

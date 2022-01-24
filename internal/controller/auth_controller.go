@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/dto"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_dto"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_util"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
@@ -22,7 +22,7 @@ func NewAuthController(userRepository repositories.UserRepository) AuthControlle
 }
 
 func (c *AuthController) Refresh(w http.ResponseWriter, req *http.Request) {
-	var refreshRequest dto.RefreshRequest
+	var refreshRequest http_dto.RefreshRequest
 	err := http_util.ParseBody(req, refreshRequest)
 
 	if err != nil {
@@ -54,15 +54,15 @@ func (c *AuthController) Refresh(w http.ResponseWriter, req *http.Request) {
 
 func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 	// check if the user would
-	var loginRequest dto.LoginRequest
+	var loginRequest http_dto.LoginRequest
 	err := http_util.ParseBody(req, &loginRequest)
 	http_util.WriteHttpError(w, http.StatusBadRequest, "could not parse body: %e", err)
 
 	var user models.User
 	switch loginRequest.Type {
-	case dto.LoginTypeDeviceId:
+	case http_dto.LoginTypeDeviceId:
 		user, err = c.authSvc.GetByDeviceId(loginRequest.DeviceId)
-	case dto.LoginTypeWalletAddress:
+	case http_dto.LoginTypeWalletAddress:
 		user, err = c.authSvc.GetByWalletAddress(loginRequest.WalletAddress)
 	}
 
@@ -71,9 +71,9 @@ func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 		// create the user
 		user = models.User{}
 		switch loginRequest.Type {
-		case dto.LoginTypeDeviceId:
+		case http_dto.LoginTypeDeviceId:
 			user.DeviceId = loginRequest.DeviceId
-		case dto.LoginTypeWalletAddress:
+		case http_dto.LoginTypeWalletAddress:
 			user.WalletAddress = loginRequest.WalletAddress
 		}
 		err := c.authSvc.Save(&user)

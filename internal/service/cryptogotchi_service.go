@@ -1,6 +1,8 @@
 package service
 
-import "gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
+import (
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
+)
 
 type CryptogotchiSvc interface {
 	repositories.CryptogotchiRepository

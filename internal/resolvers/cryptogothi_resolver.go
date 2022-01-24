@@ -4,13 +4,14 @@ import (
 	"context"
 	"sync"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/vektah/gqlparser/v2/gqlerror"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/graph/input"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/config"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/dto"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
+	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
 type CryptogotchiResolver struct {
@@ -51,35 +52,33 @@ func (c *CryptogotchiResolver) Cryptogotchis(ctx context.Context) ([]*models.Cry
 	return res, nil
 }
 
-func (c *CryptogotchiResolver) HandleNewEvent(ctx *fiber.Ctx) error {
-	var body dto.EventDTO
+func (c *CryptogotchiResolver) HandleNewEvent(ctx context.Context, event input.NewEvent) (*models.Cryptogotchi, error) {
 
-	err := ctx.BodyParser(body)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
-	}
-
-	currentUser := ctx.Locals("currentUser").(*models.User)
-	cryptogotchi, err := c.cryptogotchiSvc.GetCryptogotchiByUserId(currentUser.Id.String())
+	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
+	cryptogotchi, err := c.cryptogotchiSvc.GetCryptogotchiById(event.CryptogotchiID)
 
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "no cryptogotchi found but user tries to add a new event")
+		orchardclient.Logger.Warnf("cryptogotchi not found: %e", err)
+		return nil, gqlerror.Errorf("could not find cryptogotchi with id %s", event.CryptogotchiID)
 	}
 
-	isAlive, deathDate := cryptogotchi.ReplayEvents()
+	// check if the user is allowed to update the cryptogotchi
+	if cryptogotchi.OwnerId != currentUser.Id {
+		orchardclient.Logger.Warnf("user %s is not allowed to update cryptogotchi %s", currentUser.Id, cryptogotchi.Id)
+		return nil, gqlerror.Errorf("user %s is not allowed to update cryptogotchi %s", currentUser.Id, event.CryptogotchiID)
+	}
+
+	isAlive, _ := cryptogotchi.ReplayEvents()
 	if !isAlive {
-		return fiber.NewError(fiber.StatusBadRequest, "could not add new event. The cryptogotchi died already at: "+deathDate.String())
+		return nil, gqlerror.Errorf("cryptogotchi is dead")
 	}
 
 	// cryptogotchi is still alive.
 	// apply the new event and save it inside the database.
-	newEvent, err := body.ToEvent()
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "could not convert event to entity")
-	}
+	newEvent := models.NewEventFromInput(event)
+
 	c.eventSvc.Save(&newEvent)
 	newEvent.Apply(&cryptogotchi)
 
-	return ctx.JSON(cryptogotchi)
+	return &cryptogotchi, nil
 }

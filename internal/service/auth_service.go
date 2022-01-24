@@ -3,14 +3,14 @@ package service
 import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/dto"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_dto"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
 )
 
 type AuthSvc interface {
 	repositories.UserRepository
-	CreateTokenForUser(user *models.User) (dto.TokenResponse, error)
+	CreateTokenForUser(user *models.User) (http_dto.TokenResponse, error)
 	GetSigningKey() []byte
 }
 
@@ -34,7 +34,7 @@ func (svc *AuthService) generateRefreshToken() string {
 	return uuid.NewString()
 }
 
-func (svc *AuthService) CreateTokenForUser(user *models.User) (dto.TokenResponse, error) {
+func (svc *AuthService) CreateTokenForUser(user *models.User) (http_dto.TokenResponse, error) {
 	claims := jwt.RegisteredClaims{
 		Subject:  user.Id.String(),
 		Issuer:   "clodhopper",
@@ -44,13 +44,13 @@ func (svc *AuthService) CreateTokenForUser(user *models.User) (dto.TokenResponse
 	t, err := svc.tokenSvc.CreateSignedToken(claims)
 
 	if err != nil {
-		return dto.TokenResponse{}, err
+		return http_dto.TokenResponse{}, err
 	}
 
 	// create a refresh token for the user.
 	user.RefreshToken = svc.generateRefreshToken()
 
-	return dto.TokenResponse{
+	return http_dto.TokenResponse{
 		AccessToken:  t,
 		RefreshToken: user.RefreshToken,
 	}, nil
