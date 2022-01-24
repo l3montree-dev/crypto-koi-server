@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/joho/godotenv"
@@ -29,6 +32,12 @@ func (hook *SentryErrorLoggingHook) Levels() []logrus.Level {
 	}
 }
 
+func mustReadFile(filepath string) []byte {
+	bytes, err := ioutil.ReadFile(filepath)
+	orchardclient.FailOnError(err, fmt.Sprintf("could not read file: %s", filepath))
+	return bytes
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -47,7 +56,7 @@ func main() {
 
 	db, err := db.NewMySQL(db.MySQLConfig{
 		User:     os.Getenv("DB_USER"),
-		Password: os.Getenv("DB_PASSWORD"),
+		Password: strings.TrimSpace(string(mustReadFile(os.Getenv("DB_PASSWORD_FILE_PATH")))),
 		Port:     os.Getenv("DB_PORT"),
 		DBName:   os.Getenv("DB_NAME"),
 		Host:     os.Getenv("DB_HOST"),
