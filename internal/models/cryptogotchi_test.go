@@ -30,3 +30,24 @@ func TestCryptogotchiProgressUntil(t *testing.T) {
 	assert.LessOrEqual(t, float64(89), cryptogotchi.Affection)
 	assert.LessOrEqual(t, float64(89), cryptogotchi.Fun)
 }
+
+func TestDeathDate(t *testing.T) {
+	cryptogotchi := models.Cryptogotchi{
+		Name:           util.Str("Tabito"),
+		Food:           10,
+		FoodDrain:      1,
+		Fun:            10,
+		FunDrain:       1,
+		Affection:      10,
+		AffectionDrain: 1,
+		Events:         []models.Event{},
+		GameStats:      []models.GameStat{},
+		Base: models.Base{
+			CreatedAt: time.Now().Add(time.Minute * -100),
+		},
+	}
+
+	isAlive, deathDate := cryptogotchi.ProgressUntil(time.Now())
+	assert.False(t, isAlive)
+	assert.Equal(t, time.Now().Add(time.Minute*-90).Unix(), deathDate.Unix())
+}

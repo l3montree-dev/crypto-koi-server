@@ -37,6 +37,7 @@ type Cryptogotchi {
   funDrain: Float!
   affectionDrain: Float!
   tokenId: String
+  deathDate: Time
   events: [Event]!
   ownerId: String!
   # unix timestamp

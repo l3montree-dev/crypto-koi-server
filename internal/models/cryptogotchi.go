@@ -90,8 +90,8 @@ func (c *Cryptogotchi) ProgressUntil(nextTime time.Time) (bool, time.Time) {
 	if !c.IsAlive {
 		// the cryptogotchi did die.
 		// lets check the death date.
-		seconds := c.Food / c.GetMetabolism()
-		deathDate = lastAggregatedTime.Add(time.Duration(seconds) * time.Second)
+		minutes := c.Food / c.GetMetabolism()
+		deathDate = lastAggregatedTime.Add(time.Duration(minutes) * time.Minute)
 	}
 
 	c.Food = nextFood
@@ -110,7 +110,7 @@ func (c *Cryptogotchi) ReplayEvents() (bool, time.Time) {
 			return stillAlive, deathDate
 		}
 	}
-	return c.IsAlive, time.Time{}
+	return true, time.Time{}
 }
 
 func (c *Cryptogotchi) Replay() *Cryptogotchi {

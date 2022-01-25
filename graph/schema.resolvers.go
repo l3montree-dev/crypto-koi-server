@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/graph/generated"
@@ -18,6 +19,19 @@ import (
 
 func (r *cryptogotchiResolver) ID(ctx context.Context, obj *models.Cryptogotchi) (string, error) {
 	return obj.Id.String(), nil
+}
+
+func (r *cryptogotchiResolver) DeathDate(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error) {
+	isAlive, deathDate := obj.ReplayEvents()
+	if !isAlive {
+		return &deathDate, nil
+	}
+
+	isAlive, deathDate = obj.ProgressUntil(time.Now())
+	if !isAlive {
+		return &deathDate, nil
+	}
+	return nil, nil
 }
 
 func (r *cryptogotchiResolver) OwnerID(ctx context.Context, obj *models.Cryptogotchi) (string, error) {
@@ -130,9 +144,9 @@ func (r *queryResolver) User(ctx context.Context) (*models.User, error) {
 		for i, cryptogotchi := range user.Cryptogotchies {
 			wg.Add(1)
 			go func(c models.Cryptogotchi, index int) {
+				defer wg.Done()
 				user.Cryptogotchies[index] = *c.Replay()
 			}(cryptogotchi, i)
-
 		}
 
 		wg.Wait()
