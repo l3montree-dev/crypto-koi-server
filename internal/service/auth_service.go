@@ -21,10 +21,10 @@ type AuthService struct {
 	tokenSvc TokenSvc
 }
 
-func NewAuthService(rep repositories.UserRepository) AuthSvc {
+func NewAuthService(rep repositories.UserRepository, tokenSvc TokenSvc) AuthSvc {
 	return &AuthService{
 		UserRepository: rep,
-		tokenSvc:       NewTokenService(),
+		tokenSvc:       tokenSvc,
 	}
 }
 

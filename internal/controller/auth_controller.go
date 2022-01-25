@@ -16,9 +16,9 @@ type AuthController struct {
 	authSvc service.AuthSvc
 }
 
-func NewAuthController(userRepository repositories.UserRepository) AuthController {
+func NewAuthController(userRepository repositories.UserRepository, tokenSvc service.TokenSvc) AuthController {
 	return AuthController{
-		authSvc: service.NewAuthService(userRepository),
+		authSvc: service.NewAuthService(userRepository, tokenSvc),
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -81,13 +82,24 @@ func (s *GraphqlGameserver) authMiddleware(next http.Handler) http.Handler {
 		}
 
 		// parse the token from the request
-		claims, err := s.tokenSvc.ParseToken(token)
+		// remove the bearer prefix
+		claims, err := s.tokenSvc.ParseToken(strings.Replace(strings.Replace(token, "Bearer ", "", -1), "bearer ", "", -1))
 		if err != nil {
 			// invalid token
 			// log it.
-			orchardclient.Logger.Errorf("invalid token: %s", err)
-			next.ServeHTTP(w, r)
-			http_util.WriteHttpError(w, http.StatusUnauthorized, "invalid token: %e")
+			if ve, ok := err.(*jwt.ValidationError); ok {
+				if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+					orchardclient.Logger.Errorf("invalid token: %s", err)
+					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e")
+				} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
+					// Token is either expired or not active yet
+					orchardclient.Logger.Info("token is either expired or not active yet: %s", err)
+					http_util.WriteHttpError(w, http.StatusUnauthorized, "token is either expired or not active yet: %e")
+				} else {
+					orchardclient.Logger.Errorf("invalid token: %s", err)
+					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e")
+				}
+			}
 			return
 		}
 
@@ -149,11 +161,14 @@ func (s *GraphqlGameserver) Start() {
 
 	router.Use(sentryMiddleware.Handle)
 
+	tokenSvc := service.NewTokenService()
+	s.tokenSvc = tokenSvc
+
 	cryptogotchiRepository := repositories.NewGormCryptogotchiRepository(s.db)
 	eventRepository := repositories.NewGormEventRepository(s.db)
 	userRepository := repositories.NewGormUserRepository(s.db)
 
-	authController := controller.NewAuthController(userRepository)
+	authController := controller.NewAuthController(userRepository, tokenSvc)
 
 	openseaController := controller.NewOpenseaController(eventRepository, cryptogotchiRepository)
 
