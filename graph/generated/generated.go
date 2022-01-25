@@ -50,18 +50,21 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Cryptogotchi struct {
-		Affection func(childComplexity int) int
-		CreatedAt func(childComplexity int) int
-		Events    func(childComplexity int) int
-		Food      func(childComplexity int) int
-		Fun       func(childComplexity int) int
-		GameStats func(childComplexity int) int
-		ID        func(childComplexity int) int
-		IsAlive   func(childComplexity int) int
-		Name      func(childComplexity int) int
-		OwnerID   func(childComplexity int) int
-		TokenId   func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
+		Affection      func(childComplexity int) int
+		AffectionDrain func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		Events         func(childComplexity int) int
+		Food           func(childComplexity int) int
+		FoodDrain      func(childComplexity int) int
+		Fun            func(childComplexity int) int
+		FunDrain       func(childComplexity int) int
+		GameStats      func(childComplexity int) int
+		ID             func(childComplexity int) int
+		IsAlive        func(childComplexity int) int
+		Name           func(childComplexity int) int
+		OwnerID        func(childComplexity int) int
+		TokenId        func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
 	}
 
 	Event struct {
@@ -74,15 +77,18 @@ type ComplexityRoot struct {
 	}
 
 	GameStat struct {
+		CreatedAt      func(childComplexity int) int
 		CryptogotchiId func(childComplexity int) int
 		GameFinished   func(childComplexity int) int
 		ID             func(childComplexity int) int
 		Score          func(childComplexity int) int
 		Type           func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
 	}
 
 	Mutation struct {
-		HandleNewEvent func(childComplexity int, event input.NewEvent) int
+		ChangeCryptogotchiName func(childComplexity int, id string, newName string) int
+		HandleNewEvent         func(childComplexity int, event input.NewEvent) int
 	}
 
 	Query struct {
@@ -117,6 +123,7 @@ type GameStatResolver interface {
 }
 type MutationResolver interface {
 	HandleNewEvent(ctx context.Context, event input.NewEvent) (*models.Cryptogotchi, error)
+	ChangeCryptogotchiName(ctx context.Context, id string, newName string) (*models.Cryptogotchi, error)
 }
 type QueryResolver interface {
 	Cryptogotchies(ctx context.Context) ([]*models.Cryptogotchi, error)
@@ -148,6 +155,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Cryptogotchi.Affection(childComplexity), true
 
+	case "Cryptogotchi.affectionDrain":
+		if e.complexity.Cryptogotchi.AffectionDrain == nil {
+			break
+		}
+
+		return e.complexity.Cryptogotchi.AffectionDrain(childComplexity), true
+
 	case "Cryptogotchi.createdAt":
 		if e.complexity.Cryptogotchi.CreatedAt == nil {
 			break
@@ -169,12 +183,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Cryptogotchi.Food(childComplexity), true
 
+	case "Cryptogotchi.foodDrain":
+		if e.complexity.Cryptogotchi.FoodDrain == nil {
+			break
+		}
+
+		return e.complexity.Cryptogotchi.FoodDrain(childComplexity), true
+
 	case "Cryptogotchi.fun":
 		if e.complexity.Cryptogotchi.Fun == nil {
 			break
 		}
 
 		return e.complexity.Cryptogotchi.Fun(childComplexity), true
+
+	case "Cryptogotchi.funDrain":
+		if e.complexity.Cryptogotchi.FunDrain == nil {
+			break
+		}
+
+		return e.complexity.Cryptogotchi.FunDrain(childComplexity), true
 
 	case "Cryptogotchi.gameStats":
 		if e.complexity.Cryptogotchi.GameStats == nil {
@@ -267,6 +295,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Event.UpdatedAt(childComplexity), true
 
+	case "GameStat.createdAt":
+		if e.complexity.GameStat.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.GameStat.CreatedAt(childComplexity), true
+
 	case "GameStat.cryptogotchiId":
 		if e.complexity.GameStat.CryptogotchiId == nil {
 			break
@@ -301,6 +336,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GameStat.Type(childComplexity), true
+
+	case "GameStat.updatedAt":
+		if e.complexity.GameStat.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.GameStat.UpdatedAt(childComplexity), true
+
+	case "Mutation.changeCryptogotchiName":
+		if e.complexity.Mutation.ChangeCryptogotchiName == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_changeCryptogotchiName_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ChangeCryptogotchiName(childComplexity, args["id"].(string), args["newName"].(string)), true
 
 	case "Mutation.handleNewEvent":
 		if e.complexity.Mutation.HandleNewEvent == nil {
@@ -441,6 +495,8 @@ type GameStat {
     score: Float
     cryptogotchiId: String!
     gameFinished: Time
+    createdAt: Time!
+    updatedAt: Time!
 }
 
 type Event {
@@ -460,19 +516,24 @@ type Cryptogotchi {
   affection: Float!
   fun: Float!
   food: Float!
-  tokenId: String!
-  events: [Event!]!
+  foodDrain: Float!
+  funDrain: Float!
+  affectionDrain: Float!
+  tokenId: String
+  events: [Event]!
   ownerId: String!
   # unix timestamp
   createdAt: Time!
   updatedAt: Time!
-  gameStats: [GameStat]
+  # at least an empty array is provided as default value
+  gameStats: [GameStat!]!
 }
 
 type User {
     id: ID!
     name: String
-    cryptogotchies: [Cryptogotchi]
+    # at least an empty array is provided as default value
+    cryptogotchies: [Cryptogotchi!]!
     createdAt: Time!
     updatedAt: Time!
 }
@@ -490,6 +551,7 @@ input NewEvent {
 
 type Mutation {
   handleNewEvent(event: NewEvent!): Cryptogotchi!
+  changeCryptogotchiName(id: ID!, newName: String!): Cryptogotchi!
 }
 
 type Query {
@@ -502,6 +564,30 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_changeCryptogotchiName_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["newName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newName"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newName"] = arg1
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_handleNewEvent_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -778,6 +864,111 @@ func (ec *executionContext) _Cryptogotchi_food(ctx context.Context, field graphq
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Cryptogotchi_foodDrain(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Cryptogotchi",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FoodDrain, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Cryptogotchi_funDrain(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Cryptogotchi",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FunDrain, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Cryptogotchi_affectionDrain(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Cryptogotchi",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AffectionDrain, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Cryptogotchi_tokenId(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -803,14 +994,11 @@ func (ec *executionContext) _Cryptogotchi_tokenId(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Cryptogotchi_events(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
@@ -845,7 +1033,7 @@ func (ec *executionContext) _Cryptogotchi_events(ctx context.Context, field grap
 	}
 	res := resTmp.([]models.Event)
 	fc.Result = res
-	return ec.marshalNEvent2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEventᚄ(ctx, field.Selections, res)
+	return ec.marshalNEvent2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEvent(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Cryptogotchi_ownerId(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
@@ -978,11 +1166,14 @@ func (ec *executionContext) _Cryptogotchi_gameStats(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]models.GameStat)
 	fc.Result = res
-	return ec.marshalOGameStat2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐGameStat(ctx, field.Selections, res)
+	return ec.marshalNGameStat2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐGameStatᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Event_id(ctx context.Context, field graphql.CollectedField, obj *models.Event) (ret graphql.Marshaler) {
@@ -1364,6 +1555,76 @@ func (ec *executionContext) _GameStat_gameFinished(ctx context.Context, field gr
 	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _GameStat_createdAt(ctx context.Context, field graphql.CollectedField, obj *models.GameStat) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GameStat",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GameStat_updatedAt(ctx context.Context, field graphql.CollectedField, obj *models.GameStat) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GameStat",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_handleNewEvent(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1390,6 +1651,48 @@ func (ec *executionContext) _Mutation_handleNewEvent(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().HandleNewEvent(rctx, args["event"].(input.NewEvent))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Cryptogotchi)
+	fc.Result = res
+	return ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_changeCryptogotchiName(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_changeCryptogotchiName_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ChangeCryptogotchiName(rctx, args["id"].(string), args["newName"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1639,11 +1942,14 @@ func (ec *executionContext) _User_cryptogotchies(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]models.Cryptogotchi)
 	fc.Result = res
-	return ec.marshalOCryptogotchi2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
+	return ec.marshalNCryptogotchi2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchiᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_createdAt(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -2978,9 +3284,9 @@ func (ec *executionContext) _Cryptogotchi(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "tokenId":
+		case "foodDrain":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Cryptogotchi_tokenId(ctx, field, obj)
+				return ec._Cryptogotchi_foodDrain(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -2988,6 +3294,33 @@ func (ec *executionContext) _Cryptogotchi(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "funDrain":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Cryptogotchi_funDrain(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "affectionDrain":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Cryptogotchi_affectionDrain(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "tokenId":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Cryptogotchi_tokenId(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
 		case "events":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Cryptogotchi_events(ctx, field, obj)
@@ -3045,6 +3378,9 @@ func (ec *executionContext) _Cryptogotchi(ctx context.Context, sel ast.Selection
 
 			out.Values[i] = innerFunc(ctx)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3251,6 +3587,26 @@ func (ec *executionContext) _GameStat(ctx context.Context, sel ast.SelectionSet,
 
 			out.Values[i] = innerFunc(ctx)
 
+		case "createdAt":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._GameStat_createdAt(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updatedAt":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._GameStat_updatedAt(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3284,6 +3640,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "handleNewEvent":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_handleNewEvent(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "changeCryptogotchiName":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_changeCryptogotchiName(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
@@ -3436,6 +3802,9 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 			out.Values[i] = innerFunc(ctx)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "createdAt":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._User_createdAt(ctx, field, obj)
@@ -3895,6 +4264,50 @@ func (ec *executionContext) marshalNCryptogotchi2gitlabᚗcomᚋl3montreeᚋcryp
 	return ec._Cryptogotchi(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNCryptogotchi2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchiᚄ(ctx context.Context, sel ast.SelectionSet, v []models.Cryptogotchi) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCryptogotchi2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNCryptogotchi2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx context.Context, sel ast.SelectionSet, v []*models.Cryptogotchi) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -3943,11 +4356,7 @@ func (ec *executionContext) marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋc
 	return ec._Cryptogotchi(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNEvent2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEvent(ctx context.Context, sel ast.SelectionSet, v models.Event) graphql.Marshaler {
-	return ec._Event(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNEvent2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEventᚄ(ctx context.Context, sel ast.SelectionSet, v []models.Event) graphql.Marshaler {
+func (ec *executionContext) marshalNEvent2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEvent(ctx context.Context, sel ast.SelectionSet, v []models.Event) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3971,7 +4380,7 @@ func (ec *executionContext) marshalNEvent2ᚕgitlabᚗcomᚋl3montreeᚋcryptogo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNEvent2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEvent(ctx, sel, v[i])
+			ret[i] = ec.marshalOEvent2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEvent(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -3981,12 +4390,6 @@ func (ec *executionContext) marshalNEvent2ᚕgitlabᚗcomᚋl3montreeᚋcryptogo
 
 	}
 	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
 
 	return ret
 }
@@ -4004,6 +4407,54 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 		}
 	}
 	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) marshalNGameStat2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐGameStat(ctx context.Context, sel ast.SelectionSet, v models.GameStat) graphql.Marshaler {
+	return ec._GameStat(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGameStat2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐGameStatᚄ(ctx context.Context, sel ast.SelectionSet, v []models.GameStat) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNGameStat2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐGameStat(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
@@ -4054,27 +4505,6 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
-	res, err := graphql.UnmarshalString(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := graphql.MarshalString(*v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4391,56 +4821,15 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOCryptogotchi2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx context.Context, sel ast.SelectionSet, v models.Cryptogotchi) graphql.Marshaler {
-	return ec._Cryptogotchi(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOCryptogotchi2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx context.Context, sel ast.SelectionSet, v []models.Cryptogotchi) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOCryptogotchi2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
 func (ec *executionContext) marshalOCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx context.Context, sel ast.SelectionSet, v *models.Cryptogotchi) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Cryptogotchi(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOEvent2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEvent(ctx context.Context, sel ast.SelectionSet, v models.Event) graphql.Marshaler {
+	return ec._Event(ctx, sel, &v)
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {
@@ -4457,51 +4846,6 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
-}
-
-func (ec *executionContext) marshalOGameStat2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐGameStat(ctx context.Context, sel ast.SelectionSet, v models.GameStat) graphql.Marshaler {
-	return ec._GameStat(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOGameStat2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐGameStat(ctx context.Context, sel ast.SelectionSet, v []models.GameStat) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOGameStat2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐGameStat(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

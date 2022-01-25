@@ -11,6 +11,7 @@ type UserRepository interface {
 	GetById(id string) (models.User, error)
 	Save(*models.User) error
 	GetByRefreshToken(refreshToken string) (models.User, error)
+	Delete(*models.User) error
 }
 
 type GormUserRepository struct {
@@ -19,6 +20,10 @@ type GormUserRepository struct {
 
 func NewGormUserRepository(db *gorm.DB) UserRepository {
 	return &GormUserRepository{db: db}
+}
+
+func (rep *GormUserRepository) Delete(u *models.User) error {
+	return rep.db.Delete(u).Error
 }
 
 func (rep *GormUserRepository) GetByDeviceId(deviceId string) (models.User, error) {

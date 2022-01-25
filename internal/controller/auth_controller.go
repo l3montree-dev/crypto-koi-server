@@ -13,12 +13,14 @@ import (
 )
 
 type AuthController struct {
-	authSvc service.AuthSvc
+	authSvc         service.AuthSvc
+	cryptogotchiSvc service.CryptogotchiSvc
 }
 
-func NewAuthController(userRepository repositories.UserRepository, tokenSvc service.TokenSvc) AuthController {
+func NewAuthController(userRepository repositories.UserRepository, cryptogotchiSvc service.CryptogotchiSvc, authSvc service.AuthSvc) AuthController {
 	return AuthController{
-		authSvc: service.NewAuthService(userRepository, tokenSvc),
+		authSvc:         authSvc,
+		cryptogotchiSvc: cryptogotchiSvc,
 	}
 }
 
@@ -86,9 +88,21 @@ func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 			user.WalletAddress = &loginRequest.WalletAddress
 		}
 		err := c.authSvc.Save(&user)
+
 		if err != nil {
 			orchardclient.Logger.Errorf("could not save user: %e", err)
 			http_util.WriteHttpError(w, http.StatusInternalServerError, "could not save user: %e", err)
+			return
+		}
+
+		// generate a new cryptogotchi for the user.
+		_, err = c.cryptogotchiSvc.GenerateCryptogotchiForUser(&user)
+
+		if err != nil {
+			orchardclient.Logger.Errorf("could not generate cryptogotchi: %e", err)
+			// delete the created user to avoid having a user without a cryptogotchi.
+			c.authSvc.Delete(&user)
+			http_util.WriteHttpError(w, http.StatusInternalServerError, "could not generate cryptogotchi: %e", err)
 			return
 		}
 	} else if err != nil {

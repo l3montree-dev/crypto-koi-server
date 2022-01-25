@@ -12,6 +12,8 @@ type GameStat {
     score: Float
     cryptogotchiId: String!
     gameFinished: Time
+    createdAt: Time!
+    updatedAt: Time!
 }
 
 type Event {
@@ -31,19 +33,24 @@ type Cryptogotchi {
   affection: Float!
   fun: Float!
   food: Float!
-  tokenId: String!
-  events: [Event!]!
+  foodDrain: Float!
+  funDrain: Float!
+  affectionDrain: Float!
+  tokenId: String
+  events: [Event]!
   ownerId: String!
   # unix timestamp
   createdAt: Time!
   updatedAt: Time!
-  gameStats: [GameStat]
+  # at least an empty array is provided as default value
+  gameStats: [GameStat!]!
 }
 
 type User {
     id: ID!
     name: String
-    cryptogotchies: [Cryptogotchi]
+    # at least an empty array is provided as default value
+    cryptogotchies: [Cryptogotchi!]!
     createdAt: Time!
     updatedAt: Time!
 }
@@ -61,6 +68,7 @@ input NewEvent {
 
 type Mutation {
   handleNewEvent(event: NewEvent!): Cryptogotchi!
+  changeCryptogotchiName(id: ID!, newName: String!): Cryptogotchi!
 }
 
 type Query {

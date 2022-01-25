@@ -22,7 +22,6 @@ import (
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/controller"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_util"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
-	resolver "gitlab.com/l3montree/cryptogotchi/clodhopper/internal/resolvers"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 	"gorm.io/gorm"
@@ -109,7 +108,6 @@ func (s *GraphqlGameserver) authMiddleware(next http.Handler) http.Handler {
 			// invalid user
 			// log it.
 			orchardclient.Logger.Errorf("invalid user: %s", err)
-			next.ServeHTTP(w, r)
 			http_util.WriteHttpError(w, http.StatusInternalServerError, "could not fetch user from database")
 			return
 		}
@@ -120,6 +118,20 @@ func (s *GraphqlGameserver) authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func graphqlTimeout(timeout time.Duration) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			ctx, cancel := context.WithTimeout(r.Context(), timeout)
+			defer func() {
+				cancel()
+			}()
+
+			r = r.WithContext(ctx)
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
 func NewGraphqlGameserver(db *gorm.DB) Server {
 	return &GraphqlGameserver{db: db}
 }
@@ -154,48 +166,60 @@ func (s *GraphqlGameserver) Start() {
 
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.AllowContentType("application/json"))
-	// make sure to stop processing after 30 seconds.
-	router.Use(middleware.Timeout(30 * time.Second))
+
 	router.Use(middleware.RealIP)
 	router.Use(middleware.RequestID)
 
 	router.Use(sentryMiddleware.Handle)
 
-	tokenSvc := service.NewTokenService()
-	s.tokenSvc = tokenSvc
-
+	// init all repositories
 	cryptogotchiRepository := repositories.NewGormCryptogotchiRepository(s.db)
 	eventRepository := repositories.NewGormEventRepository(s.db)
 	userRepository := repositories.NewGormUserRepository(s.db)
+	gameRepository := repositories.NewGormGameStatRepository(s.db)
 
-	authController := controller.NewAuthController(userRepository, tokenSvc)
-
+	// init all services
+	tokenSvc := service.NewTokenService()
+	userSvc := service.NewUserService(userRepository)
+	authSvc := service.NewAuthService(userRepository, tokenSvc)
+	eventSvc := service.NewEventService(eventRepository)
+	gameSvc := service.NewGameService(gameRepository, tokenSvc)
+	// init all controllers
+	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRepository)
+	authController := controller.NewAuthController(userRepository, cryptogotchiSvc, authSvc)
 	openseaController := controller.NewOpenseaController(eventRepository, cryptogotchiRepository)
 
-	s.userSvc = service.NewUserService(userRepository)
+	// set services to server instance for middleware
+	s.tokenSvc = tokenSvc
+	s.userSvc = userSvc
 
+	// add all routes.
 	if isDev {
 		router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
 	router.Route("/auth", func(r chi.Router) {
+		// make sure to stop processing after 10 seconds.
+		r.Use(middleware.Timeout(10 * time.Second))
 		r.Post("/login", authController.Login)
 		r.Post("/refresh", authController.Refresh)
 	})
 
 	router.Route("/integrations", func(r chi.Router) {
+		// make sure to stop processing after 10 seconds.
+		r.Use(middleware.Timeout(10 * time.Second))
 		// opensea.io integration.
 		// gets called by their API and wallet applications.
 		r.Get("/opensea/:tokenId", openseaController.GetCryptogotchi)
 	})
 
-	cryptogotchiResolver := resolver.NewCryptogotchiResolver(eventRepository, cryptogotchiRepository)
-
 	// attach the graphql handler to the router
-	resolver := graph.NewResolver(&cryptogotchiResolver)
+	resolver := graph.NewResolver(s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc)
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver}))
 
 	// authorized routes
 	router.Group(func(r chi.Router) {
+		// make sure to stop processing after 10 seconds.
+		r.Use(graphqlTimeout(10 * time.Second))
 		// attach the auth middleware to the router
 		r.Use(s.authMiddleware)
 		r.Handle("/query", srv)

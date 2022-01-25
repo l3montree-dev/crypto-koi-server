@@ -9,6 +9,7 @@ type CryptogotchiRepository interface {
 	GetCryptogotchiByTokenId(tokenId string) (models.Cryptogotchi, error)
 	GetCryptogotchiesByUserId(userId string) ([]models.Cryptogotchi, error)
 	GetCryptogotchiById(id string) (models.Cryptogotchi, error)
+	Save(*models.Cryptogotchi) error
 }
 
 type GormCryptogotchiRepository struct {
@@ -23,6 +24,10 @@ func (rep *GormCryptogotchiRepository) GetCryptogotchiByTokenId(tokenId string) 
 	var cryptogotchi models.Cryptogotchi
 	err := rep.db.Preload("Events").Where("token_id = ?", tokenId).First(&cryptogotchi).Error
 	return cryptogotchi, err
+}
+
+func (rep *GormCryptogotchiRepository) Save(m *models.Cryptogotchi) error {
+	return rep.db.Save(m).Error
 }
 
 func (rep *GormCryptogotchiRepository) GetCryptogotchiesByUserId(userId string) ([]models.Cryptogotchi, error) {

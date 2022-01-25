@@ -16,11 +16,18 @@ type Cryptogotchi struct {
 	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36); not null"`
 
 	// values between 100 and 0.
-	Affection float64 `json:"affection" gorm:"default:0"`
+	Affection float64 `json:"affection" gorm:"default:100"`
 	// values between 100 and 0.
-	Fun float64 `json:"fun" gorm:"default:0"`
+	Fun float64 `json:"fun" gorm:"default:100"`
 	// values between 100 and 0.
-	Food float64 `json:"food" gorm:"default:0"`
+	Food float64 `json:"food" gorm:"default:100"`
+
+	// drain per minute
+	FoodDrain float64 `json:"foodDrain" gorm:"default:1"`
+	// drain per minute
+	FunDrain float64 `json:"funDrain" gorm:"default:1"`
+	// drain per minute
+	AffectionDrain float64 `json:"affectionDrain" gorm:"default:1"`
 
 	// the id of the token - might be changed in the future.
 	// stored inside the blockchain
@@ -38,20 +45,20 @@ func (c *Cryptogotchi) ToOpenseaNFT() OpenseaNFT {
 }
 
 // the metabolism value is used to calculate the hunger value to a given time.
-// if the value is higher, the hunger value will decrease faster
-// if the value is lower, the hunger value will decrease slower
+// if the value is higher, the Food value will decrease faster
+// if the value is lower, the Food value will decrease slower
 func (c *Cryptogotchi) GetMetabolism() float64 {
-	return 0.1
+	return c.FoodDrain
 }
 
 // the loner value is used to calculate the affection value to a given time.
 func (c *Cryptogotchi) GetLonerValue() float64 {
-	return 0.1
+	return c.FunDrain
 }
 
 // the need of love value is used to calculate the affection value to a given time.
 func (c *Cryptogotchi) GetNeedOfLove() float64 {
-	return 0.1
+	return c.AffectionDrain
 }
 
 // the cryptogotchi has a few time dependentant state variables.
@@ -59,20 +66,20 @@ func (c *Cryptogotchi) GetNeedOfLove() float64 {
 // returns if the cryptogotchi is still alive
 func (c *Cryptogotchi) ProgressUntil(nextTime time.Time) (bool, time.Time) {
 	lastAggregatedTime := c.LastAggregated
-	if lastAggregatedTime.IsZero() {
+	if lastAggregatedTime == nil || lastAggregatedTime.IsZero() {
 		lastAggregatedTime = &c.CreatedAt
 	}
 	// calculate the time difference
-	timeDiff := nextTime.Sub(*c.LastAggregated)
+	timeDiff := nextTime.Sub(*lastAggregatedTime)
 	// calculate the time difference in seconds
-	timeDiffSeconds := timeDiff.Seconds()
+	timeDiffMinutes := timeDiff.Minutes()
 
 	// calculate the food value
-	nextFood := c.Food - timeDiffSeconds*c.GetMetabolism()
+	nextFood := c.Food - timeDiffMinutes*c.GetMetabolism()
 	// calculate the affection value
-	nextAffection := c.Affection - timeDiffSeconds*c.GetLonerValue()
+	nextAffection := c.Affection - timeDiffMinutes*c.GetLonerValue()
 	// calculate the fun value
-	nextFun := c.Fun - timeDiffSeconds*c.GetNeedOfLove()
+	nextFun := c.Fun - timeDiffMinutes*c.GetNeedOfLove()
 
 	c.IsAlive = nextFood > 0 && nextAffection > 0 && nextFun > 0
 
@@ -104,6 +111,17 @@ func (c *Cryptogotchi) ReplayEvents() (bool, time.Time) {
 		}
 	}
 	return c.IsAlive, time.Time{}
+}
+
+func (c *Cryptogotchi) Replay() *Cryptogotchi {
+	// replay the events
+	stillAlive, _ := c.ReplayEvents()
+	if !stillAlive {
+		c.IsAlive = false
+		return c
+	}
+	c.ProgressUntil(time.Now())
+	return c
 }
 
 func NewCryptogotchi(user *User) Cryptogotchi {
