@@ -7,18 +7,18 @@ stages:
   #- backup
   - deploy
 
-#test:
-#  stage: test
-#  services:
-#    - mysql:8
-#  variables:
-#    MYSQL_PASSWORD: secret
-#    MYSQL_USER: billing
-#    MYSQL_DATABASE: billing
-#    MYSQL_ROOT_PASSWORD: secret
-#  script:
-#    - GIN_MODE=release go test -v -coverpkg=./... -coverprofile=profile.cov ./...
-#    - go tool cover -func profile.cov
+test:
+  stage: test
+  services:
+    - mysql:8
+  variables:
+    MYSQL_PASSWORD: secret
+    MYSQL_USER: billing
+    MYSQL_DATABASE: billing
+    MYSQL_ROOT_PASSWORD: secret
+  script:
+    - go test -v -coverpkg=./... -coverprofile=profile.cov ./...
+    - go tool cover -func profile.cov
 
 build:
   stage: build

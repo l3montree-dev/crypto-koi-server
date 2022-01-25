@@ -90,14 +90,14 @@ func (s *GraphqlGameserver) authMiddleware(next http.Handler) http.Handler {
 			if ve, ok := err.(*jwt.ValidationError); ok {
 				if ve.Errors&jwt.ValidationErrorMalformed != 0 {
 					orchardclient.Logger.Errorf("invalid token: %s", err)
-					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e")
+					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e", err)
 				} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
 					// Token is either expired or not active yet
-					orchardclient.Logger.Info("token is either expired or not active yet: %s", err)
-					http_util.WriteHttpError(w, http.StatusUnauthorized, "token is either expired or not active yet: %e")
+					orchardclient.Logger.Infof("token is either expired or not active yet: %s", err)
+					http_util.WriteHttpError(w, http.StatusUnauthorized, "token is either expired or not active yet: %e", err)
 				} else {
 					orchardclient.Logger.Errorf("invalid token: %s", err)
-					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e")
+					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e", err)
 				}
 			}
 			return
