@@ -1,7 +1,7 @@
 image: golang:1.17
 
 stages:
-  #- test
+  - test
   - build
   - publish
   #- backup
