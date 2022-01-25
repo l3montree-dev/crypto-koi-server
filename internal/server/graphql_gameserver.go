@@ -33,11 +33,38 @@ type GraphqlGameserver struct {
 	userSvc  service.UserSvc
 }
 
+type responseData struct {
+	status int
+	size   int
+}
+type loggingResponseWriter struct {
+	http.ResponseWriter // compose original http.ResponseWriter
+	responseData        *responseData
+}
+
+func (r *loggingResponseWriter) Write(b []byte) (int, error) {
+	size, err := r.ResponseWriter.Write(b) // write response using original http.ResponseWriter
+	r.responseData.size += size            // capture size
+	return size, err
+}
+
+func (r *loggingResponseWriter) WriteHeader(statusCode int) {
+	r.ResponseWriter.WriteHeader(statusCode) // write status code using original http.ResponseWriter
+	r.responseData.status = statusCode       // capture status code
+}
+
 func loggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
-		next.ServeHTTP(w, r)
-		orchardclient.Logger.WithField("method", r.Method).WithField("path", r.URL.Path).WithField("took", time.Since(now).String()).Info("handled request")
+		responseData := &responseData{}
+		loggingWriter := loggingResponseWriter{ResponseWriter: w, responseData: responseData}
+		next.ServeHTTP(&loggingWriter, r)
+		orchardclient.Logger.
+			WithField("method", r.Method).
+			WithField("status", loggingWriter.responseData.status).
+			WithField("size", loggingWriter.responseData.size).
+			WithField("path", r.URL.Path).
+			WithField("took", time.Since(now).String()).Info("handled request")
 	})
 }
 
@@ -47,8 +74,9 @@ func (s *GraphqlGameserver) authMiddleware(next http.Handler) http.Handler {
 		// get the token from the header
 		token := r.Header.Get("Authorization")
 		if token == "" {
-			orchardclient.Logger.Errorf("auth middleware called without token")
-			http_util.WriteHttpError(w, http.StatusUnauthorized, "no token provided")
+			orchardclient.Logger.Warn("auth middleware called without token")
+			next.ServeHTTP(w, r)
+			// http_util.WriteHttpError(w, http.StatusUnauthorized, "no token provided")
 			return
 		}
 
@@ -58,6 +86,7 @@ func (s *GraphqlGameserver) authMiddleware(next http.Handler) http.Handler {
 			// invalid token
 			// log it.
 			orchardclient.Logger.Errorf("invalid token: %s", err)
+			next.ServeHTTP(w, r)
 			http_util.WriteHttpError(w, http.StatusUnauthorized, "invalid token: %e")
 			return
 		}
@@ -68,6 +97,7 @@ func (s *GraphqlGameserver) authMiddleware(next http.Handler) http.Handler {
 			// invalid user
 			// log it.
 			orchardclient.Logger.Errorf("invalid user: %s", err)
+			next.ServeHTTP(w, r)
 			http_util.WriteHttpError(w, http.StatusInternalServerError, "could not fetch user from database")
 			return
 		}

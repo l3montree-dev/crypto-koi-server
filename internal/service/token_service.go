@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto/ecdsa"
 	"os"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -9,19 +10,21 @@ import (
 
 type TokenSvc interface {
 	CreateSignedToken(claims jwt.Claims) (string, error)
-	GetSigningKey() []byte
+	GetSigningKey() *ecdsa.PrivateKey
 	ParseToken(token string) (jwt.Claims, error)
 }
 
 type TokenService struct {
-	privateKey []byte
+	privateKey *ecdsa.PrivateKey
 }
 
 func NewTokenService() TokenSvc {
 	privateKeyPath := os.Getenv("PRIVATE_KEY_PATH")
 
-	privateKey, err := os.ReadFile(privateKeyPath)
+	pem, err := os.ReadFile(privateKeyPath)
 	orchardclient.FailOnError(err, "Failed to read private key")
+	privateKey, err := jwt.ParseECPrivateKeyFromPEM(pem)
+	orchardclient.FailOnError(err, "Failed to parse private key")
 	return &TokenService{
 		privateKey: privateKey,
 	}
@@ -33,7 +36,7 @@ func (svc *TokenService) CreateSignedToken(claims jwt.Claims) (string, error) {
 	return token.SignedString(svc.privateKey)
 }
 
-func (svc *TokenService) GetSigningKey() []byte {
+func (svc *TokenService) GetSigningKey() *ecdsa.PrivateKey {
 	return svc.privateKey
 }
 

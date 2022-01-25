@@ -44,12 +44,14 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	err = sentry.Init(sentry.ClientOptions{
-		Dsn: "https://e56b8f4eedcf451e9b1cec93799f4443@sentry.l3montree.com/50",
-	})
-
-	if err != nil {
-		log.Fatalf("sentry.Init: %s", err)
+	isDev := os.Getenv("DEV") == "true"
+	if !isDev {
+		err = sentry.Init(sentry.ClientOptions{
+			Dsn: "https://e56b8f4eedcf451e9b1cec93799f4443@sentry.l3montree.com/50",
+		})
+		if err != nil {
+			log.Fatalf("sentry.Init: %s", err)
+		}
 	}
 
 	orchardclient.Logger.AddHook(&SentryErrorLoggingHook{})

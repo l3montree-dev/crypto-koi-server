@@ -26,7 +26,7 @@ func NewCryptogotchiResolver(eventRepository repositories.EventRepository, crypt
 	}
 }
 
-func (c *CryptogotchiResolver) Cryptogotchis(ctx context.Context) ([]*models.Cryptogotchi, error) {
+func (c *CryptogotchiResolver) Cryptogotchies(ctx context.Context) ([]*models.Cryptogotchi, error) {
 	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
 	cryptogotchies, err := c.cryptogotchiSvc.GetCryptogotchiesByUserId(currentUser.Id.String())
 	if db.IsNotFound(err) {

@@ -7,7 +7,6 @@ require (
 	github.com/getsentry/sentry-go v0.12.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/cors v1.2.0
-	github.com/gofiber/fiber/v2 v2.24.0
 	github.com/google/uuid v1.3.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/vektah/gqlparser/v2 v2.2.0
@@ -18,21 +17,16 @@ require (
 
 require (
 	github.com/agnivade/levenshtein v1.1.0 // indirect
-	github.com/andybalholm/brotli v1.0.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.0 // indirect
-	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/magefile/mage v1.9.0 // indirect
 	github.com/matryer/moq v0.2.3 // indirect
 	github.com/mitchellh/mapstructure v1.2.3 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/streadway/amqp v1.0.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.31.0 // indirect
-	github.com/valyala/tcplisten v1.0.0 // indirect
 	go.elastic.co/ecslogrus v1.0.0 // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/sys v0.0.0-20220111092808-5a964db01320 // indirect

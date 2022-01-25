@@ -8,6 +8,7 @@ import (
 
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/graph/generated"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/graph/input"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/config"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
 )
 
@@ -47,8 +48,12 @@ func (r *mutationResolver) HandleNewEvent(ctx context.Context, event input.NewEv
 	return r.cryptogotchiResolver.HandleNewEvent(ctx, event)
 }
 
-func (r *queryResolver) Cryptogotchis(ctx context.Context) ([]*models.Cryptogotchi, error) {
-	return r.cryptogotchiResolver.Cryptogotchis(ctx)
+func (r *queryResolver) Cryptogotchies(ctx context.Context) ([]*models.Cryptogotchi, error) {
+	return r.cryptogotchiResolver.Cryptogotchies(ctx)
+}
+
+func (r *queryResolver) User(ctx context.Context) (*models.User, error) {
+	return ctx.Value(config.USER_CTX_KEY).(*models.User), nil
 }
 
 func (r *userResolver) ID(ctx context.Context, obj *models.User) (string, error) {

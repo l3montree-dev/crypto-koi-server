@@ -7,30 +7,30 @@ import (
 )
 
 type Cryptogotchi struct {
-	// aggregate of the Affection, boringness and hunger state variables
-	IsAlive bool `json:"isAlive"`
-
 	Base
-	Name string `json:"name" gorm:"type:varchar(255) not null"`
+	// aggregate of the Affection, boringness and hunger state variables
+	IsAlive bool `json:"isAlive" gorm:"default:true"`
 
-	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36) not null"`
+	Name *string `json:"name" gorm:"type:varchar(255);default:null"`
+
+	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36); not null"`
 
 	// values between 100 and 0.
-	Affection float64 `json:"affection"`
+	Affection float64 `json:"affection" gorm:"default:0"`
 	// values between 100 and 0.
-	Fun float64 `json:"fun"`
+	Fun float64 `json:"fun" gorm:"default:0"`
 	// values between 100 and 0.
-	Food float64 `json:"food"`
+	Food float64 `json:"food" gorm:"default:0"`
 
 	// the id of the token - might be changed in the future.
 	// stored inside the blockchain
-	TokenId string `json:"token_id" gorm:"type:varchar(255)"`
+	TokenId *string `json:"token_id" gorm:"type:varchar(255);default:null"`
 	// mapping to the event struct.
 	Events []Event `json:"events"`
 
 	GameStats []GameStat `json:"game_stats" gorm:"foreignKey:cryptogotchi_id"`
 
-	LastAggregated time.Time `json:"-"`
+	LastAggregated *time.Time `json:"-" gorm:"type:timestamp;default:null"`
 }
 
 func (c *Cryptogotchi) ToOpenseaNFT() OpenseaNFT {
@@ -60,10 +60,10 @@ func (c *Cryptogotchi) GetNeedOfLove() float64 {
 func (c *Cryptogotchi) ProgressUntil(nextTime time.Time) (bool, time.Time) {
 	lastAggregatedTime := c.LastAggregated
 	if lastAggregatedTime.IsZero() {
-		lastAggregatedTime = c.CreatedAt
+		lastAggregatedTime = &c.CreatedAt
 	}
 	// calculate the time difference
-	timeDiff := nextTime.Sub(c.LastAggregated)
+	timeDiff := nextTime.Sub(*c.LastAggregated)
 	// calculate the time difference in seconds
 	timeDiffSeconds := timeDiff.Seconds()
 
@@ -76,7 +76,7 @@ func (c *Cryptogotchi) ProgressUntil(nextTime time.Time) (bool, time.Time) {
 
 	c.IsAlive = nextFood > 0 && nextAffection > 0 && nextFun > 0
 
-	c.LastAggregated = nextTime
+	c.LastAggregated = &nextTime
 
 	deathDate := time.Time{}
 

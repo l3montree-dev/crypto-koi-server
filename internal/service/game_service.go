@@ -87,8 +87,9 @@ func (svc *GameService) StopGame(token string, score float64) error {
 		return err
 	}
 
-	game.Score = score
-	game.GameFinished = time.Now()
+	game.Score = &score
+	now := time.Now()
+	game.GameFinished = &now
 	err = svc.Save(&game)
 	return err
 }

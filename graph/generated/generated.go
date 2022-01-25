@@ -86,15 +86,16 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Cryptogotchis func(childComplexity int) int
+		Cryptogotchies func(childComplexity int) int
+		User           func(childComplexity int) int
 	}
 
 	User struct {
-		CreatedAt     func(childComplexity int) int
-		Cryptogotchis func(childComplexity int) int
-		ID            func(childComplexity int) int
-		Name          func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		Cryptogotchies func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Name           func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
 	}
 }
 
@@ -118,7 +119,8 @@ type MutationResolver interface {
 	HandleNewEvent(ctx context.Context, event input.NewEvent) (*models.Cryptogotchi, error)
 }
 type QueryResolver interface {
-	Cryptogotchis(ctx context.Context) ([]*models.Cryptogotchi, error)
+	Cryptogotchies(ctx context.Context) ([]*models.Cryptogotchi, error)
+	User(ctx context.Context) (*models.User, error)
 }
 type UserResolver interface {
 	ID(ctx context.Context, obj *models.User) (string, error)
@@ -312,12 +314,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.HandleNewEvent(childComplexity, args["event"].(input.NewEvent)), true
 
-	case "Query.cryptogotchis":
-		if e.complexity.Query.Cryptogotchis == nil {
+	case "Query.cryptogotchies":
+		if e.complexity.Query.Cryptogotchies == nil {
 			break
 		}
 
-		return e.complexity.Query.Cryptogotchis(childComplexity), true
+		return e.complexity.Query.Cryptogotchies(childComplexity), true
+
+	case "Query.user":
+		if e.complexity.Query.User == nil {
+			break
+		}
+
+		return e.complexity.Query.User(childComplexity), true
 
 	case "User.createdAt":
 		if e.complexity.User.CreatedAt == nil {
@@ -326,12 +335,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.CreatedAt(childComplexity), true
 
-	case "User.cryptogotchis":
-		if e.complexity.User.Cryptogotchis == nil {
+	case "User.cryptogotchies":
+		if e.complexity.User.Cryptogotchies == nil {
 			break
 		}
 
-		return e.complexity.User.Cryptogotchis(childComplexity), true
+		return e.complexity.User.Cryptogotchies(childComplexity), true
 
 	case "User.id":
 		if e.complexity.User.ID == nil {
@@ -463,7 +472,7 @@ type Cryptogotchi {
 type User {
     id: ID!
     name: String!
-    cryptogotchis: [Cryptogotchi]
+    cryptogotchies: [Cryptogotchi]
     createdAt: Time!
     updatedAt: Time!
 }
@@ -484,7 +493,8 @@ type Mutation {
 }
 
 type Query {
-  cryptogotchis: [Cryptogotchi]!
+  cryptogotchies: [Cryptogotchi]!
+  user: User!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -1405,7 +1415,7 @@ func (ec *executionContext) _Mutation_handleNewEvent(ctx context.Context, field 
 	return ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_cryptogotchis(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_cryptogotchies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1423,7 +1433,7 @@ func (ec *executionContext) _Query_cryptogotchis(ctx context.Context, field grap
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Cryptogotchis(rctx)
+		return ec.resolvers.Query().Cryptogotchies(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1438,6 +1448,41 @@ func (ec *executionContext) _Query_cryptogotchis(ctx context.Context, field grap
 	res := resTmp.([]*models.Cryptogotchi)
 	fc.Result = res
 	return ec.marshalNCryptogotchi2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().User(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1581,7 +1626,7 @@ func (ec *executionContext) _User_name(ctx context.Context, field graphql.Collec
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _User_cryptogotchis(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
+func (ec *executionContext) _User_cryptogotchies(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1599,7 +1644,7 @@ func (ec *executionContext) _User_cryptogotchis(ctx context.Context, field graph
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Cryptogotchis, nil
+		return obj.Cryptogotchies, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3297,7 +3342,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "cryptogotchis":
+		case "cryptogotchies":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -3306,7 +3351,30 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_cryptogotchis(ctx, field)
+				res = ec._Query_cryptogotchies(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_user(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -3385,9 +3453,9 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "cryptogotchis":
+		case "cryptogotchies":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._User_cryptogotchis(ctx, field, obj)
+				return ec._User_cryptogotchies(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -4031,6 +4099,20 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNUser2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {
+	return ec._User(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
