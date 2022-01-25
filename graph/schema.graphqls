@@ -9,9 +9,9 @@ scalar Time
 type GameStat {
     id: ID!
     type: String!
-    score: Float!
+    score: Float
     cryptogotchiId: String!
-    gameFinished: Time!
+    gameFinished: Time
 }
 
 type Event {
@@ -27,9 +27,9 @@ type Event {
 type Cryptogotchi {
   id: ID!
   isAlive: Boolean!
-  name: String!
+  name: String
   affection: Float!
-  fun : Float!
+  fun: Float!
   food: Float!
   tokenId: String!
   events: [Event!]!
@@ -42,7 +42,7 @@ type Cryptogotchi {
 
 type User {
     id: ID!
-    name: String!
+    name: String
     cryptogotchies: [Cryptogotchi]
     createdAt: Time!
     updatedAt: Time!

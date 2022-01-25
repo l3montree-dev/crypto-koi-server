@@ -104,7 +104,7 @@ func (s *GraphqlGameserver) authMiddleware(next http.Handler) http.Handler {
 		}
 
 		// get the user from the token
-		user, err := s.userSvc.GetById(claims.(jwt.RegisteredClaims).Subject)
+		user, err := s.userSvc.GetById(claims.(jwt.MapClaims)["sub"].(string))
 		if err != nil {
 			// invalid user
 			// log it.
@@ -115,7 +115,7 @@ func (s *GraphqlGameserver) authMiddleware(next http.Handler) http.Handler {
 		}
 
 		oldCtx := r.Context()
-		newCtx := context.WithValue(oldCtx, config.USER_CTX_KEY, user)
+		newCtx := context.WithValue(oldCtx, config.USER_CTX_KEY, &user)
 		next.ServeHTTP(w, r.WithContext(newCtx))
 	})
 }
@@ -171,6 +171,8 @@ func (s *GraphqlGameserver) Start() {
 	authController := controller.NewAuthController(userRepository, tokenSvc)
 
 	openseaController := controller.NewOpenseaController(eventRepository, cryptogotchiRepository)
+
+	s.userSvc = service.NewUserService(userRepository)
 
 	if isDev {
 		router.Handle("/", playground.Handler("GraphQL playground", "/query"))
