@@ -1,26 +1,41 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/graph/input"
-	"gorm.io/datatypes"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/config"
+	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
 type EventType string
 
 const (
-	FeedEventType   EventType = "feed"
-	PlayEventType   EventType = "play"
-	CuddleEventType EventType = "cuddle"
+	FeedEventType    EventType = "feed"
+	GameWonEventType EventType = "game-won"
+	// PlayEventType   EventType = "play"
+	// CuddleEventType EventType = "cuddle"
 )
+
+func IsEventType(stringToCheck string) (EventType, error) {
+	switch EventType(stringToCheck) {
+	case FeedEventType:
+		return FeedEventType, nil
+	case GameWonEventType:
+		return GameWonEventType, nil
+	default:
+		return "", fmt.Errorf("unknown event type: %s", stringToCheck)
+	}
+}
 
 type Event struct {
 	Base
-	Type           EventType         `json:"type" gorm:"type:varchar(255)"`
-	Payload        datatypes.JSONMap `json:"payload"`
-	CryptogotchiId uuid.UUID         `json:"cryptogotchiId" gorm:"type:char(36)"`
+	Type           EventType `json:"type" gorm:"type:varchar(255)"`
+	CryptogotchiId uuid.UUID `json:"cryptogotchiId" gorm:"type:char(36)"`
+	// the value to increment.
+	// a regular feed event will contain the value 10
+	Payload float64
 }
 
 func (e Event) Apply(c *Cryptogotchi) (bool, time.Time) {
@@ -29,21 +44,14 @@ func (e Event) Apply(c *Cryptogotchi) (bool, time.Time) {
 		return isAlive, deathDate
 	}
 
-	switch e.Type {
-	case FeedEventType:
-		c.Food += 10
-	case CuddleEventType:
-		c.Affection += 10
-	case PlayEventType:
-		c.Fun += 10
-	}
+	orchardclient.Logger.Info("replayed event:", e.Id)
+	c.Food += e.Payload
 	return true, time.Time{}
 }
 
-func NewEventFromInput(newEvent input.NewEvent) Event {
+func NewFeedEvent() Event {
 	return Event{
-		Type:           EventType(newEvent.Type),
-		Payload:        newEvent.Payload,
-		CryptogotchiId: uuid.MustParse(newEvent.CryptogotchiID),
+		Type:    FeedEventType,
+		Payload: config.DEFAULT_FEED_VALUE,
 	}
 }

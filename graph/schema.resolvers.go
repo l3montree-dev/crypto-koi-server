@@ -21,6 +21,10 @@ func (r *cryptogotchiResolver) ID(ctx context.Context, obj *models.Cryptogotchi)
 	return obj.Id.String(), nil
 }
 
+func (r *cryptogotchiResolver) MinutesTillDeath(ctx context.Context, obj *models.Cryptogotchi) (float64, error) {
+	return obj.GetMinutesLeft(), nil
+}
+
 func (r *cryptogotchiResolver) DeathDate(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error) {
 	isAlive, deathDate := obj.ReplayEvents()
 	if !isAlive {
@@ -38,16 +42,17 @@ func (r *cryptogotchiResolver) OwnerID(ctx context.Context, obj *models.Cryptogo
 	return obj.OwnerId.String(), nil
 }
 
+func (r *cryptogotchiResolver) NextFeeding(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error) {
+	res := obj.GetNextFeedingTime()
+	return &res, nil
+}
+
 func (r *eventResolver) ID(ctx context.Context, obj *models.Event) (string, error) {
 	return obj.Id.String(), nil
 }
 
 func (r *eventResolver) Type(ctx context.Context, obj *models.Event) (string, error) {
 	return string(obj.Type), nil
-}
-
-func (r *eventResolver) Payload(ctx context.Context, obj *models.Event) (map[string]interface{}, error) {
-	return obj.Payload, nil
 }
 
 func (r *eventResolver) CryptogotchiID(ctx context.Context, obj *models.Event) (string, error) {
@@ -62,33 +67,76 @@ func (r *gameStatResolver) Type(ctx context.Context, obj *models.GameStat) (stri
 	return string(obj.Type), nil
 }
 
-func (r *mutationResolver) HandleNewEvent(ctx context.Context, event input.NewEvent) (*models.Cryptogotchi, error) {
-	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
-	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiById(event.CryptogotchiID)
+func (r *gameStatResolver) CryptogotchiID(ctx context.Context, obj *models.GameStat) (string, error) {
+	return obj.CryptogotchiId.String(), nil
+}
+
+func (r *mutationResolver) Feed(ctx context.Context, cryptogotchiID string) (*models.Cryptogotchi, error) {
+	// check if we are allowed to feed
+	cryptogotchi, err := r.checkCryptogotchiInteractable(ctx, cryptogotchiID)
 
 	if err != nil {
-		orchardclient.Logger.Warnf("cryptogotchi not found: %e", err)
-		return nil, gqlerror.Errorf("could not find cryptogotchi with id %s", event.CryptogotchiID)
+		return nil, err
+	}
+	// the user is allowed to feed it.
+	// get the last time it was fed.
+	nextFeedingTime := cryptogotchi.GetNextFeedingTime()
+	if !nextFeedingTime.Before(time.Now()) {
+		return &cryptogotchi, gqlerror.Errorf("it is not time to feed yet")
 	}
 
-	// check if the user is allowed to update the cryptogotchi
-	if cryptogotchi.OwnerId != currentUser.Id {
-		orchardclient.Logger.Warnf("user %s is not allowed to update cryptogotchi %s", currentUser.Id, cryptogotchi.Id)
-		return nil, gqlerror.Errorf("user %s is not allowed to update cryptogotchi %s", currentUser.Id, event.CryptogotchiID)
+	// finally feed it.
+	feedEvent := models.NewFeedEvent()
+	feedEvent.CryptogotchiId = cryptogotchi.Id
+
+	r.eventSvc.Save(&feedEvent)
+
+	feedEvent.Apply(&cryptogotchi)
+	return &cryptogotchi, nil
+}
+
+func (r *mutationResolver) StartGame(ctx context.Context, cryptogotchiID string, gameType string) (*input.GameStartResponse, error) {
+	// start a new game
+	cryptogotchi, err := r.checkCryptogotchiInteractable(ctx, cryptogotchiID)
+	if err != nil {
+		return nil, err
 	}
 
-	isAlive, _ := cryptogotchi.ReplayEvents()
-	if !isAlive {
-		return nil, gqlerror.Errorf("cryptogotchi is dead")
+	// check if valid game type.
+	parsedGameType, err := models.IsGameType(gameType)
+	if err != nil {
+		return nil, err
 	}
 
-	// cryptogotchi is still alive.
-	// apply the new event and save it inside the database.
-	newEvent := models.NewEventFromInput(event)
+	_, token, err := r.gameSvc.StartGame(&cryptogotchi, models.GameType(parsedGameType))
+	if err != nil {
+		return nil, err
+	}
 
-	r.eventSvc.Save(&newEvent)
-	newEvent.Apply(&cryptogotchi)
+	return &input.GameStartResponse{
+		Token: token,
+	}, nil
+}
 
+func (r *mutationResolver) FinishGame(ctx context.Context, token string, score float64) (*models.Cryptogotchi, error) {
+	game, err := r.gameSvc.GetGameByToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if the cryptogotchi is interactable
+	cryptogotchi, err := r.checkCryptogotchiInteractable(ctx, game.CryptogotchiId.String())
+	if err != nil {
+		return nil, err
+	}
+
+	// finally finish the game
+	event, err := r.gameSvc.FinishGame(token, score)
+	if err != nil {
+		return nil, err
+	}
+
+	event.Apply(&cryptogotchi)
 	return &cryptogotchi, nil
 }
 

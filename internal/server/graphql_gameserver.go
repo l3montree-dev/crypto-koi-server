@@ -183,7 +183,7 @@ func (s *GraphqlGameserver) Start() {
 	userSvc := service.NewUserService(userRepository)
 	authSvc := service.NewAuthService(userRepository, tokenSvc)
 	eventSvc := service.NewEventService(eventRepository)
-	gameSvc := service.NewGameService(gameRepository, tokenSvc)
+	gameSvc := service.NewGameService(gameRepository, eventSvc, tokenSvc)
 	// init all controllers
 	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRepository)
 	authController := controller.NewAuthController(userRepository, cryptogotchiSvc, authSvc)

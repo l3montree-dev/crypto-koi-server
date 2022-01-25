@@ -4,10 +4,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/config"
 )
 
 type Cryptogotchi struct {
 	Base
+
 	// aggregate of the Affection, boringness and hunger state variables
 	IsAlive bool `json:"isAlive" gorm:"default:true"`
 
@@ -16,18 +18,18 @@ type Cryptogotchi struct {
 	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36); not null"`
 
 	// values between 100 and 0.
-	Affection float64 `json:"affection" gorm:"default:100"`
+	// Affection float64 `json:"affection" gorm:"default:100"`
 	// values between 100 and 0.
-	Fun float64 `json:"fun" gorm:"default:100"`
+	// Fun float64 `json:"fun" gorm:"default:100"`
 	// values between 100 and 0.
 	Food float64 `json:"food" gorm:"default:100"`
 
 	// drain per minute
-	FoodDrain float64 `json:"foodDrain" gorm:"default:1"`
+	FoodDrain float64 `json:"foodDrain" gorm:"default:0.5"`
 	// drain per minute
-	FunDrain float64 `json:"funDrain" gorm:"default:1"`
+	// FunDrain float64 `json:"funDrain" gorm:"default:0.5"`
 	// drain per minute
-	AffectionDrain float64 `json:"affectionDrain" gorm:"default:1"`
+	// AffectionDrain float64 `json:"affectionDrain" gorm:"default:0.5"`
 
 	// the id of the token - might be changed in the future.
 	// stored inside the blockchain
@@ -37,7 +39,8 @@ type Cryptogotchi struct {
 
 	GameStats []GameStat `json:"game_stats" gorm:"foreignKey:cryptogotchi_id"`
 
-	LastAggregated *time.Time `json:"-" gorm:"type:timestamp;default:null"`
+	LastAggregated      time.Time `json:"-" gorm:"-"`
+	ProcessedEventsTill time.Time `json:"-" gorm:"-"`
 }
 
 func (c *Cryptogotchi) ToOpenseaNFT() OpenseaNFT {
@@ -51,14 +54,9 @@ func (c *Cryptogotchi) GetMetabolism() float64 {
 	return c.FoodDrain
 }
 
-// the loner value is used to calculate the affection value to a given time.
-func (c *Cryptogotchi) GetLonerValue() float64 {
-	return c.FunDrain
-}
-
-// the need of love value is used to calculate the affection value to a given time.
-func (c *Cryptogotchi) GetNeedOfLove() float64 {
-	return c.AffectionDrain
+func (c *Cryptogotchi) GetMinutesLeft() float64 {
+	c.Replay()
+	return c.Food / c.GetMetabolism()
 }
 
 // the cryptogotchi has a few time dependentant state variables.
@@ -66,24 +64,21 @@ func (c *Cryptogotchi) GetNeedOfLove() float64 {
 // returns if the cryptogotchi is still alive
 func (c *Cryptogotchi) ProgressUntil(nextTime time.Time) (bool, time.Time) {
 	lastAggregatedTime := c.LastAggregated
-	if lastAggregatedTime == nil || lastAggregatedTime.IsZero() {
-		lastAggregatedTime = &c.CreatedAt
+	if lastAggregatedTime.IsZero() {
+		lastAggregatedTime = c.CreatedAt
 	}
 	// calculate the time difference
-	timeDiff := nextTime.Sub(*lastAggregatedTime)
+	timeDiff := nextTime.Sub(lastAggregatedTime)
 	// calculate the time difference in seconds
 	timeDiffMinutes := timeDiff.Minutes()
 
 	// calculate the food value
 	nextFood := c.Food - timeDiffMinutes*c.GetMetabolism()
 	// calculate the affection value
-	nextAffection := c.Affection - timeDiffMinutes*c.GetLonerValue()
-	// calculate the fun value
-	nextFun := c.Fun - timeDiffMinutes*c.GetNeedOfLove()
 
-	c.IsAlive = nextFood > 0 && nextAffection > 0 && nextFun > 0
+	c.IsAlive = nextFood > 0
 
-	c.LastAggregated = &nextTime
+	c.LastAggregated = nextTime
 
 	deathDate := time.Time{}
 
@@ -95,22 +90,36 @@ func (c *Cryptogotchi) ProgressUntil(nextTime time.Time) (bool, time.Time) {
 	}
 
 	c.Food = nextFood
-	c.Affection = nextAffection
-	c.Fun = nextFun
-
 	return c.IsAlive, deathDate
 }
 
 func (c *Cryptogotchi) ReplayEvents() (bool, time.Time) {
 	for _, event := range c.Events {
-		// mutates the cryptogotchi
-		stillAlive, deathDate := event.Apply(c)
-		if !stillAlive {
-			// the cryptogotchi did die already.
-			return stillAlive, deathDate
+		if c.ProcessedEventsTill.Before(event.CreatedAt) {
+			// mutates the cryptogotchi
+			stillAlive, deathDate := event.Apply(c)
+			c.ProcessedEventsTill = event.CreatedAt
+			if !stillAlive {
+				// the cryptogotchi did die already.
+				return stillAlive, deathDate
+			}
 		}
 	}
 	return true, time.Time{}
+}
+
+func (c *Cryptogotchi) GetNextFeedingTime() time.Time {
+	// get the last feeding event
+	// iterate over the slice in the other direction
+	for i := len(c.Events) - 1; i >= 0; i-- {
+		event := c.Events[i]
+		if event.Type == FeedEventType {
+			// this is the last event.
+			return event.CreatedAt.Add(config.TIME_BETWEEN_FEEDINGS)
+		}
+	}
+	// if there is no event - just return the current time
+	return time.Now()
 }
 
 func (c *Cryptogotchi) Replay() *Cryptogotchi {

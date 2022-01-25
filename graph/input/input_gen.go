@@ -2,14 +2,6 @@
 
 package input
 
-import (
-	"time"
-)
-
-type NewEvent struct {
-	CryptogotchiID string                 `json:"cryptogotchiId"`
-	Type           string                 `json:"type"`
-	Payload        map[string]interface{} `json:"payload"`
-	CreatedAt      time.Time              `json:"createdAt"`
-	UpdatedAt      time.Time              `json:"updatedAt"`
+type GameStartResponse struct {
+	Token string `json:"token"`
 }

@@ -19,23 +19,23 @@ type GameStat {
 type Event {
   id: ID!
   type: String!
-  payload: Map!
+  payload: Float!
   # unix timestamp
   createdAt: Time!
   updatedAt: Time!
-  cryptogotchiId: String!
+  cryptogotchiId: ID!
 }
 
 type Cryptogotchi {
   id: ID!
   isAlive: Boolean!
   name: String
-  affection: Float!
-  fun: Float!
+  #affection: Float!
+  #fun: Float!
   food: Float!
-  foodDrain: Float!
-  funDrain: Float!
-  affectionDrain: Float!
+  minutesTillDeath: Float!
+  #funDrain: Float!
+  #affectionDrain: Float!
   tokenId: String
   deathDate: Time
   events: [Event]!
@@ -45,6 +45,7 @@ type Cryptogotchi {
   updatedAt: Time!
   # at least an empty array is provided as default value
   gameStats: [GameStat!]!
+  nextFeeding: Time!
 }
 
 type User {
@@ -56,19 +57,15 @@ type User {
     updatedAt: Time!
 }
 
-
-input NewEvent {
-    cryptogotchiId: String!
-    type: String!
-    payload: Map!
-    createdAt: Time!
-    updatedAt: Time!
+type GameStartResponse {
+    token: String!
 }
 
-
-
 type Mutation {
-  handleNewEvent(event: NewEvent!): Cryptogotchi!
+    # regular feed event
+  feed(cryptogotchiId: ID!): Cryptogotchi!
+  startGame(cryptogotchiId: ID!, gameType: String!): GameStartResponse!
+  finishGame(token: String!, score: Float!): Cryptogotchi!
   changeCryptogotchiName(id: ID!, newName: String!): Cryptogotchi!
 }
 

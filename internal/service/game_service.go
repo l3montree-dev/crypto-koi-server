@@ -16,25 +16,27 @@ type GameSvc interface {
 	// the token needs to get resend.
 	StartGame(cryptogotchi *models.Cryptogotchi, gameType models.GameType) (models.GameStat, string, error)
 	GetGameByToken(token string) (models.GameStat, error)
-	StopGame(token string, score float64) error
+	FinishGame(token string, score float64) (models.Event, error)
 }
 
 type GameService struct {
 	repositories.GameStatRepository
 	tokenSvc TokenSvc
+	eventSvc EventSvc
 }
 
-func NewGameService(rep repositories.GameStatRepository, tokenSvc TokenSvc) GameSvc {
+func NewGameService(rep repositories.GameStatRepository, eventSvc EventSvc, tokenSvc TokenSvc) GameSvc {
 	return &GameService{
 		GameStatRepository: rep,
 		tokenSvc:           tokenSvc,
+		eventSvc:           eventSvc,
 	}
 }
 
 func (svc *GameService) StartGame(cryptogotchi *models.Cryptogotchi, gameType models.GameType) (models.GameStat, string, error) {
 	// generate a new token.
 	gameStat := models.GameStat{
-		CryptogotchiId: cryptogotchi.Id.String(),
+		CryptogotchiId: cryptogotchi.Id,
 		Type:           gameType,
 	}
 	err := svc.Save(&gameStat)
@@ -81,15 +83,26 @@ func (svc *GameService) GetGameByToken(token string) (models.GameStat, error) {
 	return gameStat, err
 }
 
-func (svc *GameService) StopGame(token string, score float64) error {
+func (svc *GameService) FinishGame(token string, score float64) (models.Event, error) {
 	game, err := svc.GetGameByToken(token)
 	if err != nil {
-		return err
+		return models.Event{}, err
 	}
 
 	game.Score = &score
 	now := time.Now()
 	game.GameFinished = &now
+	// create an event from the game stat
+	event, err := game.ToEvent()
+	if err != nil {
+		return models.Event{}, err
+	}
+
 	err = svc.Save(&game)
-	return err
+	if err != nil {
+		return models.Event{}, err
+	}
+
+	err = svc.eventSvc.Save(&event)
+	return event, err
 }

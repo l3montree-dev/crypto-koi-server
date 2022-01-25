@@ -28,19 +28,19 @@ func (rep *GormUserRepository) Delete(u *models.User) error {
 
 func (rep *GormUserRepository) GetByDeviceId(deviceId string) (models.User, error) {
 	var user models.User
-	err := rep.db.Preload("Cryptogotchies").Where("device_id = ?", deviceId).First(&user).Error
+	err := rep.db.Preload("Cryptogotchies").Preload("Cryptogotchies.Events").Preload("Cryptogotchies.GameStats").Where("device_id = ?", deviceId).First(&user).Error
 	return user, err
 }
 
 func (rep *GormUserRepository) GetByWalletAddress(address string) (models.User, error) {
 	var user models.User
-	err := rep.db.Preload("Cryptogotchies").Where("wallet_address = ?", address).First(&user).Error
+	err := rep.db.Preload("Cryptogotchies").Preload("Cryptogotchies.Events").Preload("Cryptogotchies.GameStats").Where("wallet_address = ?", address).First(&user).Error
 	return user, err
 }
 
 func (rep *GormUserRepository) GetById(id string) (models.User, error) {
 	var user models.User
-	err := rep.db.Preload("Cryptogotchies").Where("id = ?", id).First(&user).Error
+	err := rep.db.Preload("Cryptogotchies").Preload("Cryptogotchies.Events").Preload("Cryptogotchies.GameStats").Where("id = ?", id).First(&user).Error
 	return user, err
 }
 
