@@ -34,17 +34,15 @@ type Cryptogotchi {
   #fun: Float!
   food: Float!
   minutesTillDeath: Float!
+  maxLifetimeMinutes: Float!
   #funDrain: Float!
   #affectionDrain: Float!
   tokenId: String
   deathDate: Time
-  events: [Event]!
   ownerId: String!
   # unix timestamp
   createdAt: Time!
   updatedAt: Time!
-  # at least an empty array is provided as default value
-  gameStats: [GameStat!]!
   nextFeeding: Time!
 }
 
@@ -70,6 +68,7 @@ type Mutation {
 }
 
 type Query {
-  cryptogotchies: [Cryptogotchi]!
-  user: User!
+    events(cryptogotchiId: ID!, offset: Int!, limit: Int!): [Event!]!
+    cryptogotchi(cryptogotchiId: ID!): Cryptogotchi
+    user: User!
 }

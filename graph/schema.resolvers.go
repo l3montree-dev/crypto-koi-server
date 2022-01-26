@@ -25,6 +25,10 @@ func (r *cryptogotchiResolver) MinutesTillDeath(ctx context.Context, obj *models
 	return obj.GetMinutesLeft(), nil
 }
 
+func (r *cryptogotchiResolver) MaxLifetimeMinutes(ctx context.Context, obj *models.Cryptogotchi) (float64, error) {
+	return 100 / obj.FoodDrain, nil
+}
+
 func (r *cryptogotchiResolver) DeathDate(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error) {
 	isAlive, deathDate := obj.ReplayEvents()
 	if !isAlive {
@@ -80,10 +84,10 @@ func (r *mutationResolver) Feed(ctx context.Context, cryptogotchiID string) (*mo
 	}
 	// the user is allowed to feed it.
 	// get the last time it was fed.
-	nextFeedingTime := cryptogotchi.GetNextFeedingTime()
+	/*nextFeedingTime := cryptogotchi.GetNextFeedingTime()
 	if !nextFeedingTime.Before(time.Now()) {
 		return &cryptogotchi, gqlerror.Errorf("it is not time to feed yet")
-	}
+	}*/
 
 	// finally feed it.
 	feedEvent := models.NewFeedEvent()
@@ -92,6 +96,9 @@ func (r *mutationResolver) Feed(ctx context.Context, cryptogotchiID string) (*mo
 	r.eventSvc.Save(&feedEvent)
 
 	feedEvent.Apply(&cryptogotchi)
+
+	// otherwise other resolver functions might not have the complete event history.
+	cryptogotchi.AddEventToHistory(feedEvent)
 	return &cryptogotchi, nil
 }
 
@@ -158,29 +165,44 @@ func (r *mutationResolver) ChangeCryptogotchiName(ctx context.Context, id string
 	return &cryptogotchi, err
 }
 
-func (r *queryResolver) Cryptogotchies(ctx context.Context) ([]*models.Cryptogotchi, error) {
+func (r *queryResolver) Events(ctx context.Context, cryptogotchiID string, offset int, limit int) ([]*models.Event, error) {
+	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiByIdWithoutPreload(cryptogotchiID)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if the user is the owner of this cryptogotchi.
+	// if not - return an error.
+	if cryptogotchi.OwnerId.String() != ctx.Value(config.USER_CTX_KEY).(*models.User).Id.String() {
+		return nil, gqlerror.Errorf("you are not the owner of this cryptogotchi")
+	}
+
+	events, err := r.eventSvc.GetPaginated(cryptogotchiID, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	eventPointer := make([]*models.Event, len(events))
+	for i, event := range events {
+		tmp := event
+		eventPointer[i] = &tmp
+	}
+	return eventPointer, nil
+}
+
+func (r *queryResolver) Cryptogotchi(ctx context.Context, cryptogotchiID string) (*models.Cryptogotchi, error) {
 	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
-	cryptogotchies, err := r.cryptogotchiSvc.GetCryptogotchiesByUserId(currentUser.Id.String())
+	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiById(cryptogotchiID)
 	if db.IsNotFound(err) {
-		// the user does not have a cryptogotchi yet.
-		cryptogotchies = []models.Cryptogotchi{models.NewCryptogotchi(currentUser)}
+		return nil, gqlerror.Errorf("could not find cryptogotchi with id %s", cryptogotchiID)
 	}
-
-	res := make([]*models.Cryptogotchi, len(cryptogotchies))
-
-	// replay all events concurrently
-	wg := sync.WaitGroup{}
-	for i, cryptogotchi := range cryptogotchies {
-		wg.Add(1)
-		go func(cryptogotchi models.Cryptogotchi, index int) {
-			defer wg.Done()
-			res[index] = cryptogotchi.Replay()
-		}(cryptogotchi, i)
+	cryptogotchi.Replay()
+	// check if the cryptogotchi belongs to the current user
+	if cryptogotchi.OwnerId != currentUser.Id {
+		// remove the events from the history
+		// privacy policy :-)
+		cryptogotchi.Events = nil
 	}
-
-	wg.Wait()
-
-	return res, nil
+	return &cryptogotchi, err
 }
 
 func (r *queryResolver) User(ctx context.Context) (*models.User, error) {

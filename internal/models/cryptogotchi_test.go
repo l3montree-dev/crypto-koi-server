@@ -43,3 +43,40 @@ func TestDeathDate(t *testing.T) {
 	assert.False(t, isAlive)
 	assert.Equal(t, time.Now().Add(time.Minute*-90).Unix(), deathDate.Unix())
 }
+
+func generateFeedEvent(createdAt time.Time) models.Event {
+	return models.Event{
+		Type: models.FeedEventType,
+		Base: models.Base{
+			CreatedAt: createdAt,
+		},
+	}
+}
+func TestNextFeedingTime(t *testing.T) {
+	cryptogotchi := models.Cryptogotchi{
+		Name:      util.Str("Tabito"),
+		Food:      10,
+		FoodDrain: 1,
+
+		Events:    []models.Event{},
+		GameStats: []models.GameStat{},
+		Base: models.Base{
+			CreatedAt: time.Now().Add(time.Minute * -10),
+		},
+	}
+
+	nextFeeding := cryptogotchi.GetNextFeedingTime()
+	// if no events - than it should be now
+	assert.Equal(t, time.Now().Unix(), nextFeeding.Unix())
+
+	// the cryptogotchi was feed 5 minutes ago
+	// the next feeding time would be - in 5 minutes
+	cryptogotchi.Events = append(cryptogotchi.Events, generateFeedEvent(time.Now().Add(time.Minute*-5)))
+	nextFeeding = cryptogotchi.GetNextFeedingTime()
+	assert.Equal(t, time.Now().Add(time.Minute*5).Unix(), nextFeeding.Unix())
+
+	// the cryptogotchi was feed 20 minutes ago and 5 minutes ago - the next feeding time would still be in 5 minutes
+	cryptogotchi.Events = append(cryptogotchi.Events, generateFeedEvent(time.Now().Add(time.Minute*-20)))
+	nextFeeding = cryptogotchi.GetNextFeedingTime()
+	assert.Equal(t, time.Now().Add(time.Minute*5).Unix(), nextFeeding.Unix())
+}

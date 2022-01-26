@@ -7,6 +7,7 @@ import (
 
 type EventRepository interface {
 	Save(record *models.Event) error
+	GetPaginated(cryptogotchiId string, offset int, amount int) ([]models.Event, error)
 }
 
 type GormEventRepository struct {
@@ -19,4 +20,10 @@ func NewGormEventRepository(db *gorm.DB) EventRepository {
 
 func (rep *GormEventRepository) Save(record *models.Event) error {
 	return rep.db.Create(record).Error
+}
+
+func (rep *GormEventRepository) GetPaginated(cryptogotchiId string, offset int, amount int) ([]models.Event, error) {
+	var events []models.Event
+	err := rep.db.Where("cryptogotchi_id = ?", cryptogotchiId).Order("created_at desc").Offset(offset).Limit(amount).Find(&events).Error
+	return events, err
 }

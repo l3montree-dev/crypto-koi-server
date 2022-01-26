@@ -46,6 +46,10 @@ func (e Event) Apply(c *Cryptogotchi) (bool, time.Time) {
 
 	orchardclient.Logger.Info("replayed event:", e.Id)
 	c.Food += e.Payload
+	// limit the food to 100
+	if c.Food > 100 {
+		c.Food = 100
+	}
 	return true, time.Time{}
 }
 

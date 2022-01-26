@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -108,17 +110,31 @@ func (c *Cryptogotchi) ReplayEvents() (bool, time.Time) {
 }
 
 func (c *Cryptogotchi) GetNextFeedingTime() time.Time {
+	c.sortEvents()
 	// get the last feeding event
 	// iterate over the slice in the other direction
 	for i := len(c.Events) - 1; i >= 0; i-- {
 		event := c.Events[i]
 		if event.Type == FeedEventType {
 			// this is the last event.
+			fmt.Println("Decided for event: ", event.Id, "Created at: ", event.CreatedAt, "therefore next time:", event.CreatedAt.Add(config.TIME_BETWEEN_FEEDINGS))
 			return event.CreatedAt.Add(config.TIME_BETWEEN_FEEDINGS)
 		}
 	}
 	// if there is no event - just return the current time
 	return time.Now()
+}
+
+func (c *Cryptogotchi) sortEvents() {
+	// order by createdAt
+	sort.SliceStable(c.Events, func(i, j int) bool {
+		return c.Events[i].CreatedAt.Before(c.Events[j].CreatedAt)
+	})
+}
+
+func (c *Cryptogotchi) AddEventToHistory(event Event) {
+	c.Events = append(c.Events, event)
+	c.sortEvents()
 }
 
 func (c *Cryptogotchi) Replay() *Cryptogotchi {
