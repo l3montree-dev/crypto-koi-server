@@ -75,7 +75,6 @@ func (c *Cryptogotchi) ProgressUntil(nextTime time.Time) (bool, time.Time) {
 	// calculate the food value
 	nextFood := c.Food - timeDiffMinutes*c.GetMetabolism()
 	// calculate the affection value
-
 	c.IsAlive = nextFood > 0
 
 	c.LastAggregated = nextTime

@@ -22,7 +22,7 @@ func NewGormCryptogotchiRepository(db *gorm.DB) CryptogotchiRepository {
 
 func (rep *GormCryptogotchiRepository) GetCryptogotchiByTokenId(tokenId string) (models.Cryptogotchi, error) {
 	var cryptogotchi models.Cryptogotchi
-	err := rep.db.Preload("Events").Where("token_id = ?", tokenId).First(&cryptogotchi).Error
+	err := rep.db.Preload("Events", orderEventsASC).Where("token_id = ?", tokenId).First(&cryptogotchi).Error
 	return cryptogotchi, err
 }
 
@@ -32,12 +32,12 @@ func (rep *GormCryptogotchiRepository) Save(m *models.Cryptogotchi) error {
 
 func (rep *GormCryptogotchiRepository) GetCryptogotchiesByUserId(userId string) ([]models.Cryptogotchi, error) {
 	var cryptogotchies []models.Cryptogotchi
-	err := rep.db.Preload("Events").Where("user_id = ?", userId).Find(&cryptogotchies).Error
+	err := rep.db.Preload("Events", orderEventsASC).Where("user_id = ?", userId).Find(&cryptogotchies).Error
 	return cryptogotchies, err
 }
 
 func (rep *GormCryptogotchiRepository) GetCryptogotchiById(id string) (models.Cryptogotchi, error) {
 	var cryptogotchi models.Cryptogotchi
-	err := rep.db.Preload("Events").Where("id = ?", id).First(&cryptogotchi).Error
+	err := rep.db.Preload("Events", orderEventsASC).Where("id = ?", id).First(&cryptogotchi).Error
 	return cryptogotchi, err
 }
