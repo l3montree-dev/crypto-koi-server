@@ -29,8 +29,7 @@ func (c *OpenseaController) GetCryptogotchi(w http.ResponseWriter, req *http.Req
 		http_util.WriteHttpError(w, http.StatusNotFound, "could not get cryptogotchi: %e", err)
 		return
 	}
-	// mutates the cryptogotchi struct
-	cryptogotchi.ReplayEvents()
+
 	// transform the cryptogotchi to an opensea-NFT compatible json.
 	nft := cryptogotchi.ToOpenseaNFT()
 	http_util.WriteJSON(w, nft)

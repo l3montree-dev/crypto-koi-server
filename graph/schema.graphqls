@@ -65,9 +65,11 @@ type Mutation {
   startGame(cryptogotchiId: ID!, gameType: String!): GameStartResponse!
   finishGame(token: String!, score: Float!): Cryptogotchi!
   changeCryptogotchiName(id: ID!, newName: String!): Cryptogotchi!
+  changeUserName(newName: String!): User!
 }
 
 type Query {
+    leaderBoard(offset: Int!, limit: Int!): [Cryptogotchi!]!
     events(cryptogotchiId: ID!, offset: Int!, limit: Int!): [Event!]!
     cryptogotchi(cryptogotchiId: ID!): Cryptogotchi
     user: User!

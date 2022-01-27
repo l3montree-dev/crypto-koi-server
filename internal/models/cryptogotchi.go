@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"sort"
 	"time"
 
@@ -18,6 +17,10 @@ type Cryptogotchi struct {
 	Name *string `json:"name" gorm:"type:varchar(255);default:null"`
 
 	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36); not null"`
+
+	PredictedDeathDate time.Time `json:"-" gorm:"type:timestamp;not null"`
+
+	LastFeed *time.Time `json:"-" gorm:"type:timestamp;"`
 
 	// values between 100 and 0.
 	// Affection float64 `json:"affection" gorm:"default:100"`
@@ -57,7 +60,6 @@ func (c *Cryptogotchi) GetMetabolism() float64 {
 }
 
 func (c *Cryptogotchi) GetMinutesLeft() float64 {
-	c.Replay()
 	return c.Food / c.GetMetabolism()
 }
 
@@ -94,21 +96,6 @@ func (c *Cryptogotchi) ProgressUntil(nextTime time.Time) (bool, time.Time) {
 	return c.IsAlive, deathDate
 }
 
-func (c *Cryptogotchi) ReplayEvents() (bool, time.Time) {
-	for _, event := range c.Events {
-		if c.ProcessedEventsTill.Before(event.CreatedAt) {
-			// mutates the cryptogotchi
-			stillAlive, deathDate := event.Apply(c)
-			c.ProcessedEventsTill = event.CreatedAt
-			if !stillAlive {
-				// the cryptogotchi did die already.
-				return stillAlive, deathDate
-			}
-		}
-	}
-	return true, time.Time{}
-}
-
 func (c *Cryptogotchi) GetNextFeedingTime() time.Time {
 	c.sortEvents()
 	// get the last feeding event
@@ -116,8 +103,6 @@ func (c *Cryptogotchi) GetNextFeedingTime() time.Time {
 	for i := len(c.Events) - 1; i >= 0; i-- {
 		event := c.Events[i]
 		if event.Type == FeedEventType {
-			// this is the last event.
-			fmt.Println("Decided for event: ", event.Id, "Created at: ", event.CreatedAt, "therefore next time:", event.CreatedAt.Add(config.TIME_BETWEEN_FEEDINGS))
 			return event.CreatedAt.Add(config.TIME_BETWEEN_FEEDINGS)
 		}
 	}
@@ -130,22 +115,6 @@ func (c *Cryptogotchi) sortEvents() {
 	sort.SliceStable(c.Events, func(i, j int) bool {
 		return c.Events[i].CreatedAt.Before(c.Events[j].CreatedAt)
 	})
-}
-
-func (c *Cryptogotchi) AddEventToHistory(event Event) {
-	c.Events = append(c.Events, event)
-	c.sortEvents()
-}
-
-func (c *Cryptogotchi) Replay() *Cryptogotchi {
-	// replay the events
-	stillAlive, _ := c.ReplayEvents()
-	if !stillAlive {
-		c.IsAlive = false
-		return c
-	}
-	c.ProgressUntil(time.Now())
-	return c
 }
 
 func NewCryptogotchi(user *User) Cryptogotchi {

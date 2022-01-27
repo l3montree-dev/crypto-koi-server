@@ -45,11 +45,9 @@ func (r *Resolver) checkCryptogotchiInteractable(ctx context.Context, cryptogotc
 	}
 	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
 	if cryptogotchi.OwnerId != currentUser.Id {
-		panic(gqlerror.Errorf("you are not the owner of this cryptogotchi"))
+		return cryptogotchi, gqlerror.Errorf("you are not the owner of this cryptogotchi")
 	}
 
-	// check if the cryptogotchi is still alive.
-	cryptogotchi.Replay()
 	if !cryptogotchi.IsAlive {
 		return cryptogotchi, (gqlerror.Errorf("this cryptogotchi is already dead"))
 	}

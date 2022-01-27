@@ -5,7 +5,7 @@ package graph
 
 import (
 	"context"
-	"sync"
+	"fmt"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -22,7 +22,7 @@ func (r *cryptogotchiResolver) ID(ctx context.Context, obj *models.Cryptogotchi)
 }
 
 func (r *cryptogotchiResolver) MinutesTillDeath(ctx context.Context, obj *models.Cryptogotchi) (float64, error) {
-	return obj.GetMinutesLeft(), nil
+	return time.Until(obj.PredictedDeathDate).Minutes(), nil
 }
 
 func (r *cryptogotchiResolver) MaxLifetimeMinutes(ctx context.Context, obj *models.Cryptogotchi) (float64, error) {
@@ -30,14 +30,8 @@ func (r *cryptogotchiResolver) MaxLifetimeMinutes(ctx context.Context, obj *mode
 }
 
 func (r *cryptogotchiResolver) DeathDate(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error) {
-	isAlive, deathDate := obj.ReplayEvents()
-	if !isAlive {
-		return &deathDate, nil
-	}
-
-	isAlive, deathDate = obj.ProgressUntil(time.Now())
-	if !isAlive {
-		return &deathDate, nil
+	if time.Now().After(obj.PredictedDeathDate) {
+		return &obj.PredictedDeathDate, nil
 	}
 	return nil, nil
 }
@@ -47,8 +41,12 @@ func (r *cryptogotchiResolver) OwnerID(ctx context.Context, obj *models.Cryptogo
 }
 
 func (r *cryptogotchiResolver) NextFeeding(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error) {
-	res := obj.GetNextFeedingTime()
-	return &res, nil
+	if obj.LastFeed == nil {
+		now := time.Now()
+		return &now, nil
+	}
+	next := obj.LastFeed.Add(config.TIME_BETWEEN_FEEDINGS)
+	return &next, nil
 }
 
 func (r *eventResolver) ID(ctx context.Context, obj *models.Event) (string, error) {
@@ -97,8 +95,8 @@ func (r *mutationResolver) Feed(ctx context.Context, cryptogotchiID string) (*mo
 
 	feedEvent.Apply(&cryptogotchi)
 
-	// otherwise other resolver functions might not have the complete event history.
-	cryptogotchi.AddEventToHistory(feedEvent)
+	r.cryptogotchiSvc.Save(&cryptogotchi)
+
 	return &cryptogotchi, nil
 }
 
@@ -154,19 +152,21 @@ func (r *mutationResolver) ChangeCryptogotchiName(ctx context.Context, id string
 		return nil, gqlerror.Errorf("could not find cryptogotchi with id %s", id)
 	}
 
-	// check if cryptogotchi is alive.
-	cryptogotchi.Replay()
-	if !cryptogotchi.IsAlive {
-		return nil, gqlerror.Errorf("cryptogotchi is dead")
-	}
-
 	cryptogotchi.Name = &newName
 	err = r.cryptogotchiSvc.Save(&cryptogotchi)
 	return &cryptogotchi, err
 }
 
+func (r *mutationResolver) ChangeUserName(ctx context.Context, newName string) (*models.User, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) LeaderBoard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) Events(ctx context.Context, cryptogotchiID string, offset int, limit int) ([]*models.Event, error) {
-	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiByIdWithoutPreload(cryptogotchiID)
+	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiById(cryptogotchiID)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func (r *queryResolver) Cryptogotchi(ctx context.Context, cryptogotchiID string)
 	if db.IsNotFound(err) {
 		return nil, gqlerror.Errorf("could not find cryptogotchi with id %s", cryptogotchiID)
 	}
-	cryptogotchi.Replay()
+
 	// check if the cryptogotchi belongs to the current user
 	if cryptogotchi.OwnerId != currentUser.Id {
 		// remove the events from the history
@@ -206,28 +206,8 @@ func (r *queryResolver) Cryptogotchi(ctx context.Context, cryptogotchiID string)
 }
 
 func (r *queryResolver) User(ctx context.Context) (*models.User, error) {
-	res := make(chan *models.User)
-	go func() {
-		user := ctx.Value(config.USER_CTX_KEY).(*models.User)
-		// replay all events concurrently
-		wg := sync.WaitGroup{}
-		for i, cryptogotchi := range user.Cryptogotchies {
-			wg.Add(1)
-			go func(c models.Cryptogotchi, index int) {
-				defer wg.Done()
-				user.Cryptogotchies[index] = *c.Replay()
-			}(cryptogotchi, i)
-		}
-
-		wg.Wait()
-		res <- user
-	}()
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	case result := <-res:
-		return result, nil
-	}
+	user := ctx.Value(config.USER_CTX_KEY).(*models.User)
+	return user, nil
 }
 
 func (r *userResolver) ID(ctx context.Context, obj *models.User) (string, error) {

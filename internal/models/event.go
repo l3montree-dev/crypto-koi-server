@@ -39,7 +39,9 @@ type Event struct {
 }
 
 func (e Event) Apply(c *Cryptogotchi) (bool, time.Time) {
+	fmt.Println("before", c.Food)
 	isAlive, deathDate := c.ProgressUntil(e.CreatedAt)
+	fmt.Println("After progress", c.Food)
 	if !isAlive {
 		return isAlive, deathDate
 	}
@@ -50,6 +52,12 @@ func (e Event) Apply(c *Cryptogotchi) (bool, time.Time) {
 	if c.Food > 100 {
 		c.Food = 100
 	}
+	// predict the new death date.
+	minutesLeft := c.GetMinutesLeft()
+	c.PredictedDeathDate = time.Now().Add(time.Duration(minutesLeft) * time.Minute)
+	fmt.Println("death date", c.PredictedDeathDate)
+	now := time.Now()
+	c.LastFeed = &now
 	return true, time.Time{}
 }
 
