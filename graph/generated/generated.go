@@ -906,14 +906,14 @@ func (ec *executionContext) _Cryptogotchi_isAlive(ctx context.Context, field gra
 		Object:     "Cryptogotchi",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.IsAlive, nil
+		return obj.IsAlive(), nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)

@@ -48,7 +48,7 @@ func (r *Resolver) checkCryptogotchiInteractable(ctx context.Context, cryptogotc
 		return cryptogotchi, gqlerror.Errorf("you are not the owner of this cryptogotchi")
 	}
 
-	if !cryptogotchi.IsAlive {
+	if !cryptogotchi.IsAlive() {
 		return cryptogotchi, (gqlerror.Errorf("this cryptogotchi is already dead"))
 	}
 	return cryptogotchi, nil

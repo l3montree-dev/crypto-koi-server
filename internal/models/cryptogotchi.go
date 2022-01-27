@@ -1,7 +1,6 @@
 package models
 
 import (
-	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,111 +9,65 @@ import (
 
 type Cryptogotchi struct {
 	Base
-
-	// aggregate of the Affection, boringness and hunger state variables
-	IsAlive bool `json:"isAlive" gorm:"default:true"`
-
-	Name *string `json:"name" gorm:"type:varchar(255);default:null"`
-
-	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36); not null"`
-
-	PredictedDeathDate time.Time `json:"-" gorm:"type:timestamp;not null"`
-
-	LastFeed *time.Time `json:"-" gorm:"type:timestamp;"`
-
-	// values between 100 and 0.
-	// Affection float64 `json:"affection" gorm:"default:100"`
-	// values between 100 and 0.
-	// Fun float64 `json:"fun" gorm:"default:100"`
+	Name               *string    `json:"name" gorm:"type:varchar(255);default:null"`
+	OwnerId            uuid.UUID  `json:"owner" gorm:"type:char(36); not null"`
+	PredictedDeathDate time.Time  `json:"-" gorm:"not null"`
+	LastFed            *time.Time `json:"-" gorm:"default:null"`
 	// values between 100 and 0.
 	Food float64 `json:"food" gorm:"default:100"`
-
 	// drain per minute
 	FoodDrain float64 `json:"foodDrain" gorm:"default:0.5"`
-	// drain per minute
-	// FunDrain float64 `json:"funDrain" gorm:"default:0.5"`
-	// drain per minute
-	// AffectionDrain float64 `json:"affectionDrain" gorm:"default:0.5"`
-
 	// the id of the token - might be changed in the future.
 	// stored inside the blockchain
 	TokenId *string `json:"token_id" gorm:"type:varchar(255);default:null"`
 	// mapping to the event struct.
-	Events []Event `json:"events"`
-
+	Events    []Event    `json:"events"`
 	GameStats []GameStat `json:"game_stats" gorm:"foreignKey:cryptogotchi_id"`
-
-	LastAggregated      time.Time `json:"-" gorm:"-"`
-	ProcessedEventsTill time.Time `json:"-" gorm:"-"`
+	// the timestamp of the current snapshot stored inside the database.
+	// in most cases this equals the LastFeed value. - nevertheless to build the struct a bit more
+	// future proof, we store the timestamp of the snapshot in the database as a separate column.
+	// currently this affects only the food value.
+	SnapshotValid time.Time `json:"-" gorm:"not null"`
 }
 
 func (c *Cryptogotchi) ToOpenseaNFT() OpenseaNFT {
 	return OpenseaNFT{}
 }
 
-// the metabolism value is used to calculate the hunger value to a given time.
-// if the value is higher, the Food value will decrease faster
-// if the value is lower, the Food value will decrease slower
-func (c *Cryptogotchi) GetMetabolism() float64 {
-	return c.FoodDrain
+// make sure to only call this function after the food value has been updated.
+func (c *Cryptogotchi) PredictNewDeathDate() time.Time {
+	return time.Now().Add(time.Duration(c.Food/c.FoodDrain) * time.Minute)
 }
 
-func (c *Cryptogotchi) GetMinutesLeft() float64 {
-	return c.Food / c.GetMetabolism()
+func (c *Cryptogotchi) IsAlive() bool {
+	return c.PredictedDeathDate.After(time.Now())
 }
 
 // the cryptogotchi has a few time dependentant state variables.
 // this function updates the state variables according to the provided time
 // returns if the cryptogotchi is still alive
 func (c *Cryptogotchi) ProgressUntil(nextTime time.Time) (bool, time.Time) {
-	lastAggregatedTime := c.LastAggregated
-	if lastAggregatedTime.IsZero() {
-		lastAggregatedTime = c.CreatedAt
+	if c.PredictedDeathDate.Before(nextTime) {
+		c.Food = 0
+		return false, c.PredictedDeathDate
 	}
 	// calculate the time difference
-	timeDiff := nextTime.Sub(lastAggregatedTime)
-	// calculate the time difference in seconds
-	timeDiffMinutes := timeDiff.Minutes()
+	timeDiffMinutes := nextTime.Sub(c.SnapshotValid).Minutes()
 
 	// calculate the food value
-	nextFood := c.Food - timeDiffMinutes*c.GetMetabolism()
-	// calculate the affection value
-	c.IsAlive = nextFood > 0
-
-	c.LastAggregated = nextTime
-
-	deathDate := time.Time{}
-
-	if !c.IsAlive {
-		// the cryptogotchi did die.
-		// lets check the death date.
-		minutes := c.Food / c.GetMetabolism()
-		deathDate = lastAggregatedTime.Add(time.Duration(minutes) * time.Minute)
-	}
-
-	c.Food = nextFood
-	return c.IsAlive, deathDate
+	// just calculating the current state does not change the predicted death date.
+	c.Food -= timeDiffMinutes * c.FoodDrain
+	// update the snapshot validity since we mutated the cryptogotchi
+	c.SnapshotValid = nextTime
+	return true, time.Time{}
 }
 
 func (c *Cryptogotchi) GetNextFeedingTime() time.Time {
-	c.sortEvents()
-	// get the last feeding event
-	// iterate over the slice in the other direction
-	for i := len(c.Events) - 1; i >= 0; i-- {
-		event := c.Events[i]
-		if event.Type == FeedEventType {
-			return event.CreatedAt.Add(config.TIME_BETWEEN_FEEDINGS)
-		}
+	if c.LastFed == nil {
+		return time.Now()
 	}
-	// if there is no event - just return the current time
-	return time.Now()
-}
 
-func (c *Cryptogotchi) sortEvents() {
-	// order by createdAt
-	sort.SliceStable(c.Events, func(i, j int) bool {
-		return c.Events[i].CreatedAt.Before(c.Events[j].CreatedAt)
-	})
+	return (*c.LastFed).Add(config.TIME_BETWEEN_FEEDINGS)
 }
 
 func NewCryptogotchi(user *User) Cryptogotchi {

@@ -41,11 +41,11 @@ func (r *cryptogotchiResolver) OwnerID(ctx context.Context, obj *models.Cryptogo
 }
 
 func (r *cryptogotchiResolver) NextFeeding(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error) {
-	if obj.LastFeed == nil {
+	if obj.LastFed == nil {
 		now := time.Now()
 		return &now, nil
 	}
-	next := obj.LastFeed.Add(config.TIME_BETWEEN_FEEDINGS)
+	next := obj.LastFed.Add(config.TIME_BETWEEN_FEEDINGS)
 	return &next, nil
 }
 
@@ -91,13 +91,18 @@ func (r *mutationResolver) Feed(ctx context.Context, cryptogotchiID string) (*mo
 	feedEvent := models.NewFeedEvent()
 	feedEvent.CryptogotchiId = cryptogotchi.Id
 
-	r.eventSvc.Save(&feedEvent)
+	err = r.eventSvc.Save(&feedEvent)
+
+	if err != nil {
+		return nil, err
+	}
 
 	feedEvent.Apply(&cryptogotchi)
 
-	r.cryptogotchiSvc.Save(&cryptogotchi)
+	fmt.Println("LAST FEED", cryptogotchi.LastFed)
+	err = r.cryptogotchiSvc.Save(&cryptogotchi)
 
-	return &cryptogotchi, nil
+	return &cryptogotchi, err
 }
 
 func (r *mutationResolver) StartGame(ctx context.Context, cryptogotchiID string, gameType string) (*input.GameStartResponse, error) {

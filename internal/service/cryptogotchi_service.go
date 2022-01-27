@@ -24,15 +24,17 @@ func NewCryptogotchiService(rep repositories.CryptogotchiRepository) Cryptogotch
 }
 
 func (svc *CryptogotchiService) GenerateCryptogotchiForUser(user *models.User) (models.Cryptogotchi, error) {
-	foodValue := 100.
+	foodValue := 50.
 	foodDrainValue := 0.5
+	now := time.Now()
 	newCrypt := models.Cryptogotchi{
 		// TODO: generate a random name
 		Name:               util.Str("Tabito"),
 		OwnerId:            user.Id,
 		Food:               foodValue,
 		FoodDrain:          foodDrainValue,
-		PredictedDeathDate: time.Now().Add(time.Duration(foodValue/foodDrainValue) * time.Minute),
+		PredictedDeathDate: now.Add(time.Duration(foodValue/foodDrainValue) * time.Minute),
+		SnapshotValid:      now,
 	}
 	err := svc.Save(&newCrypt)
 	return newCrypt, err

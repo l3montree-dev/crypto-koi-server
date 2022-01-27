@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/config"
-	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
 type EventType string
@@ -39,25 +38,22 @@ type Event struct {
 }
 
 func (e Event) Apply(c *Cryptogotchi) (bool, time.Time) {
-	fmt.Println("before", c.Food)
 	isAlive, deathDate := c.ProgressUntil(e.CreatedAt)
-	fmt.Println("After progress", c.Food)
 	if !isAlive {
 		return isAlive, deathDate
 	}
 
-	orchardclient.Logger.Info("replayed event:", e.Id)
 	c.Food += e.Payload
 	// limit the food to 100
 	if c.Food > 100 {
 		c.Food = 100
+	} else if c.Food < 0 {
+		c.Food = 0
 	}
-	// predict the new death date.
-	minutesLeft := c.GetMinutesLeft()
-	c.PredictedDeathDate = time.Now().Add(time.Duration(minutesLeft) * time.Minute)
-	fmt.Println("death date", c.PredictedDeathDate)
+
+	c.PredictedDeathDate = c.PredictNewDeathDate()
 	now := time.Now()
-	c.LastFeed = &now
+	c.LastFed = &now
 	return true, time.Time{}
 }
 
