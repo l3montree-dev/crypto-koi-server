@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"time"
+
 	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
 	"gorm.io/gorm"
 )
@@ -45,6 +47,6 @@ func (rep *GormCryptogotchiRepository) GetCryptogotchiById(id string) (models.Cr
 
 func (rep *GormCryptogotchiRepository) GetLeaderboard(offset, limit int) ([]models.Cryptogotchi, error) {
 	var cryptogotchies []models.Cryptogotchi
-	err := rep.db.Where("predicted_death_date > now()").Order("created_at ASC").Offset(offset).Limit(limit).Find(&cryptogotchies).Error
+	err := rep.db.Where("predicted_death_date > ?", time.Now()).Order("created_at ASC").Offset(offset).Limit(limit).Find(&cryptogotchies).Error
 	return cryptogotchies, err
 }
