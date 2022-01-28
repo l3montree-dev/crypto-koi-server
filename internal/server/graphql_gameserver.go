@@ -225,6 +225,6 @@ func (s *GraphqlGameserver) Start() {
 		r.Handle("/query", srv)
 	})
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	orchardclient.Logger.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

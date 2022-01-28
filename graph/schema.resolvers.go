@@ -163,11 +163,23 @@ func (r *mutationResolver) ChangeCryptogotchiName(ctx context.Context, id string
 }
 
 func (r *mutationResolver) ChangeUserName(ctx context.Context, newName string) (*models.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
+	currentUser.Name = &newName
+	err := r.userSvc.Save(currentUser)
+	return currentUser, err
 }
 
-func (r *queryResolver) LeaderBoard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Leaderboard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error) {
+	cryptogotchis, err := r.cryptogotchiSvc.GetLeaderboard(offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*models.Cryptogotchi, len(cryptogotchis))
+	for i, c := range cryptogotchis {
+		tmp := c
+		res[i] = &tmp
+	}
+	return res, nil
 }
 
 func (r *queryResolver) Events(ctx context.Context, cryptogotchiID string, offset int, limit int) ([]*models.Event, error) {

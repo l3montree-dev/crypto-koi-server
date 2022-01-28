@@ -60,6 +60,7 @@ type ComplexityRoot struct {
 		Name               func(childComplexity int) int
 		NextFeeding        func(childComplexity int) int
 		OwnerID            func(childComplexity int) int
+		SnapshotValid      func(childComplexity int) int
 		TokenId            func(childComplexity int) int
 		UpdatedAt          func(childComplexity int) int
 	}
@@ -98,7 +99,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Cryptogotchi func(childComplexity int, cryptogotchiID string) int
 		Events       func(childComplexity int, cryptogotchiID string, offset int, limit int) int
-		LeaderBoard  func(childComplexity int, offset int, limit int) int
+		Leaderboard  func(childComplexity int, offset int, limit int) int
 		User         func(childComplexity int) int
 	}
 
@@ -142,7 +143,7 @@ type MutationResolver interface {
 	ChangeUserName(ctx context.Context, newName string) (*models.User, error)
 }
 type QueryResolver interface {
-	LeaderBoard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error)
+	Leaderboard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error)
 	Events(ctx context.Context, cryptogotchiID string, offset int, limit int) ([]*models.Event, error)
 	Cryptogotchi(ctx context.Context, cryptogotchiID string) (*models.Cryptogotchi, error)
 	User(ctx context.Context) (*models.User, error)
@@ -235,6 +236,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Cryptogotchi.OwnerID(childComplexity), true
+
+	case "Cryptogotchi.snapshotValid":
+		if e.complexity.Cryptogotchi.SnapshotValid == nil {
+			break
+		}
+
+		return e.complexity.Cryptogotchi.SnapshotValid(childComplexity), true
 
 	case "Cryptogotchi.tokenId":
 		if e.complexity.Cryptogotchi.TokenId == nil {
@@ -432,17 +440,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Events(childComplexity, args["cryptogotchiId"].(string), args["offset"].(int), args["limit"].(int)), true
 
-	case "Query.leaderBoard":
-		if e.complexity.Query.LeaderBoard == nil {
+	case "Query.leaderboard":
+		if e.complexity.Query.Leaderboard == nil {
 			break
 		}
 
-		args, err := ec.field_Query_leaderBoard_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_leaderboard_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.LeaderBoard(childComplexity, args["offset"].(int), args["limit"].(int)), true
+		return e.complexity.Query.Leaderboard(childComplexity, args["offset"].(int), args["limit"].(int)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -596,6 +604,7 @@ type Cryptogotchi {
   createdAt: Time!
   updatedAt: Time!
   nextFeeding: Time!
+  snapshotValid: Time!
 }
 
 type User {
@@ -621,7 +630,7 @@ type Mutation {
 }
 
 type Query {
-    leaderBoard(offset: Int!, limit: Int!): [Cryptogotchi!]!
+    leaderboard(offset: Int!, limit: Int!): [Cryptogotchi!]!
     events(cryptogotchiId: ID!, offset: Int!, limit: Int!): [Event!]!
     cryptogotchi(cryptogotchiId: ID!): Cryptogotchi
     user: User!
@@ -798,7 +807,7 @@ func (ec *executionContext) field_Query_events_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_leaderBoard_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_leaderboard_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -1269,6 +1278,41 @@ func (ec *executionContext) _Cryptogotchi_nextFeeding(ctx context.Context, field
 	res := resTmp.(*time.Time)
 	fc.Result = res
 	return ec.marshalNTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Cryptogotchi_snapshotValid(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Cryptogotchi",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SnapshotValid, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Event_id(ctx context.Context, field graphql.CollectedField, obj *models.Event) (ret graphql.Marshaler) {
@@ -1965,7 +2009,7 @@ func (ec *executionContext) _Mutation_changeUserName(ctx context.Context, field 
 	return ec.marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_leaderBoard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_leaderboard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1982,7 +2026,7 @@ func (ec *executionContext) _Query_leaderBoard(ctx context.Context, field graphq
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_leaderBoard_args(ctx, rawArgs)
+	args, err := ec.field_Query_leaderboard_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1990,7 +2034,7 @@ func (ec *executionContext) _Query_leaderBoard(ctx context.Context, field graphq
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().LeaderBoard(rctx, args["offset"].(int), args["limit"].(int))
+		return ec.resolvers.Query().Leaderboard(rctx, args["offset"].(int), args["limit"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3677,6 +3721,16 @@ func (ec *executionContext) _Cryptogotchi(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
+		case "snapshotValid":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Cryptogotchi_snapshotValid(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4044,7 +4098,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "leaderBoard":
+		case "leaderboard":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -4053,7 +4107,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_leaderBoard(ctx, field)
+				res = ec._Query_leaderboard(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

@@ -44,6 +44,7 @@ type Cryptogotchi {
   createdAt: Time!
   updatedAt: Time!
   nextFeeding: Time!
+  snapshotValid: Time!
 }
 
 type User {
@@ -69,7 +70,7 @@ type Mutation {
 }
 
 type Query {
-    leaderBoard(offset: Int!, limit: Int!): [Cryptogotchi!]!
+    leaderboard(offset: Int!, limit: Int!): [Cryptogotchi!]!
     events(cryptogotchiId: ID!, offset: Int!, limit: Int!): [Event!]!
     cryptogotchi(cryptogotchiId: ID!): Cryptogotchi
     user: User!
