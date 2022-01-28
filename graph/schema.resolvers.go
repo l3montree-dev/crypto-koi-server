@@ -82,10 +82,10 @@ func (r *mutationResolver) Feed(ctx context.Context, cryptogotchiID string) (*mo
 	}
 	// the user is allowed to feed it.
 	// get the last time it was fed.
-	/*nextFeedingTime := cryptogotchi.GetNextFeedingTime()
+	nextFeedingTime := cryptogotchi.GetNextFeedingTime()
 	if !nextFeedingTime.Before(time.Now()) {
 		return &cryptogotchi, gqlerror.Errorf("it is not time to feed yet")
-	}*/
+	}
 
 	// finally feed it.
 	feedEvent := models.NewFeedEvent()
