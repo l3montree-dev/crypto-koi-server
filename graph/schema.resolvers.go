@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -99,7 +98,6 @@ func (r *mutationResolver) Feed(ctx context.Context, cryptogotchiID string) (*mo
 
 	feedEvent.Apply(&cryptogotchi)
 
-	fmt.Println("LAST FEED", cryptogotchi.LastFed)
 	err = r.cryptogotchiSvc.Save(&cryptogotchi)
 
 	return &cryptogotchi, err
