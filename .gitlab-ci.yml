@@ -88,7 +88,7 @@ production:
     url: "https://l3montree.com"
   script:
     - echo "$K8S_CERTIFICATE" >> ca.pem
-    - kubectl --server=$K8S_API_URL --token=$K8S_TOKEN --certificate-authority=ca.pem --namespace=cryptogotchi rollout restart deployment/clodhopper-server
+    - kubectl --server=$K8S_API_URL --token=$K8S_TOKEN --certificate-authority=ca.pem --namespace=tabito rollout restart deployment/clodhopper
   only:
     - main
   when: manual
