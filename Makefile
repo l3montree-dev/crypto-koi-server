@@ -1,6 +1,6 @@
 MAKEFLAGS += -j2
 
-.PHONY: run docker codegen
+.PHONY: run docker codegen deploy
 
 
 run: docker codegen
@@ -11,3 +11,12 @@ docker:
 
 codegen: 
 	gqlgen generate
+
+node_modules:
+	cd web3 && npm i && cd ..
+
+deploy:
+	cd web3 && npm run deploy && cd ..
+
+start-web3:
+	cd web3 && npm run start && cd ..

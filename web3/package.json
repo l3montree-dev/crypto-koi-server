@@ -1,0 +1,36 @@
+{
+    "name": "clodhopper",
+    "version": "0.0.1",
+    "description": "Cattleshow backend, deploys and interacts with smart contracts",
+    "main": "index.js",
+    "scripts": {
+        "start": "npx kill-port 8545 && npx hardhat node --hostname 0.0.0.0",
+        "deploy": "ts-node scripts/deploy.ts",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@gitlab.com/l3montree/cryptogotchi/clodhopper.git"
+    },
+    "author": "Tim Bastin",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://gitlab.com/l3montree/cryptogotchi/clodhopper/issues"
+    },
+    "homepage": "https://gitlab.com/l3montree/cryptogotchi/clodhopper#readme",
+    "dependencies": {
+        "@nomiclabs/hardhat-ethers": "^2.0.5",
+        "@nomiclabs/hardhat-waffle": "^2.0.2",
+        "@types/dotenv": "^8.2.0",
+        "app-root-path": "^3.0.0",
+        "dotenv": "^16.0.0",
+        "hardhat": "^2.8.4",
+        "kill-port": "^1.6.1",
+        "ts-node": "^10.5.0",
+        "typescript": "^4.5.5",
+        "web3": "^1.7.0"
+    },
+    "devDependencies": {
+        "@types/app-root-path": "^1.2.4"
+    }
+}

@@ -63,6 +63,7 @@ func (c *Cryptogotchi) ProgressUntil(nextTime time.Time) (bool, time.Time) {
 }
 
 func (c *Cryptogotchi) GetNextFeedingTime() time.Time {
+
 	if c.LastFed == nil {
 		return time.Now()
 	}

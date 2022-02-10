@@ -3,3 +3,7 @@
 /public.pem
 pass
 profile.cov
+web3/node_modules
+dist/
+web3/artifacts
+web3/cache
