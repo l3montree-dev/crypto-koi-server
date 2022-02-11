@@ -12,7 +12,7 @@ export = {
   gasReporter: {
     enabled: true,
     currency: 'EUR',
-    token: 'ETH',
+    token: 'MATIC',
     coinmarketcap: '0a636342-83a5-453d-837e-797d24235436',
   },
   solidity: '0.8.1',

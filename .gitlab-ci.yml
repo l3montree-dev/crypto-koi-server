@@ -10,8 +10,7 @@ stages:
 
 npm:
   stage: install
-  image: 
-    name: node:16
+  image: node:16
   artifacts:
     paths:
       - node_modules
@@ -34,6 +33,7 @@ golang:
 
 hardhat:
   stage: test
+  image: node:16
   needs: ["npm"]
   script:
     - npx hardhat test

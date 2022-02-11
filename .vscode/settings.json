@@ -4,5 +4,6 @@
         "cryptogotchis",
         "gorm",
         "gqlerror"
-    ]
+    ],
+    "mochaExplorer.files": "test/**/*.{j,t}s"
 }

@@ -54,4 +54,5 @@ if (!privateKey) {
     CryptoKoi.bytecode,
     address,
   );
+  console.log(contract);
 })();

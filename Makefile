@@ -13,10 +13,10 @@ codegen:
 	gqlgen generate
 
 node_modules:
-	cd web3 && npm i && cd ..
+	npm i
 
 deploy:
-	cd web3 && npm run deploy && cd ..
+	npm run deploy
 
 start-web3:
-	cd web3 && npm run start && cd ..
+	npm run start
