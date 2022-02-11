@@ -42,9 +42,9 @@ build:
   needs: ["golang"]
   artifacts:
     paths:
-      - ./clodhopper-server
+      - ./crypto-koi-api
   script:
-    - go build -o clodhopper-server ./cmd/clodhopper-server
+    - go build -o crypto-koi-api ./cmd/crypto-koi-api
 
 publish:
   image: docker:19.03.1
@@ -93,7 +93,7 @@ development:
     url: "https://l3montree.com"
   script:
     - echo "$K8S_DEVELOPMENT_CERTIFICATE" >> ca.pem
-    - kubectl --server=$K8S_DEVELOPMENT_API_URL --token=$K8S_DEVELOPMENT_TOKEN --certificate-authority=ca.pem --namespace=tabito rollout restart deployment/clodhopper
+    - kubectl --server=$K8S_DEVELOPMENT_API_URL --token=$K8S_DEVELOPMENT_TOKEN --certificate-authority=ca.pem --namespace=crypto-koi rollout restart deployment/crypto-koi-api
   only:
     - dev
   when: manual
@@ -109,7 +109,7 @@ production:
     url: "https://l3montree.com"
   script:
     - echo "$K8S_CERTIFICATE" >> ca.pem
-    - kubectl --server=$K8S_API_URL --token=$K8S_TOKEN --certificate-authority=ca.pem --namespace=tabito rollout restart deployment/clodhopper
+    - kubectl --server=$K8S_API_URL --token=$K8S_TOKEN --certificate-authority=ca.pem --namespace=crypto-koi rollout restart deployment/crypto-koi-api
   only:
     - main
   when: manual
