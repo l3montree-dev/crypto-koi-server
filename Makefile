@@ -18,5 +18,5 @@ node_modules:
 deploy:
 	npm run deploy
 
-start-web3:
+blockchain:
 	npm run start

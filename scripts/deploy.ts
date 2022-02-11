@@ -1,27 +1,10 @@
 import appRootPath from 'app-root-path';
 import * as child_process from 'child_process';
 import * as dotenv from 'dotenv';
-import { join } from 'path';
-import Web3 from 'web3';
+import { ContractFactory, ContractInterface, ethers } from 'ethers';
 import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
 
-dotenv.config({
-  path: join(process.cwd(), '..', '.env'),
-});
-
-const deployContract = async (
-  web3: Web3,
-  abi: any | any[],
-  data: string,
-  from: string,
-) => {
-  const deployment = new web3.eth.Contract(abi).deploy({ data });
-  const gas = await deployment.estimateGas();
-  const {
-    options: { address: contractAddress },
-  } = await deployment.send({ from, gas });
-  return new web3.eth.Contract(abi, contractAddress);
-};
+dotenv.config();
 
 const opts: child_process.ExecSyncOptions = {
   cwd: appRootPath.toString(),
@@ -36,6 +19,16 @@ if (!url) {
   throw new Error('CHAIN_URL environment variable is undefined.');
 }
 
+const deployContract = (
+  abi: ContractInterface,
+  bytecode: string,
+  signer: ethers.Signer,
+  options: { name: string; symbol: string },
+): Promise<ethers.Contract> => {
+  const contract = new ContractFactory(abi, bytecode, signer);
+  return contract.deploy(options.name, options.symbol);
+};
+
 const privateKey = process.env.PRIVATE_KEY;
 
 if (!privateKey) {
@@ -43,16 +36,14 @@ if (!privateKey) {
 }
 
 (async function fn() {
-  const web3 = new Web3(new Web3.providers.HttpProvider(url));
-
-  const { address } =
-    web3.eth.accounts.privateKeyToAccount(privateKey);
+  const provider = ethers.getDefaultProvider(url);
+  const signer = new ethers.Wallet(privateKey, provider);
 
   const contract = await deployContract(
-    web3,
     CryptoKoi.abi,
     CryptoKoi.bytecode,
-    address,
+    signer,
+    { name: 'CryptoKoi', symbol: 'CK' },
   );
   console.log(contract);
 })();
