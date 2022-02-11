@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { Contract } from 'ethers';
+import { Contract, Signer } from 'ethers';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import tokens from './tokens.json';
@@ -10,8 +10,12 @@ type TokenType = {
   signature?: string;
 };
 
-async function deploy(name: string, ...params: unknown[]) {
-  const Contract = await ethers.getContractFactory(name);
+async function deploy(
+  name: string,
+  signer: Signer,
+  ...params: unknown[]
+) {
+  const Contract = await ethers.getContractFactory(name, signer);
   return await Contract.deploy(...params).then((f) => f.deployed());
 }
 
@@ -26,19 +30,17 @@ function hashToken(tokenId: string, account: string) {
 
 describe('CryptoKoi', function () {
   let accounts: SignerWithAddress[];
+  let signer: SignerWithAddress;
   before(async function () {
     accounts = await ethers.getSigners();
+    signer = accounts[0];
   });
 
   describe('Mint all elements', function () {
     let registry: Contract;
 
     before(async function () {
-      registry = await deploy('CryptoKoi', 'Name', 'Symbol');
-      await registry.grantRole(
-        await registry.MINTER_ROLE(),
-        accounts[1].address,
-      );
+      registry = await deploy('CryptoKoi', signer, 'Name', 'Symbol');
     });
 
     for (const [tokenId, account] of Object.entries(tokens)) {
@@ -46,7 +48,7 @@ describe('CryptoKoi', function () {
         /**
          * Account[1] (minter) creates signature
          */
-        const signature = await accounts[1].signMessage(
+        const signature = await signer.signMessage(
           hashToken(tokenId, account),
         );
         /**
@@ -67,17 +69,13 @@ describe('CryptoKoi', function () {
     let registry: Contract;
     let token: TokenType;
     before(async function () {
-      registry = await deploy('CryptoKoi', 'Name', 'Symbol');
-      await registry.grantRole(
-        await registry.MINTER_ROLE(),
-        accounts[1].address,
-      );
+      registry = await deploy('CryptoKoi', signer, 'Name', 'Symbol');
 
       token = {};
       const t = Object.entries(tokens).find(Boolean);
       if (t) {
         [token.tokenId, token.account] = t;
-        token.signature = await accounts[1].signMessage(
+        token.signature = await signer.signMessage(
           hashToken(token.tokenId, token.account),
         );
       }
@@ -114,11 +112,7 @@ describe('CryptoKoi', function () {
     let registry: Contract;
     let token: TokenType;
     before(async function () {
-      registry = await deploy('CryptoKoi', 'Name', 'Symbol');
-      await registry.grantRole(
-        await registry.MINTER_ROLE(),
-        accounts[1].address,
-      );
+      registry = await deploy('CryptoKoi', signer, 'Name', 'Symbol');
 
       token = {};
       const t = Object.entries(tokens).find(Boolean);

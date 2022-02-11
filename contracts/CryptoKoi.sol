@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import '@openzeppelin/contracts/access/AccessControl.sol';
+import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 
 contract CryptoKoi is ERC721, AccessControl {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-    constructor(string memory name, string memory symbol) ERC721(name, symbol) {
+    constructor(string memory name, string memory symbol)
+        ERC721(name, symbol)
+    {
         // mark the creator of the contract as admin.
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
@@ -30,7 +30,7 @@ contract CryptoKoi is ERC721, AccessControl {
     ) external {
         require(
             _verify(_hash(account, tokenId), signature),
-            "Invalid signature"
+            'Invalid signature'
         );
         _safeMint(account, tokenId);
     }
@@ -51,6 +51,10 @@ contract CryptoKoi is ERC721, AccessControl {
         view
         returns (bool)
     {
-        return hasRole(MINTER_ROLE, ECDSA.recover(digest, signature));
+        return
+            hasRole(
+                DEFAULT_ADMIN_ROLE,
+                ECDSA.recover(digest, signature)
+            );
     }
 }
