@@ -3,7 +3,7 @@ import * as child_process from 'child_process';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 import Web3 from 'web3';
-import Hello from '../artifacts/contracts/Hello.sol/Hello.json';
+import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
 
 dotenv.config({
   path: join(process.cwd(), '..', '.env'),
@@ -50,10 +50,8 @@ if (!privateKey) {
 
   const contract = await deployContract(
     web3,
-    Hello.abi,
-    Hello.bytecode,
+    CryptoKoi.abi,
+    CryptoKoi.bytecode,
     address,
   );
-  console.log(contract);
-  console.log(await contract.methods.sayHello('React').call());
 })();

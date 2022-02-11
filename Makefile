@@ -4,7 +4,7 @@ MAKEFLAGS += -j2
 
 
 run: docker codegen
-	go run cmd/clodhopper-server/main.go
+	go run cmd/crypto-koi-api/main.go
 
 docker: 
 	docker-compose up -d
