@@ -1,6 +1,6 @@
 # Clodhopper
 
-[![coverage report](https://gitlab.com/l3montree/cryptogotchi/clodhopper/badges/main/coverage.svg)](https://gitlab.com/l3montree/cryptogotchi/clodhopper/-/commits/main)
+[![coverage report](https://gitlab.com/l3montree/crypto-koi/crypto-koi-api/badges/main/coverage.svg)](https://gitlab.com/l3montree/crypto-koi/crypto-koi-api/-/commits/main)
 
 ## Setup
 
