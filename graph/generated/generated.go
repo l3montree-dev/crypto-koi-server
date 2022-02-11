@@ -61,7 +61,6 @@ type ComplexityRoot struct {
 		NextFeeding        func(childComplexity int) int
 		OwnerID            func(childComplexity int) int
 		SnapshotValid      func(childComplexity int) int
-		TokenId            func(childComplexity int) int
 		UpdatedAt          func(childComplexity int) int
 	}
 
@@ -117,7 +116,6 @@ type CryptogotchiResolver interface {
 
 	MinutesTillDeath(ctx context.Context, obj *models.Cryptogotchi) (float64, error)
 	MaxLifetimeMinutes(ctx context.Context, obj *models.Cryptogotchi) (float64, error)
-
 	DeathDate(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error)
 	OwnerID(ctx context.Context, obj *models.Cryptogotchi) (string, error)
 
@@ -243,13 +241,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Cryptogotchi.SnapshotValid(childComplexity), true
-
-	case "Cryptogotchi.tokenId":
-		if e.complexity.Cryptogotchi.TokenId == nil {
-			break
-		}
-
-		return e.complexity.Cryptogotchi.TokenId(childComplexity), true
 
 	case "Cryptogotchi.updatedAt":
 		if e.complexity.Cryptogotchi.UpdatedAt == nil {
@@ -597,7 +588,7 @@ type Cryptogotchi {
   maxLifetimeMinutes: Float!
   #funDrain: Float!
   #affectionDrain: Float!
-  tokenId: String
+ 
   deathDate: Time
   ownerId: String!
   # unix timestamp
@@ -1074,38 +1065,6 @@ func (ec *executionContext) _Cryptogotchi_maxLifetimeMinutes(ctx context.Context
 	res := resTmp.(float64)
 	fc.Result = res
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Cryptogotchi_tokenId(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Cryptogotchi",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TokenId, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Cryptogotchi_deathDate(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
@@ -3637,13 +3596,6 @@ func (ec *executionContext) _Cryptogotchi(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
-		case "tokenId":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Cryptogotchi_tokenId(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
 		case "deathDate":
 			field := field
 

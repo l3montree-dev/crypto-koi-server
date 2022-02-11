@@ -18,8 +18,6 @@ type Cryptogotchi struct {
 	// drain per minute
 	FoodDrain float64 `json:"foodDrain" gorm:"default:0.5"`
 	// the id of the token - might be changed in the future.
-	// stored inside the blockchain
-	TokenId *string `json:"token_id" gorm:"type:varchar(255);default:null"`
 	// mapping to the event struct.
 	Events    []Event    `json:"events"`
 	GameStats []GameStat `json:"game_stats" gorm:"foreignKey:cryptogotchi_id"`

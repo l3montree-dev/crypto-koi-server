@@ -31,3 +31,10 @@ make
 ```
 
 This will start the docker containers, regenerates the types and start the server.
+
+## Web3
+
+The web3 integration is build using typescript and etherjs. For local testing hardhat is used. To start a local blockchain (hardhat) use the `make web3` command. This will start a blockchain network accessible at `http://localhost:8545`. To deploy the smart contract `CryptoKoi` onto the chain, the `make deploy` command can be used. This will first:
+
+1. Compile the contract
+2. Deploy it
