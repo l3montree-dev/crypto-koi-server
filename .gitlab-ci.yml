@@ -1,14 +1,25 @@
 image: golang:1.17
 
 stages:
+  - install
   - test
   - build
   - publish
   #- backup
   - deploy
 
-test:
+npm:
+  stage: install
+  image: node:16
+  artifacts:
+    paths:
+      - node_modules
+  script:
+    - npm i
+
+golang:
   stage: test
+  needs: []
   services:
     - mysql:8
   variables:
@@ -20,8 +31,15 @@ test:
     - go test -v -coverpkg=./... -coverprofile=profile.cov ./...
     - go tool cover -func profile.cov
 
+hardhat:
+  stage: test
+  needs: ["npm"]
+  script:
+    - npx hardhat test
+
 build:
   stage: build
+  needs: ["golang"]
   artifacts:
     paths:
       - ./clodhopper-server
@@ -31,6 +49,7 @@ build:
 publish:
   image: docker:19.03.1
   stage: publish
+  needs: ["build"]
   services:
     - docker:19.03.1-dind
   variables:
@@ -65,6 +84,7 @@ publish:
 
 development:
   stage: deploy
+  needs: ["publish"]
   image:
     name: bitnami/kubectl:1.19.14
     entrypoint: [""]
@@ -80,6 +100,7 @@ development:
 
 production:
   stage: deploy
+  needs: ["publish"]
   image:
     name: bitnami/kubectl:1.19.14
     entrypoint: [""]
