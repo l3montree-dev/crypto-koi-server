@@ -5,3 +5,9 @@ package input
 type GameStartResponse struct {
 	Token string `json:"token"`
 }
+
+type NftData struct {
+	Signature string `json:"signature"`
+	Address   string `json:"address"`
+	TokenID   string `json:"tokenId"`
+}

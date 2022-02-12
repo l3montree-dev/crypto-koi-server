@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_util"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/http_util"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
 )
 
 type OpenseaController struct {

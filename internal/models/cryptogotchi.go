@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/config"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
 )
 
 type Cryptogotchi struct {

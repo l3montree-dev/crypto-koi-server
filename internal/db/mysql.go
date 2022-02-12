@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 	mysqlDriver "gorm.io/driver/mysql"
 	"gorm.io/gorm"

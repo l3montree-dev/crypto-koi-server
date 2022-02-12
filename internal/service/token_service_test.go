@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
 )
 
 func TestTokenService(t *testing.T) {

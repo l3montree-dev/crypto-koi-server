@@ -1,6 +1,6 @@
 package service
 
-import "gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
+import "gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
 
 type EventSvc interface {
 	repositories.EventRepository

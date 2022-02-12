@@ -4,9 +4,10 @@ import (
 	"context"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/config"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/web3"
 )
 
 // This file will not be regenerated automatically.
@@ -19,6 +20,7 @@ type Resolver struct {
 	userSvc         service.UserSvc
 	gameSvc         service.GameSvc
 	authSvc         service.AuthSvc
+	web3            web3.Web3
 }
 
 func NewResolver(
@@ -27,6 +29,7 @@ func NewResolver(
 	cryptogotchiSvc service.CryptogotchiSvc,
 	gameSvc service.GameSvc,
 	authSvc service.AuthSvc,
+	web3 web3.Web3,
 ) Resolver {
 	return Resolver{
 		eventSvc:        eventSvc,
@@ -34,6 +37,7 @@ func NewResolver(
 		cryptogotchiSvc: cryptogotchiSvc,
 		gameSvc:         gameSvc,
 		authSvc:         authSvc,
+		web3:            web3,
 	}
 }
 

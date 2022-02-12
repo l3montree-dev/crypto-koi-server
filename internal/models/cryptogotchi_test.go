@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/config"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/util"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 )
 
 func TestCryptogotchiProgressUntil(t *testing.T) {

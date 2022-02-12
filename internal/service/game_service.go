@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
 )
 
 type GameSvc interface {

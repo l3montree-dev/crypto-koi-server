@@ -45,9 +45,9 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
     signer,
     { name: 'CryptoKoi', symbol: 'CK' },
   );
-  const contractAddress = await (
-    await contract.deployTransaction.wait()
-  ).contractAddress;
+
+  const contractAddress = (await contract.deployTransaction.wait())
+    .contractAddress;
 
   console.log(
     'Save the contract address as environment variable. Copy the following line and paste it into the .env file. The client application will need it as well',

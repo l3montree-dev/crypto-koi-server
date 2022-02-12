@@ -3,12 +3,12 @@ package controller
 import (
 	"net/http"
 
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_dto"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_util"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/db"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/http_dto"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/http_util"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 

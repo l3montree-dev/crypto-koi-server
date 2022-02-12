@@ -60,6 +60,12 @@ type GameStartResponse {
     token: String!
 }
 
+type NftData {
+    signature: String!
+    address: String!
+    tokenId: String!
+}
+
 type Mutation {
     # regular feed event
   feed(cryptogotchiId: ID!): Cryptogotchi!
@@ -67,6 +73,7 @@ type Mutation {
   finishGame(token: String!, score: Float!): Cryptogotchi!
   changeCryptogotchiName(id: ID!, newName: String!): Cryptogotchi!
   changeUserName(newName: String!): User!
+  getNftSignature(id: ID!, address: String!): NftData!
 }
 
 type Query {

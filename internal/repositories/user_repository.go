@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gorm.io/gorm"
 )
 

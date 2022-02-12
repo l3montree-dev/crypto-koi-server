@@ -5,14 +5,15 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/graph/generated"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/graph/input"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/config"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph/generated"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph/input"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/db"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
@@ -165,6 +166,25 @@ func (r *mutationResolver) ChangeUserName(ctx context.Context, newName string) (
 	currentUser.Name = &newName
 	err := r.userSvc.Save(currentUser)
 	return currentUser, err
+}
+
+func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, address string) (*input.NftData, error) {
+	cryptogotchi, err := r.checkCryptogotchiInteractable(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("could not find cryptogotchi with id %s", id)
+	}
+
+	signature, tokenId, err := r.web3.GetNftSignatureForCryptogotchi(&cryptogotchi, address)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &input.NftData{
+		Signature: signature,
+		TokenID:   tokenId,
+		Address:   address,
+	}, nil
 }
 
 func (r *queryResolver) Leaderboard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error) {

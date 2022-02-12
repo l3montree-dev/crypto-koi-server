@@ -16,13 +16,14 @@ import (
 
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/go-chi/chi/v5"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/graph"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/graph/generated"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/config"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/controller"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_util"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/service"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph/generated"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/controller"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/http_util"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/web3"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 	"gorm.io/gorm"
 )
@@ -212,8 +213,14 @@ func (s *GraphqlGameserver) Start() {
 		r.Get("/opensea/:tokenId", openseaController.GetCryptogotchi)
 	})
 
+	privateKey := os.Getenv("PRIVATE_KEY")
+	if privateKey == "" {
+		orchardclient.Logger.Fatal("PRIVATE_KEY environment variable is not defined")
+	}
+
+	web3 := web3.NewWeb3(privateKey)
 	// attach the graphql handler to the router
-	resolver := graph.NewResolver(s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc)
+	resolver := graph.NewResolver(s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, web3)
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver}))
 
 	// authorized routes

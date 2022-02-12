@@ -15,8 +15,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/graph/input"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph/input"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -92,7 +92,14 @@ type ComplexityRoot struct {
 		ChangeUserName         func(childComplexity int, newName string) int
 		Feed                   func(childComplexity int, cryptogotchiID string) int
 		FinishGame             func(childComplexity int, token string, score float64) int
+		GetNftSignature        func(childComplexity int, id string, address string) int
 		StartGame              func(childComplexity int, cryptogotchiID string, gameType string) int
+	}
+
+	NftData struct {
+		Address   func(childComplexity int) int
+		Signature func(childComplexity int) int
+		TokenID   func(childComplexity int) int
 	}
 
 	Query struct {
@@ -139,6 +146,7 @@ type MutationResolver interface {
 	FinishGame(ctx context.Context, token string, score float64) (*models.Cryptogotchi, error)
 	ChangeCryptogotchiName(ctx context.Context, id string, newName string) (*models.Cryptogotchi, error)
 	ChangeUserName(ctx context.Context, newName string) (*models.User, error)
+	GetNftSignature(ctx context.Context, id string, address string) (*input.NftData, error)
 }
 type QueryResolver interface {
 	Leaderboard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error)
@@ -395,6 +403,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.FinishGame(childComplexity, args["token"].(string), args["score"].(float64)), true
 
+	case "Mutation.getNftSignature":
+		if e.complexity.Mutation.GetNftSignature == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_getNftSignature_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GetNftSignature(childComplexity, args["id"].(string), args["address"].(string)), true
+
 	case "Mutation.startGame":
 		if e.complexity.Mutation.StartGame == nil {
 			break
@@ -406,6 +426,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.StartGame(childComplexity, args["cryptogotchiId"].(string), args["gameType"].(string)), true
+
+	case "NftData.address":
+		if e.complexity.NftData.Address == nil {
+			break
+		}
+
+		return e.complexity.NftData.Address(childComplexity), true
+
+	case "NftData.signature":
+		if e.complexity.NftData.Signature == nil {
+			break
+		}
+
+		return e.complexity.NftData.Signature(childComplexity), true
+
+	case "NftData.tokenId":
+		if e.complexity.NftData.TokenID == nil {
+			break
+		}
+
+		return e.complexity.NftData.TokenID(childComplexity), true
 
 	case "Query.cryptogotchi":
 		if e.complexity.Query.Cryptogotchi == nil {
@@ -611,6 +652,12 @@ type GameStartResponse {
     token: String!
 }
 
+type NftData {
+    signature: String!
+    address: String!
+    tokenId: String!
+}
+
 type Mutation {
     # regular feed event
   feed(cryptogotchiId: ID!): Cryptogotchi!
@@ -618,6 +665,7 @@ type Mutation {
   finishGame(token: String!, score: Float!): Cryptogotchi!
   changeCryptogotchiName(id: ID!, newName: String!): Cryptogotchi!
   changeUserName(newName: String!): User!
+  getNftSignature(id: ID!, address: String!): NftData!
 }
 
 type Query {
@@ -708,6 +756,30 @@ func (ec *executionContext) field_Mutation_finishGame_args(ctx context.Context, 
 		}
 	}
 	args["score"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_getNftSignature_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["address"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["address"] = arg1
 	return args, nil
 }
 
@@ -1797,7 +1869,7 @@ func (ec *executionContext) _Mutation_feed(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*models.Cryptogotchi)
 	fc.Result = res
-	return ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
+	return ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_startGame(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1839,7 +1911,7 @@ func (ec *executionContext) _Mutation_startGame(ctx context.Context, field graph
 	}
 	res := resTmp.(*input.GameStartResponse)
 	fc.Result = res
-	return ec.marshalNGameStartResponse2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋgraphᚋinputᚐGameStartResponse(ctx, field.Selections, res)
+	return ec.marshalNGameStartResponse2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐGameStartResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_finishGame(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1881,7 +1953,7 @@ func (ec *executionContext) _Mutation_finishGame(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.Cryptogotchi)
 	fc.Result = res
-	return ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
+	return ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_changeCryptogotchiName(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1923,7 +1995,7 @@ func (ec *executionContext) _Mutation_changeCryptogotchiName(ctx context.Context
 	}
 	res := resTmp.(*models.Cryptogotchi)
 	fc.Result = res
-	return ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
+	return ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_changeUserName(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1965,7 +2037,154 @@ func (ec *executionContext) _Mutation_changeUserName(ctx context.Context, field 
 	}
 	res := resTmp.(*models.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_getNftSignature(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_getNftSignature_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().GetNftSignature(rctx, args["id"].(string), args["address"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*input.NftData)
+	fc.Result = res
+	return ec.marshalNNftData2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐNftData(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NftData_signature(ctx context.Context, field graphql.CollectedField, obj *input.NftData) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NftData",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Signature, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NftData_address(ctx context.Context, field graphql.CollectedField, obj *input.NftData) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NftData",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Address, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NftData_tokenId(ctx context.Context, field graphql.CollectedField, obj *input.NftData) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NftData",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TokenID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_leaderboard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2007,7 +2226,7 @@ func (ec *executionContext) _Query_leaderboard(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*models.Cryptogotchi)
 	fc.Result = res
-	return ec.marshalNCryptogotchi2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchiᚄ(ctx, field.Selections, res)
+	return ec.marshalNCryptogotchi2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchiᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_events(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2049,7 +2268,7 @@ func (ec *executionContext) _Query_events(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.([]*models.Event)
 	fc.Result = res
-	return ec.marshalNEvent2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEventᚄ(ctx, field.Selections, res)
+	return ec.marshalNEvent2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐEventᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_cryptogotchi(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2088,7 +2307,7 @@ func (ec *executionContext) _Query_cryptogotchi(ctx context.Context, field graph
 	}
 	res := resTmp.(*models.Cryptogotchi)
 	fc.Result = res
-	return ec.marshalOCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
+	return ec.marshalOCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2123,7 +2342,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(*models.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2296,7 +2515,7 @@ func (ec *executionContext) _User_cryptogotchies(ctx context.Context, field grap
 	}
 	res := resTmp.([]models.Cryptogotchi)
 	fc.Result = res
-	return ec.marshalNCryptogotchi2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchiᚄ(ctx, field.Selections, res)
+	return ec.marshalNCryptogotchi2ᚕgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchiᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_createdAt(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -4020,6 +4239,67 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "getNftSignature":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_getNftSignature(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var nftDataImplementors = []string{"NftData"}
+
+func (ec *executionContext) _NftData(ctx context.Context, sel ast.SelectionSet, obj *input.NftData) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, nftDataImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NftData")
+		case "signature":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NftData_signature(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "address":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NftData_address(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "tokenId":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NftData_tokenId(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4666,11 +4946,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCryptogotchi2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx context.Context, sel ast.SelectionSet, v models.Cryptogotchi) graphql.Marshaler {
+func (ec *executionContext) marshalNCryptogotchi2gitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx context.Context, sel ast.SelectionSet, v models.Cryptogotchi) graphql.Marshaler {
 	return ec._Cryptogotchi(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCryptogotchi2ᚕgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchiᚄ(ctx context.Context, sel ast.SelectionSet, v []models.Cryptogotchi) graphql.Marshaler {
+func (ec *executionContext) marshalNCryptogotchi2ᚕgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchiᚄ(ctx context.Context, sel ast.SelectionSet, v []models.Cryptogotchi) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4694,7 +4974,7 @@ func (ec *executionContext) marshalNCryptogotchi2ᚕgitlabᚗcomᚋl3montreeᚋc
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCryptogotchi2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, sel, v[i])
+			ret[i] = ec.marshalNCryptogotchi2gitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4714,7 +4994,7 @@ func (ec *executionContext) marshalNCryptogotchi2ᚕgitlabᚗcomᚋl3montreeᚋc
 	return ret
 }
 
-func (ec *executionContext) marshalNCryptogotchi2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchiᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Cryptogotchi) graphql.Marshaler {
+func (ec *executionContext) marshalNCryptogotchi2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchiᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Cryptogotchi) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4738,7 +5018,7 @@ func (ec *executionContext) marshalNCryptogotchi2ᚕᚖgitlabᚗcomᚋl3montree�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx, sel, v[i])
+			ret[i] = ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4758,7 +5038,7 @@ func (ec *executionContext) marshalNCryptogotchi2ᚕᚖgitlabᚗcomᚋl3montree�
 	return ret
 }
 
-func (ec *executionContext) marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx context.Context, sel ast.SelectionSet, v *models.Cryptogotchi) graphql.Marshaler {
+func (ec *executionContext) marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx context.Context, sel ast.SelectionSet, v *models.Cryptogotchi) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4768,7 +5048,7 @@ func (ec *executionContext) marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋc
 	return ec._Cryptogotchi(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNEvent2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Event) graphql.Marshaler {
+func (ec *executionContext) marshalNEvent2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Event) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4792,7 +5072,7 @@ func (ec *executionContext) marshalNEvent2ᚕᚖgitlabᚗcomᚋl3montreeᚋcrypt
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNEvent2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEvent(ctx, sel, v[i])
+			ret[i] = ec.marshalNEvent2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐEvent(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4812,7 +5092,7 @@ func (ec *executionContext) marshalNEvent2ᚕᚖgitlabᚗcomᚋl3montreeᚋcrypt
 	return ret
 }
 
-func (ec *executionContext) marshalNEvent2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐEvent(ctx context.Context, sel ast.SelectionSet, v *models.Event) graphql.Marshaler {
+func (ec *executionContext) marshalNEvent2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐEvent(ctx context.Context, sel ast.SelectionSet, v *models.Event) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4837,11 +5117,11 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
-func (ec *executionContext) marshalNGameStartResponse2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋgraphᚋinputᚐGameStartResponse(ctx context.Context, sel ast.SelectionSet, v input.GameStartResponse) graphql.Marshaler {
+func (ec *executionContext) marshalNGameStartResponse2gitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐGameStartResponse(ctx context.Context, sel ast.SelectionSet, v input.GameStartResponse) graphql.Marshaler {
 	return ec._GameStartResponse(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNGameStartResponse2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋgraphᚋinputᚐGameStartResponse(ctx context.Context, sel ast.SelectionSet, v *input.GameStartResponse) graphql.Marshaler {
+func (ec *executionContext) marshalNGameStartResponse2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐGameStartResponse(ctx context.Context, sel ast.SelectionSet, v *input.GameStartResponse) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4879,6 +5159,20 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNNftData2gitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐNftData(ctx context.Context, sel ast.SelectionSet, v input.NftData) graphql.Marshaler {
+	return ec._NftData(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNNftData2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐNftData(ctx context.Context, sel ast.SelectionSet, v *input.NftData) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._NftData(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -4932,11 +5226,11 @@ func (ec *executionContext) marshalNTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return res
 }
 
-func (ec *executionContext) marshalNUser2gitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2gitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -5225,7 +5519,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptogotchiᚋclodhopperᚋinternalᚋmodelsᚐCryptogotchi(ctx context.Context, sel ast.SelectionSet, v *models.Cryptogotchi) graphql.Marshaler {
+func (ec *executionContext) marshalOCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx context.Context, sel ast.SelectionSet, v *models.Cryptogotchi) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

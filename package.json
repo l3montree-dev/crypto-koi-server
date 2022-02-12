@@ -10,14 +10,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+ssh://git@gitlab.com/l3montree/cryptogotchi/clodhopper.git"
+        "url": "git+ssh://git@gitlab.com/l3montree/crypto-koi/crypto-koi-api.git"
     },
     "author": "Tim Bastin",
     "license": "ISC",
     "bugs": {
-        "url": "https://gitlab.com/l3montree/cryptogotchi/clodhopper/issues"
+        "url": "https://gitlab.com/l3montree/crypto-koi/crypto-koi-api/issues"
     },
-    "homepage": "https://gitlab.com/l3montree/cryptogotchi/clodhopper#readme",
+    "homepage": "https://gitlab.com/l3montree/crypto-koi/crypto-koi-api#readme",
     "dependencies": {
         "@nomiclabs/hardhat-ethers": "^2.0.5",
         "@nomiclabs/hardhat-waffle": "^2.0.2",

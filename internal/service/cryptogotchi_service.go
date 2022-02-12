@@ -3,9 +3,9 @@ package service
 import (
 	"time"
 
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/util"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 )
 
 type CryptogotchiSvc interface {

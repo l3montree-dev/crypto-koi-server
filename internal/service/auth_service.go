@@ -5,9 +5,9 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/http_dto"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/models"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/repositories"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/http_dto"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
 )
 
 type AuthSvc interface {

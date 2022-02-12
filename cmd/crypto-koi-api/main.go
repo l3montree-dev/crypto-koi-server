@@ -10,8 +10,8 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/db"
-	"gitlab.com/l3montree/cryptogotchi/clodhopper/internal/server"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/db"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/server"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
