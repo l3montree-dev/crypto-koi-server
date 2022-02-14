@@ -1,6 +1,7 @@
 package web3
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/google/uuid"
@@ -24,6 +25,7 @@ func TestConvertCryptogotchi2TokenId(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// "340282366920938463463374607431768211455"
 	assert.Equal(t, "239264596381739575473221873891232270519", tokenId)
 }
 
@@ -40,4 +42,9 @@ func TestGetSignature(t *testing.T) {
 	}
 
 	assert.Equal(t, expectedSignature, signature)
+}
+
+func TestT(t *testing.T) {
+	i, _ := new(big.Int).SetString("00000000000000000000000000000000", 16)
+	t.Fatalf(i.String())
 }
