@@ -41,12 +41,14 @@ func applyColorToImage(c color.Color, img image.Image) image.Image {
 	for x := bounds.Min.X; x < bounds.Max.X; x++ {
 		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 			_, _, _, alphaChannel := img.At(x, y).RGBA()
-			if alphaChannel != 0 {
 
+			if alphaChannel>>8 > 240 {
 				r, g, b, _ := c.RGBA()
-
 				result.Set(x, y, color.RGBA{
-					uint8(r), uint8(g), uint8(b), 255,
+					R: uint8(r >> 8),
+					G: uint8(g >> 8),
+					B: uint8(b >> 8),
+					A: uint8(alphaChannel >> 8),
 				})
 			}
 		}
@@ -55,12 +57,6 @@ func applyColorToImage(c color.Color, img image.Image) image.Image {
 }
 
 func (g *Generator) TokenId2Image(tokenId string) image.Image {
-	// create a 39 long string - prepend with 0s if the provided tokenId is smaller
-	necessaryPrefixes := 39 - len(tokenId)
-	for i := 0; i < necessaryPrefixes; i++ {
-		tokenId = "0" + tokenId
-	}
-
 	// convert the tokenId to a big integer
 	tokenIdBigInt := math.MustParseBig256(tokenId)
 
