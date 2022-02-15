@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"image/png"
 	"math/rand"
-	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGeneration(t *testing.T) {
+/*func TestGeneration(t *testing.T) {
 	path, err := filepath.Abs(filepath.Join("..", "..", "images", "raw"))
 	if err != nil {
 		t.Fatal(err)
@@ -28,8 +27,7 @@ func TestGeneration(t *testing.T) {
 		img := generator.TokenId2Image(fmt.Sprintf("%d", rand.Int()))
 		png.Encode(f, img)
 	}
-	t.Fail()
-}
+}*/
 
 func TestConsistency(t *testing.T) {
 	path, err := filepath.Abs(filepath.Join("..", "..", "images", "raw"))

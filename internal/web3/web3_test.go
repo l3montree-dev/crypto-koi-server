@@ -25,7 +25,6 @@ func TestGetSignature(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Fatal(cryptogotchi.Id.Time())
 
 	assert.Equal(t, expectedSignature, signature)
 }
