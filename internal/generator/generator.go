@@ -48,7 +48,7 @@ func concatPreAllocate(slices ...[]ImageWithColor) []ImageWithColor {
 	return tmp
 }
 
-type koiCtr = func() Koi
+type koiCtr = func(randomSeed int) Koi
 type Generator struct {
 	preloader Preloader
 	koiCtrs   []koiCtr
@@ -59,6 +59,10 @@ func NewGenerator(preloader Preloader) Generator {
 		preloader: preloader,
 		koiCtrs: []koiCtr{
 			NewKohakuKoi,
+			NewShowaKoi,
+			NewUtsuriKoi,
+			NewMonochromeKoi,
+			NewShigureKoi,
 		},
 	}
 }
@@ -70,7 +74,7 @@ func (generator *Generator) createChannels(buffered int) (chan imageProcessingMe
 	return imageProcessingChan, imageProcessingResultChan
 }
 func (generator *Generator) startWorker(imageProcessingChan <-chan imageProcessingMessage, outputChan chan<- imageProcessingResult) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1; i++ {
 		go func() {
 			for msg := range imageProcessingChan {
 				outputChan <- imageProcessingResult{
@@ -116,7 +120,7 @@ func (g *Generator) TokenId2Image(tokenId string) image.Image {
 	// now the token id is 39 characters long.
 	// extract all seed values. Just crop a few characters and convert them into integers.
 	// start applying all seeds to first get the koy, and afterwards get all images.
-	koi := g.koiCtrs[r.Intn(len(g.koiCtrs))]()
+	koi := g.koiCtrs[r.Intn(len(g.koiCtrs))](r.Int())
 
 	minBodyImages, maxBodyImages := koi.AmountBodyImages()
 	minHeadImages, maxHeadImages := koi.AmountHeadImages()
@@ -124,15 +128,18 @@ func (g *Generator) TokenId2Image(tokenId string) image.Image {
 
 	amountOfBodyImages := maxBodyImages
 	if maxBodyImages != minBodyImages {
-		amountOfBodyImages = r.Intn(maxBodyImages-minBodyImages) + minBodyImages
+		// increment by 1 to include the max value into the possible values
+		amountOfBodyImages = r.Intn(maxBodyImages+1-minBodyImages) + minBodyImages
 	}
 	amountOfFinImages := maxFinImages
 	if maxFinImages != minFinImages {
-		amountOfFinImages = r.Intn(maxFinImages-minFinImages) + minFinImages
+		// increment by 1 to include the max value into the possible values
+		amountOfFinImages = r.Intn(maxFinImages+1-minFinImages) + minFinImages
 	}
 	amountOfHeadImages := maxHeadImages
 	if maxHeadImages != minHeadImages {
-		amountOfHeadImages = r.Intn(maxHeadImages-minHeadImages) + minHeadImages
+		// increment by 1 to include the max value into the possible values
+		amountOfHeadImages = r.Intn(maxHeadImages+1-minHeadImages) + minHeadImages
 	}
 
 	allImages := concatPreAllocate(
@@ -157,7 +164,7 @@ func (g *Generator) TokenId2Image(tokenId string) image.Image {
 	imgProcessingChan <- imageProcessingMessage{
 		id:        1,
 		baseImage: g.preloader.GetImage("fins"),
-		color:     koi.GetBodyColor(r.Intn(255)),
+		color:     koi.GetFinBackgroundColor(r.Intn(255)),
 	}
 
 	for i, img := range allImages {

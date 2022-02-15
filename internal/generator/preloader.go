@@ -3,6 +3,7 @@ package generator
 import (
 	"image"
 	"image/png"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -52,5 +53,9 @@ func NewMemoryPreloader(basePath string) Preloader {
 }
 
 func (p *MemoryPreloader) GetImage(imageName string) image.Image {
-	return p.Images[imageName]
+	val, ok := p.Images[imageName]
+	if !ok {
+		log.Fatalf("image: %s not preloaded", imageName)
+	}
+	return val
 }
