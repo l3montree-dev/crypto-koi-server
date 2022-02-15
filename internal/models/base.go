@@ -18,7 +18,13 @@ func (b *Base) BeforeCreate(tx *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	b.Id = uuid
+
+	// check if no id is set - if there is an id set, do not overwrite it.
+	// cryptogotchis are getting created by providing an id value.
+	if b.Id.String() == "00000000-0000-0000-0000-000000000000" {
+		b.Id = uuid
+	}
+
 	return nil
 }
 

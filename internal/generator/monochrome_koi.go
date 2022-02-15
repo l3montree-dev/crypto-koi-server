@@ -24,6 +24,10 @@ func (koi MonochromeKoi) PrimaryColor() color.Color {
 	return koi.color
 }
 
+func (koi MonochromeKoi) GetType() KoiType {
+	return koi.koiType
+}
+
 func (koi MonochromeKoi) GetFinImages(amount int, randomSeed int) []ImageWithColor {
 	return []ImageWithColor{}
 }

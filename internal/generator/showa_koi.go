@@ -26,6 +26,10 @@ func (koi ShowaKoi) PrimaryColor() color.Color {
 	return koi.redColor
 }
 
+func (koi ShowaKoi) GetType() KoiType {
+	return koi.koiType
+}
+
 func (koi ShowaKoi) GetFinImages(amount int, randomSeed int) []ImageWithColor {
 	return pickAmount(
 		amount,

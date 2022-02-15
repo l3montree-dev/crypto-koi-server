@@ -108,6 +108,7 @@ type Koi interface {
 	AmountBodyImages() (int, int)
 	AmountFinImages() (int, int)
 	PrimaryColor() color.Color
+	GetType() KoiType
 }
 
 func pickAmount(amount, randomSeed int, images []ImageWithColor) []ImageWithColor {

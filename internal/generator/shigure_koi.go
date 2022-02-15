@@ -25,6 +25,10 @@ func (koi ShigureKoi) PrimaryColor() color.Color {
 	return koi.redColor
 }
 
+func (koi ShigureKoi) GetType() KoiType {
+	return koi.koiType
+}
+
 func (koi ShigureKoi) GetFinImages(amount int, randomSeed int) []ImageWithColor {
 	return amountWithColor("fin", amount, randomSeed, 1, 2, koi.blackColor)
 }
