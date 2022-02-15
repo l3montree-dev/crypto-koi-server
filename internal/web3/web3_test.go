@@ -1,7 +1,6 @@
 package web3
 
 import (
-	"math/big"
 	"testing"
 
 	"github.com/google/uuid"
@@ -42,9 +41,4 @@ func TestGetSignature(t *testing.T) {
 	}
 
 	assert.Equal(t, expectedSignature, signature)
-}
-
-func TestT(t *testing.T) {
-	i, _ := new(big.Int).SetString("00000000000000000000000000000000", 16)
-	t.Fatalf(i.String())
 }
