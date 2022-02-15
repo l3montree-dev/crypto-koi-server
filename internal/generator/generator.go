@@ -150,20 +150,20 @@ func (g *Generator) TokenId2Image(tokenId string) image.Image {
 
 	imgProcessingChan <- imageProcessingMessage{
 		id:        0,
-		baseImage: g.preloader.Body,
+		baseImage: g.preloader.GetImage("body"),
 		color:     koi.GetBodyColor(r.Intn(255)),
 	}
 
 	imgProcessingChan <- imageProcessingMessage{
 		id:        1,
-		baseImage: g.preloader.Fin,
+		baseImage: g.preloader.GetImage("fins"),
 		color:     koi.GetBodyColor(r.Intn(255)),
 	}
 
 	for i, img := range allImages {
 		imgProcessingChan <- imageProcessingMessage{
 			id:        i + 2,
-			baseImage: g.preloader.Images[img.ImageName],
+			baseImage: g.preloader.GetImage(img.ImageName),
 			color:     img.Color,
 		}
 	}
@@ -185,7 +185,7 @@ func (g *Generator) TokenId2Image(tokenId string) image.Image {
 	close(imgProcessingChan)
 	close(imgResultChan)
 
-	resultImages = append(resultImages, g.preloader.Outline)
+	resultImages = append(resultImages, g.preloader.GetImage("outline"))
 	elapsed := time.Since(start)
 	log.Printf("collecting took %s", elapsed)
 	start = time.Now()

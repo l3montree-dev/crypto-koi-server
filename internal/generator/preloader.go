@@ -9,11 +9,12 @@ import (
 )
 
 // preload all images into ram for faster generation
-type Preloader struct {
-	Outline image.Image
-	Body    image.Image
-	Fin     image.Image
-	Images  map[string]image.Image
+type MemoryPreloader struct {
+	Images map[string]image.Image
+}
+
+type Preloader interface {
+	GetImage(imageName string) image.Image
 }
 
 func loadImage(basePath string, name string) image.Image {
@@ -32,13 +33,10 @@ func loadImage(basePath string, name string) image.Image {
 	return img
 }
 
-func NewPreloader(basePath string) Preloader {
+func NewMemoryPreloader(basePath string) Preloader {
 	// load all images into ram
-	preloader := Preloader{
-		Outline: loadImage(basePath, "outline.png"),
-		Fin:     loadImage(basePath, "fins.png"),
-		Body:    loadImage(basePath, "body.png"),
-		Images:  make(map[string]image.Image),
+	preloader := MemoryPreloader{
+		Images: make(map[string]image.Image),
 	}
 	entries, err := os.ReadDir(basePath)
 	if err != nil {
@@ -50,5 +48,9 @@ func NewPreloader(basePath string) Preloader {
 		}
 		preloader.Images[strings.TrimSuffix(entry.Name(), ".png")] = loadImage(basePath, entry.Name())
 	}
-	return preloader
+	return &preloader
+}
+
+func (p *MemoryPreloader) GetImage(imageName string) image.Image {
+	return p.Images[imageName]
 }
