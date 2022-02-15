@@ -45,6 +45,7 @@ type Cryptogotchi {
   updatedAt: Time!
   nextFeeding: Time!
   snapshotValid: Time!
+  color: String!
 }
 
 type User {

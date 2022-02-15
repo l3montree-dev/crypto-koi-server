@@ -20,6 +20,10 @@ func NewUtsuriKoi(randomSeed int) Koi {
 	}
 }
 
+func (koi UtsuriKoi) PrimaryColor() color.Color {
+	return koi.color
+}
+
 func (koi UtsuriKoi) GetFinImages(amount int, randomSeed int) []ImageWithColor {
 	return amountWithColor("fin", amount, randomSeed, 1, 2, koi.color)
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/generator"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/web3"
@@ -21,6 +22,7 @@ type Resolver struct {
 	gameSvc         service.GameSvc
 	authSvc         service.AuthSvc
 	web3            web3.Web3
+	generator       generator.Generator
 }
 
 func NewResolver(
@@ -30,6 +32,7 @@ func NewResolver(
 	gameSvc service.GameSvc,
 	authSvc service.AuthSvc,
 	web3 web3.Web3,
+	generator generator.Generator,
 ) Resolver {
 	return Resolver{
 		eventSvc:        eventSvc,
@@ -38,6 +41,7 @@ func NewResolver(
 		gameSvc:         gameSvc,
 		authSvc:         authSvc,
 		web3:            web3,
+		generator:       generator,
 	}
 }
 

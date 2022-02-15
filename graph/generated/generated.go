@@ -50,6 +50,7 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Cryptogotchi struct {
+		Color              func(childComplexity int) int
 		CreatedAt          func(childComplexity int) int
 		DeathDate          func(childComplexity int) int
 		Food               func(childComplexity int) int
@@ -127,6 +128,8 @@ type CryptogotchiResolver interface {
 	OwnerID(ctx context.Context, obj *models.Cryptogotchi) (string, error)
 
 	NextFeeding(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error)
+
+	Color(ctx context.Context, obj *models.Cryptogotchi) (string, error)
 }
 type EventResolver interface {
 	ID(ctx context.Context, obj *models.Event) (string, error)
@@ -172,6 +175,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Cryptogotchi.color":
+		if e.complexity.Cryptogotchi.Color == nil {
+			break
+		}
+
+		return e.complexity.Cryptogotchi.Color(childComplexity), true
 
 	case "Cryptogotchi.createdAt":
 		if e.complexity.Cryptogotchi.CreatedAt == nil {
@@ -637,6 +647,7 @@ type Cryptogotchi {
   updatedAt: Time!
   nextFeeding: Time!
   snapshotValid: Time!
+  color: String!
 }
 
 type User {
@@ -1344,6 +1355,41 @@ func (ec *executionContext) _Cryptogotchi_snapshotValid(ctx context.Context, fie
 	res := resTmp.(time.Time)
 	fc.Result = res
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Cryptogotchi_color(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Cryptogotchi",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Cryptogotchi().Color(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Event_id(ctx context.Context, field graphql.CollectedField, obj *models.Event) (ret graphql.Marshaler) {
@@ -3902,6 +3948,26 @@ func (ec *executionContext) _Cryptogotchi(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "color":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Cryptogotchi_color(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

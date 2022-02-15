@@ -14,6 +14,7 @@ import (
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/db"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
@@ -47,6 +48,16 @@ func (r *cryptogotchiResolver) NextFeeding(ctx context.Context, obj *models.Cryp
 	}
 	next := obj.LastFed.Add(config.TIME_BETWEEN_FEEDINGS)
 	return &next, nil
+}
+
+func (r *cryptogotchiResolver) Color(ctx context.Context, obj *models.Cryptogotchi) (string, error) {
+	tokenId, err := util.TokenIdToIntString(obj.Id.String())
+	if err != nil {
+		return "", err
+	}
+	koi, _ := r.generator.GetKoi(tokenId)
+	red, g, b, _ := koi.PrimaryColor().RGBA()
+	return fmt.Sprintf("#%02x%02x%02x", red>>8, g>>8, b>>8), nil
 }
 
 func (r *eventResolver) ID(ctx context.Context, obj *models.Event) (string, error) {

@@ -14,20 +14,6 @@ const (
 	expectedSignature string = "0x0577530589f065fdb25b8f29132865782ab2a4ea75a294ba56deecddeeefb77b18755f1811bb76dfadf417ff58f6bd2b593ddb4c80b1eaa85752e0df5a5b44f400"
 )
 
-func TestConvertCryptogotchi2TokenId(t *testing.T) {
-
-	id := uuid.MustParse("b400af616cb4456589c4d6ba43f948b7")
-	// the private key does not matter
-	web3 := NewWeb3(privateKey)
-	tokenId, err := web3.Uuid2Uint(id)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// "340282366920938463463374607431768211455"
-	assert.Equal(t, "239264596381739575473221873891232270519", tokenId)
-}
-
 func TestGetSignature(t *testing.T) {
 	web3 := NewWeb3(privateKey)
 	cryptogotchi := &models.Cryptogotchi{

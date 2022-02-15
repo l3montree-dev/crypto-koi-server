@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 
@@ -41,7 +40,7 @@ func mustReadFile(filepath string) []byte {
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		orchardclient.Logger.Fatal("Error loading .env file")
 	}
 
 	isDev := os.Getenv("DEV") == "true"
@@ -50,7 +49,7 @@ func main() {
 			Dsn: "https://e56b8f4eedcf451e9b1cec93799f4443@sentry.l3montree.com/50",
 		})
 		if err != nil {
-			log.Fatalf("sentry.Init: %s", err)
+			orchardclient.Logger.Fatalf("sentry.Init: %s", err)
 		}
 	}
 
@@ -65,6 +64,10 @@ func main() {
 	})
 	orchardclient.FailOnError(err, "could not connect to database")
 
-	server := server.NewGraphqlGameserver(db)
+	baseImagePath := os.Getenv("BASE_IMAGE_PATH")
+	if baseImagePath == "" {
+		orchardclient.Logger.Fatal("BASE_IMAGE_PATH is not set")
+	}
+	server := server.NewGraphqlServer(db, baseImagePath)
 	server.Start()
 }

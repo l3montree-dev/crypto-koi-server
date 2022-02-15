@@ -20,6 +20,10 @@ func NewMonochromeKoi(randomSeed int) Koi {
 	}
 }
 
+func (koi MonochromeKoi) PrimaryColor() color.Color {
+	return koi.color
+}
+
 func (koi MonochromeKoi) GetFinImages(amount int, randomSeed int) []ImageWithColor {
 	return []ImageWithColor{}
 }

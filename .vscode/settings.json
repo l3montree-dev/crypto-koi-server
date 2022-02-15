@@ -3,7 +3,8 @@
         "Cryptogotchi",
         "cryptogotchis",
         "gorm",
-        "gqlerror"
+        "gqlerror",
+        "randomizers"
     ],
     "mochaExplorer.files": "test/**/*.{j,t}s"
 }

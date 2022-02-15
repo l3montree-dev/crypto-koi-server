@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"image/png"
 	"log"
 	"net/http"
 	"os"
@@ -20,18 +21,21 @@ import (
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph/generated"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/controller"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/generator"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/http_util"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/web3"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 	"gorm.io/gorm"
 )
 
-type GraphqlGameserver struct {
-	db       *gorm.DB
-	tokenSvc service.TokenSvc
-	userSvc  service.UserSvc
+type GraphqlServer struct {
+	db        *gorm.DB
+	tokenSvc  service.TokenSvc
+	userSvc   service.UserSvc
+	generator generator.Generator
 }
 
 type responseData struct {
@@ -70,7 +74,7 @@ func loggerMiddleware(next http.Handler) http.Handler {
 }
 
 // the auth middleware will set the current logged in user into the context
-func (s *GraphqlGameserver) authMiddleware(next http.Handler) http.Handler {
+func (s *GraphqlServer) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// get the token from the header
 		token := r.Header.Get("Authorization")
@@ -133,11 +137,29 @@ func graphqlTimeout(timeout time.Duration) func(next http.Handler) http.Handler 
 		return http.HandlerFunc(fn)
 	}
 }
-func NewGraphqlGameserver(db *gorm.DB) Server {
-	return &GraphqlGameserver{db: db}
+func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
+	preloader := generator.NewMemoryPreloader(imagesBasePath)
+	return &GraphqlServer{db: db, generator: generator.NewGenerator(preloader)}
 }
 
-func (s *GraphqlGameserver) Start() {
+func (s *GraphqlServer) imageHandler(w http.ResponseWriter, r *http.Request) {
+	tokenId := chi.URLParam(r, "tokenId")
+	// the tokenId is the uuid of the cryptogotchi.
+	tokenIdIntStr, err := util.TokenIdToIntString(tokenId)
+	if err != nil {
+		http_util.WriteHttpError(w, http.StatusBadRequest, "invalid tokenId")
+		return
+	}
+
+	img := s.generator.TokenId2Image(tokenIdIntStr)
+
+	w.Header().Set("Content-Type", "image/png")
+
+	// send the image back
+	png.Encode(w, img)
+}
+
+func (s *GraphqlServer) Start() {
 	defaultPort := "8080"
 	isDev := os.Getenv("DEV") != ""
 	port := os.Getenv("PORT")
@@ -172,6 +194,8 @@ func (s *GraphqlGameserver) Start() {
 	router.Use(middleware.RequestID)
 
 	router.Use(sentryMiddleware.Handle)
+
+	router.Get("/images/{tokenId}", s.imageHandler)
 
 	// init all repositories
 	cryptogotchiRepository := repositories.NewGormCryptogotchiRepository(s.db)
@@ -210,7 +234,7 @@ func (s *GraphqlGameserver) Start() {
 		r.Use(middleware.Timeout(10 * time.Second))
 		// opensea.io integration.
 		// gets called by their API and wallet applications.
-		r.Get("/opensea/:tokenId", openseaController.GetCryptogotchi)
+		r.Get("/opensea/{tokenId}", openseaController.GetCryptogotchi)
 	})
 
 	privateKey := os.Getenv("PRIVATE_KEY")
@@ -220,7 +244,7 @@ func (s *GraphqlGameserver) Start() {
 
 	web3 := web3.NewWeb3(privateKey)
 	// attach the graphql handler to the router
-	resolver := graph.NewResolver(s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, web3)
+	resolver := graph.NewResolver(s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, web3, s.generator)
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver}))
 
 	// authorized routes

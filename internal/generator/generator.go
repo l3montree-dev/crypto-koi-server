@@ -4,12 +4,9 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"log"
 	"math/rand"
+	"strconv"
 	"sync"
-	"time"
-
-	"github.com/ethereum/go-ethereum/common/math"
 )
 
 const (
@@ -112,15 +109,35 @@ func (generator *Generator) applyColorToImage(c color.Color, img image.Image) im
 	return result
 }
 
-func (g *Generator) TokenId2Image(tokenId string) image.Image {
-	// convert the tokenId to a big integer
-	tokenIdBigInt := math.MustParseBig256(tokenId)
-	randomSource := rand.NewSource(tokenIdBigInt.Int64())
-	r := rand.New(randomSource)
+func (g *Generator) GetKoi(tokenId string) (Koi, struct {
+	r2 *rand.Rand
+	r3 *rand.Rand
+	r4 *rand.Rand
+}) {
+	// chunk the tokenId into 4 different sizes and create a random generator out of each.
+	chunkSize := len(tokenId) / 4
+	firstChunk, _ := strconv.ParseInt(tokenId[:chunkSize], 10, 64)
+	secondChunk, _ := strconv.ParseInt(tokenId[chunkSize:chunkSize*2], 10, 64)
+	thirdChunk, _ := strconv.ParseInt(tokenId[chunkSize*2:chunkSize*3], 10, 64)
+	fourthChunk, _ := strconv.ParseInt(tokenId[chunkSize*3:], 10, 64)
+
+	// this is just so random :-)
+	r1, r2, r3, r4 := rand.New(rand.NewSource(firstChunk)), rand.New(rand.NewSource(secondChunk)), rand.New(rand.NewSource(thirdChunk)), rand.New(rand.NewSource(fourthChunk))
 	// now the token id is 39 characters long.
 	// extract all seed values. Just crop a few characters and convert them into integers.
 	// start applying all seeds to first get the koy, and afterwards get all images.
-	koi := g.koiCtrs[r.Intn(len(g.koiCtrs))](r.Int())
+	koi := g.koiCtrs[r1.Intn(len(g.koiCtrs))](r1.Int())
+
+	return koi, struct {
+		r2 *rand.Rand
+		r3 *rand.Rand
+		r4 *rand.Rand
+	}{r2, r3, r4}
+}
+
+func (g *Generator) TokenId2Image(tokenId string) image.Image {
+	koi, randomizers := g.GetKoi(tokenId)
+	r2, r3, r4 := randomizers.r2, randomizers.r3, randomizers.r4
 
 	minBodyImages, maxBodyImages := koi.AmountBodyImages()
 	minHeadImages, maxHeadImages := koi.AmountHeadImages()
@@ -129,25 +146,25 @@ func (g *Generator) TokenId2Image(tokenId string) image.Image {
 	amountOfBodyImages := maxBodyImages
 	if maxBodyImages != minBodyImages {
 		// increment by 1 to include the max value into the possible values
-		amountOfBodyImages = r.Intn(maxBodyImages+1-minBodyImages) + minBodyImages
+		amountOfBodyImages = r2.Intn(maxBodyImages+1-minBodyImages) + minBodyImages
 	}
 	amountOfFinImages := maxFinImages
 	if maxFinImages != minFinImages {
 		// increment by 1 to include the max value into the possible values
-		amountOfFinImages = r.Intn(maxFinImages+1-minFinImages) + minFinImages
+		amountOfFinImages = r2.Intn(maxFinImages+1-minFinImages) + minFinImages
 	}
 	amountOfHeadImages := maxHeadImages
 	if maxHeadImages != minHeadImages {
 		// increment by 1 to include the max value into the possible values
-		amountOfHeadImages = r.Intn(maxHeadImages+1-minHeadImages) + minHeadImages
+		amountOfHeadImages = r2.Intn(maxHeadImages+1-minHeadImages) + minHeadImages
 	}
 
 	allImages := concatPreAllocate(
 		// avoid providing zero to the r.Intn function. This will cause a panic.
 		// therefore increase it to be at least 1 and then decrease it again after the call
-		koi.GetBodyImages(amountOfBodyImages, r.Intn(255)),
-		koi.GetHeadImages(amountOfHeadImages, r.Intn(255)),
-		koi.GetFinImages(amountOfFinImages, r.Intn(255)),
+		koi.GetBodyImages(amountOfBodyImages, r3.Intn(255)),
+		koi.GetHeadImages(amountOfHeadImages, r3.Intn(255)),
+		koi.GetFinImages(amountOfFinImages, r3.Intn(255)),
 	)
 
 	// add 2 for the body and fin image
@@ -158,13 +175,13 @@ func (g *Generator) TokenId2Image(tokenId string) image.Image {
 	imgProcessingChan <- imageProcessingMessage{
 		id:        0,
 		baseImage: g.preloader.GetImage("body"),
-		color:     koi.GetBodyColor(r.Intn(255)),
+		color:     koi.GetBodyColor(r4.Intn(255)),
 	}
 
 	imgProcessingChan <- imageProcessingMessage{
 		id:        1,
 		baseImage: g.preloader.GetImage("fins"),
-		color:     koi.GetFinBackgroundColor(r.Intn(255)),
+		color:     koi.GetFinBackgroundColor(r4.Intn(255)),
 	}
 
 	for i, img := range allImages {
@@ -177,7 +194,6 @@ func (g *Generator) TokenId2Image(tokenId string) image.Image {
 
 	resultImages := make([]image.Image, len(allImages)+2)
 
-	start := time.Now()
 	wg := sync.WaitGroup{}
 	wg.Add(len(resultImages))
 	// collect all images again.
@@ -193,16 +209,9 @@ func (g *Generator) TokenId2Image(tokenId string) image.Image {
 	close(imgResultChan)
 
 	resultImages = append(resultImages, g.preloader.GetImage("outline"))
-	elapsed := time.Since(start)
-	log.Printf("collecting took %s", elapsed)
-	start = time.Now()
 	// now we have all images in the collection.
 	// we need to draw them in the correct order.
-
 	result := recursiveBatchDraw(resultImages)
-
-	elapsed = time.Since(start)
-	log.Printf("Drawing took %s", elapsed)
 	return result
 }
 

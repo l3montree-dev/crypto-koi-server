@@ -107,11 +107,7 @@ type Koi interface {
 	AmountHeadImages() (int, int)
 	AmountBodyImages() (int, int)
 	AmountFinImages() (int, int)
-}
-
-func remove(s []int, i int) []int {
-	s[i] = s[len(s)-1]
-	return s[:len(s)-1]
+	PrimaryColor() color.Color
 }
 
 func pickAmount(amount, randomSeed int, images []ImageWithColor) []ImageWithColor {
