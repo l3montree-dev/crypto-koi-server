@@ -2,6 +2,7 @@ package generator
 
 import (
 	"image/color"
+	"math/rand"
 	"strconv"
 )
 
@@ -40,9 +41,9 @@ var (
 	}
 	WhiteColorRange ColorRange = ColorRange{
 		raw: [3][2]int{
-			{190, 255},
-			{190, 255},
-			{190, 255},
+			{210, 255},
+			{210, 255},
+			{210, 255},
 		},
 	}
 	BlackColorRange ColorRange = ColorRange{
@@ -79,73 +80,105 @@ func (c ColorRange) Apply(randomSeed int) color.Color {
 	return color.RGBA{uint8(r), uint8(g), uint8(b), 255}
 }
 
-type ImageWithColorRange struct {
+type ImageWithColor struct {
 	// just the name of the image - without extension
 	ImageName string
 	// [[r, r], [g, g], [b, b]]
 	// example: [[0, 255], [0, 255], [0, 255]]
-	ColorRange ColorRange
+	Color color.Color
 }
 
-var EmptyImage = ImageWithColorRange{
-	ImageName:  "empty",
-	ColorRange: WhiteColorRange,
+var EmptyImage = ImageWithColor{
+	ImageName: "empty",
+	Color:     color.White,
 }
 
 type Koi interface {
-	GetFinImages() []ImageWithColorRange
+	GetFinImages(amount int, randomSeed int) []ImageWithColor
 	// [[r, r], [g, g], [b, b]]
-	GetFinBackgroundColorRange() ColorRange
-	GetBodyColorRange() ColorRange
-	GetBodyImages() []ImageWithColorRange
-	GetHeadImages() []ImageWithColorRange
+	GetFinBackgroundColor(randomSeed int) color.Color
+	GetBodyColor(randomSeed int) color.Color
+	GetBodyImages(amount int, randomSeed int) []ImageWithColor
+	GetHeadImages(amount int, randomSeed int) []ImageWithColor
+	AmountHeadImages() (int, int)
+	AmountBodyImages() (int, int)
+	AmountFinImages() (int, int)
 }
 
 type KohakuKoi struct {
 	koiType KoiType
 }
 
-func allWithColorRange(prefix string, min, max int, colorRange ColorRange) []ImageWithColorRange {
-	result := make([]ImageWithColorRange, max-min)
-	for i := 0; i < max-min; i++ {
-		result[i] = ImageWithColorRange{
-			ImageName:  prefix + "_" + strconv.Itoa(min+i),
-			ColorRange: colorRange,
+var _ Koi = KohakuKoi{}
+
+func remove(s []int, i int) []int {
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
+}
+
+func amountWithColor(prefix string, amount, randomSeed, possibleMin, possibleMax int, c color.Color) []ImageWithColor {
+	if amount == 0 {
+		return []ImageWithColor{}
+	}
+
+	r := rand.New(rand.NewSource(int64(randomSeed)))
+
+	possibleIndices := make([]int, possibleMax-possibleMin)
+	for i := 0; i < len(possibleIndices); i++ {
+		possibleIndices[i] = i + possibleMin
+	}
+
+	result := make([]ImageWithColor, amount)
+	for i := 0; i < amount; i++ {
+		pickedIndex := r.Intn(len(possibleIndices))
+		result[i] = ImageWithColor{
+			ImageName: prefix + "_" + strconv.Itoa(pickedIndex+1),
+			Color:     c,
 		}
+		possibleIndices = remove(possibleIndices, pickedIndex)
 	}
 	return result
 }
 
-func NewKohakuKoi() KohakuKoi {
+func NewKohakuKoi() Koi {
 	return KohakuKoi{
 		koiType: Kohaku,
 	}
 }
 
-func (koi KohakuKoi) GetFinImages() []ImageWithColorRange {
-	res := []ImageWithColorRange{
+func (koi KohakuKoi) GetFinImages(amount int, randomSeed int) []ImageWithColor {
+	res := []ImageWithColor{
 		EmptyImage,
 	}
-	res = append(res, allWithColorRange("fin", 1, 2, RedColorRange)...)
+	res = append(res, amountWithColor("fin", amount, randomSeed, 1, 2, RedColorRange.Apply(randomSeed))...)
 	return res
 }
 
-func (koi KohakuKoi) GetFinBackgroundColorRange() ColorRange {
-	return WhiteColorRange
+func (koi KohakuKoi) AmountFinImages() (int, int) {
+	return 0, 1
 }
 
-func (koi KohakuKoi) GetBodyColorRange() ColorRange {
-	return WhiteColorRange
+func (koi KohakuKoi) AmountHeadImages() (int, int) {
+	return 1, 1
 }
 
-func (koi KohakuKoi) GetBodyImages() []ImageWithColorRange {
-	res := []ImageWithColorRange{}
-	res = append(res, allWithColorRange("body", 1, 11, RedColorRange)...)
-	return res
+func (koi KohakuKoi) AmountBodyImages() (int, int) {
+	return 1, 4
 }
 
-func (koi KohakuKoi) GetHeadImages() []ImageWithColorRange {
-	res := []ImageWithColorRange{}
-	res = append(res, allWithColorRange("head", 1, 5, RedColorRange)...)
-	return res
+func (koi KohakuKoi) GetFinBackgroundColor(randomSeed int) color.Color {
+	return WhiteColorRange.Apply(randomSeed)
+}
+
+func (koi KohakuKoi) GetBodyColor(randomSeed int) color.Color {
+	return WhiteColorRange.Apply(randomSeed)
+}
+
+func (koi KohakuKoi) GetBodyImages(amount int, randomSeed int) []ImageWithColor {
+	// generate the red color - so that all image patterns have the same red color
+	return amountWithColor("body", amount, randomSeed, 1, 11, RedColorRange.Apply(randomSeed))
+}
+
+func (koi KohakuKoi) GetHeadImages(amount int, randomSeed int) []ImageWithColor {
+	return amountWithColor("head", amount, randomSeed, 1, 5, RedColorRange.Apply(randomSeed))
 }
