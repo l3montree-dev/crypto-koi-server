@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"image"
 	"image/draw"
@@ -16,20 +17,22 @@ import (
 // The cli can be used to generate koi images based upon the token id provided as the first argument.
 func main() {
 	err := godotenv.Load()
+
+	drawPrimaryColor := flag.Bool("drawPrimaryColor", false, "draw the primary color onto the image")
+
+	flag.Parse()
+
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
 	baseImagePath := os.Getenv("BASE_IMAGE_PATH")
 
 	if baseImagePath == "" {
 		log.Fatal("BASE_IMAGE_PATH environment variable not set")
 	}
 
-	if len(os.Args) < 2 {
-		log.Fatal("No token id provided as first argument (example: $ crypto-koi-cli <token id>)")
-	}
-
-	tokenId := os.Args[1]
+	tokenId := flag.Arg(0)
 
 	if tokenId == "" {
 		log.Fatal("No token id provided as first argument (example: $ crypto-koi-cli <token id>)")
@@ -41,16 +44,18 @@ func main() {
 
 	img, koi := g.TokenId2Image(tokenId)
 
-	primaryColor := koi.PrimaryColor()
+	if *drawPrimaryColor {
+		primaryColor := koi.PrimaryColor()
 
-	newImg := image.NewRGBA(image.Rect(0, 0, 100, 100))
-	for x := 0; x < newImg.Bounds().Max.X; x++ {
-		for y := 0; y < newImg.Bounds().Max.Y; y++ {
-			newImg.Set(x, y, primaryColor)
+		newImg := image.NewRGBA(image.Rect(0, 0, 100, 100))
+		for x := 0; x < newImg.Bounds().Max.X; x++ {
+			for y := 0; y < newImg.Bounds().Max.Y; y++ {
+				newImg.Set(x, y, primaryColor)
+			}
 		}
-	}
 
-	draw.Draw(img.(draw.Image), img.Bounds(), newImg, image.Point{}, draw.Over)
+		draw.Draw(img.(draw.Image), img.Bounds(), newImg, image.Point{}, draw.Over)
+	}
 
 	f, err := os.Create(fmt.Sprintf("%s.png", tokenId))
 	if err != nil {
