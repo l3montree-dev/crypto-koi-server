@@ -38,3 +38,15 @@ The web3 integration is build using typescript and etherjs. For local testing ha
 
 1. Compile the contract
 2. Deploy it
+
+## CLI Usage
+
+The application ships with a cli to generate kois using a token id. Make sure to set the `BASE_IMAGE_PATH` environment variable to the absolute path to the folder `./images/raw`.
+
+Example:
+
+```sh
+go run cmd/crypto-koi-cli/main.go [-drawPrimaryColor] <tokenId>
+```
+
+If the -drawPrimaryColor flag is provided, the image will contain the primary koi color in the top left corner. This color can be used by client side applications to modify the user interface colors accordingly.
