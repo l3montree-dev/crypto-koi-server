@@ -135,7 +135,7 @@ func (g *Generator) GetKoi(tokenId string) (Koi, struct {
 	}{r2, r3, r4}
 }
 
-func (g *Generator) TokenId2Image(tokenId string) image.Image {
+func (g *Generator) TokenId2Image(tokenId string) (image.Image, Koi) {
 	koi, randomizers := g.GetKoi(tokenId)
 	r2, r3, r4 := randomizers.r2, randomizers.r3, randomizers.r4
 
@@ -212,7 +212,7 @@ func (g *Generator) TokenId2Image(tokenId string) image.Image {
 	// now we have all images in the collection.
 	// we need to draw them in the correct order.
 	result := recursiveBatchDraw(resultImages)
-	return result
+	return result, koi
 }
 
 func combineImages(dest image.Image, other image.Image) image.Image {

@@ -41,7 +41,7 @@ func TestConsistency(t *testing.T) {
 
 	hasher := sha256.New()
 
-	img := generator.TokenId2Image(fmt.Sprintf("%d", 0))
+	img, _ := generator.TokenId2Image(fmt.Sprintf("%d", 0))
 	png.Encode(hasher, img)
 
 	str := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
@@ -49,7 +49,7 @@ func TestConsistency(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		hasher := sha256.New()
 
-		img := generator.TokenId2Image(fmt.Sprintf("%d", 0))
+		img, _ := generator.TokenId2Image(fmt.Sprintf("%d", 0))
 		png.Encode(hasher, img)
 		assert.Equal(t, str, base64.URLEncoding.EncodeToString(hasher.Sum(nil)))
 	}
