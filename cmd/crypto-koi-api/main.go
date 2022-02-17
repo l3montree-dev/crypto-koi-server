@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -11,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/db"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/server"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
@@ -29,12 +28,6 @@ func (hook *SentryErrorLoggingHook) Levels() []logrus.Level {
 		logrus.ErrorLevel,
 		logrus.WarnLevel,
 	}
-}
-
-func mustReadFile(filepath string) []byte {
-	bytes, err := ioutil.ReadFile(filepath)
-	orchardclient.FailOnError(err, fmt.Sprintf("could not read file: %s", filepath))
-	return bytes
 }
 
 func main() {
@@ -57,7 +50,7 @@ func main() {
 
 	db, err := db.NewMySQL(db.MySQLConfig{
 		User:     os.Getenv("DB_USER"),
-		Password: strings.TrimSpace(string(mustReadFile(os.Getenv("DB_PASSWORD_FILE_PATH")))),
+		Password: strings.TrimSpace(string(util.MustReadFile(os.Getenv("DB_PASSWORD_FILE_PATH")))),
 		Port:     os.Getenv("DB_PORT"),
 		DBName:   os.Getenv("DB_NAME"),
 		Host:     os.Getenv("DB_HOST"),

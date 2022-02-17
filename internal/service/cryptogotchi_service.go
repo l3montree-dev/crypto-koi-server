@@ -14,30 +14,33 @@ import (
 type CryptogotchiSvc interface {
 	repositories.CryptogotchiRepository
 	GenerateCryptogotchiForUser(user *models.User) (models.Cryptogotchi, error)
+	GenerateWithFixedTokenId(user *models.User, id uuid.UUID) (models.Cryptogotchi, error)
 }
 
 type CryptogotchiService struct {
 	repositories.CryptogotchiRepository
-	generator generator.Generator
+	generator *generator.Generator
 }
 
-func NewCryptogotchiService(rep repositories.CryptogotchiRepository) CryptogotchiSvc {
+func NewCryptogotchiService(rep repositories.CryptogotchiRepository, g *generator.Generator) CryptogotchiSvc {
 	return &CryptogotchiService{
 		CryptogotchiRepository: rep,
+		generator:              g,
 	}
 }
 
-func (svc *CryptogotchiService) GenerateCryptogotchiForUser(user *models.User) (models.Cryptogotchi, error) {
+func (svc *CryptogotchiService) GenerateWithFixedTokenId(user *models.User, id uuid.UUID) (models.Cryptogotchi, error) {
 	foodValue := 50.
 	foodDrainValue := 0.5
 	now := time.Now()
 
-	id, err := uuid.NewRandom()
+	tokenId, err := util.TokenIdToIntString(id.String())
+
 	if err != nil {
 		return models.Cryptogotchi{}, err
 	}
 
-	koi, _ := svc.generator.GetKoi(id.String())
+	koi, _ := svc.generator.GetKoi(tokenId)
 	name := strings.Title((koi.GetType()))
 
 	newCrypt := models.Cryptogotchi{
@@ -54,4 +57,12 @@ func (svc *CryptogotchiService) GenerateCryptogotchiForUser(user *models.User) (
 	}
 	err = svc.Save(&newCrypt)
 	return newCrypt, err
+}
+
+func (svc *CryptogotchiService) GenerateCryptogotchiForUser(user *models.User) (models.Cryptogotchi, error) {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return models.Cryptogotchi{}, err
+	}
+	return svc.GenerateWithFixedTokenId(user, id)
 }

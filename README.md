@@ -43,10 +43,25 @@ The web3 integration is build using typescript and etherjs. For local testing ha
 
 The application ships with a cli to generate kois using a token id. Make sure to set the `BASE_IMAGE_PATH` environment variable to the absolute path to the folder `./images/raw`.
 
+
+### Draw the image of a specific token
+
+Draw the image of a specific token. The token needs to be either in `HEX` or `DECIMAL` format (e.g "1238af213hhffff", "12356524234234").
 Example:
 
 ```sh
-go run cmd/crypto-koi-cli/main.go [-drawPrimaryColor] <tokenId>
+go run cmd/crypto-koi-cli/main.go [-drawPrimaryColor] [-debug] draw <tokenId>
 ```
 
 If the -drawPrimaryColor flag is provided, the image will contain the primary koi color in the top left corner. This color can be used by client side applications to modify the user interface colors accordingly.
+
+### Register a random user
+
+This can be helpful when testing the different client side interface colors.
+
+```sh
+go run cmd/crypto-koi-cli/main.go [-amount] [-debug] register <tokenId>
+```
+
+
+The amount of the users to be registered can be provided using the amount flag.

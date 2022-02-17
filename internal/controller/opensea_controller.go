@@ -14,10 +14,10 @@ type OpenseaController struct {
 	cryptogotchiSvc service.CryptogotchiSvc
 }
 
-func NewOpenseaController(eventRepository repositories.EventRepository, cryptogotchiRepository repositories.CryptogotchiRepository) OpenseaController {
+func NewOpenseaController(eventRepository repositories.EventRepository, cryptogotchiSvc service.CryptogotchiSvc) OpenseaController {
 	return OpenseaController{
 		eventSvc:        service.NewEventService(eventRepository),
-		cryptogotchiSvc: service.NewCryptogotchiService(cryptogotchiRepository),
+		cryptogotchiSvc: cryptogotchiSvc,
 	}
 }
 

@@ -2,6 +2,11 @@ package server
 
 import (
 	"context"
+	"image"
+
+	imageDraw "golang.org/x/image/draw"
+
+	"image/draw"
 	"image/png"
 	"log"
 	"net/http"
@@ -142,6 +147,33 @@ func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
 	return &GraphqlServer{db: db, generator: generator.NewGenerator(preloader)}
 }
 
+func (s *GraphqlServer) thumbnailHandler(w http.ResponseWriter, r *http.Request) {
+	tokenId := chi.URLParam(r, "tokenId")
+	// the tokenId is the uuid of the cryptogotchi.
+	tokenIdIntStr, err := util.TokenIdToIntString(tokenId)
+	if err != nil {
+		http_util.WriteHttpError(w, http.StatusBadRequest, "invalid tokenId")
+		return
+	}
+
+	img, koi := s.generator.TokenId2Image(tokenIdIntStr)
+
+	primaryColor := koi.PrimaryColor()
+
+	thumbnail := image.NewRGBA(image.Rect(0, 0, 200, 200))
+	for y := 0; y < thumbnail.Bounds().Max.Y; y++ {
+		for x := 0; x < thumbnail.Bounds().Max.X; x++ {
+			thumbnail.Set(x, y, primaryColor)
+		}
+	}
+
+	imageDraw.NearestNeighbor.Scale(thumbnail, thumbnail.Rect, img, img.Bounds(), draw.Over, nil)
+
+	w.Header().Set("Content-Type", "image/png")
+
+	png.Encode(w, thumbnail)
+}
+
 func (s *GraphqlServer) imageHandler(w http.ResponseWriter, r *http.Request) {
 	tokenId := chi.URLParam(r, "tokenId")
 	// the tokenId is the uuid of the cryptogotchi.
@@ -151,8 +183,19 @@ func (s *GraphqlServer) imageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	img := s.generator.TokenId2Image(tokenIdIntStr)
+	img, _ := s.generator.TokenId2Image(tokenIdIntStr)
+	/*
+		primaryColor := koi.PrimaryColor()
 
+		primaryColorImg := image.NewRGBA(image.Rect(0, 0, 100, 100))
+
+		for x := 0; x < 100; x++ {
+			for y := 0; y < 100; y++ {
+				primaryColorImg.Set(x, y, primaryColor)
+			}
+		}
+		draw.Draw(img.(draw.Image), img.Bounds(), primaryColorImg, image.Point{}, draw.Over)
+	*/
 	w.Header().Set("Content-Type", "image/png")
 
 	// send the image back
@@ -196,6 +239,7 @@ func (s *GraphqlServer) Start() {
 	router.Use(sentryMiddleware.Handle)
 
 	router.Get("/images/{tokenId}", s.imageHandler)
+	router.Get("/thumbnails/{tokenId}", s.thumbnailHandler)
 
 	// init all repositories
 	cryptogotchiRepository := repositories.NewGormCryptogotchiRepository(s.db)
@@ -210,9 +254,9 @@ func (s *GraphqlServer) Start() {
 	eventSvc := service.NewEventService(eventRepository)
 	gameSvc := service.NewGameService(gameRepository, eventSvc, tokenSvc)
 	// init all controllers
-	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRepository)
+	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRepository, &s.generator)
 	authController := controller.NewAuthController(userRepository, cryptogotchiSvc, authSvc)
-	openseaController := controller.NewOpenseaController(eventRepository, cryptogotchiRepository)
+	openseaController := controller.NewOpenseaController(eventRepository, cryptogotchiSvc)
 
 	// set services to server instance for middleware
 	s.tokenSvc = tokenSvc

@@ -48,4 +48,5 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/stretchr/testify v1.7.0
 	gitlab.com/l3montree/microservices/libs/orchardclient v0.5.6
+	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 )

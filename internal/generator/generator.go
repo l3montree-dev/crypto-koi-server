@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"log"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -49,6 +50,7 @@ type koiCtr = func(randomSeed int) Koi
 type Generator struct {
 	preloader Preloader
 	koiCtrs   []koiCtr
+	debug     bool
 }
 
 func NewGenerator(preloader Preloader) Generator {
@@ -62,6 +64,10 @@ func NewGenerator(preloader Preloader) Generator {
 			NewShigureKoi,
 		},
 	}
+}
+
+func (g *Generator) SetDebug(debug bool) {
+	g.debug = debug
 }
 
 func (generator *Generator) createChannels(buffered int) (chan imageProcessingMessage, chan imageProcessingResult) {
@@ -127,6 +133,14 @@ func (g *Generator) GetKoi(tokenId string) (Koi, struct {
 	// extract all seed values. Just crop a few characters and convert them into integers.
 	// start applying all seeds to first get the koy, and afterwards get all images.
 	koi := g.koiCtrs[r1.Intn(len(g.koiCtrs))](r1.Int())
+
+	if g.debug {
+		log.Println("firstChunk:", firstChunk)
+		log.Println("secondChunk:", secondChunk)
+		log.Println("thirdChunk:", thirdChunk)
+		log.Println("fourthChunk:", fourthChunk)
+		log.Println("koi type", koi.GetType())
+	}
 
 	return koi, struct {
 		r2 *rand.Rand

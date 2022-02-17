@@ -9,42 +9,85 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/db"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/generator"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 )
 
-// The cli can be used to generate koi images based upon the token id provided as the first argument.
-func main() {
-	err := godotenv.Load()
+func isNotDigit(c rune) bool {
+	return c < '0' || c > '9'
+}
 
-	drawPrimaryColor := flag.Bool("drawPrimaryColor", false, "draw the primary color onto the image")
-
-	flag.Parse()
+func registerRandomUser(g *generator.Generator, amount int) {
+	// register the user with the token id
+	db, err := db.NewMySQL(db.MySQLConfig{
+		User:     os.Getenv("DB_USER"),
+		Password: strings.TrimSpace(string(util.MustReadFile(os.Getenv("DB_PASSWORD_FILE_PATH")))),
+		Port:     os.Getenv("DB_PORT"),
+		DBName:   os.Getenv("DB_NAME"),
+		Host:     os.Getenv("DB_HOST"),
+	})
 
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal(err)
 	}
 
-	baseImagePath := os.Getenv("BASE_IMAGE_PATH")
-
-	if baseImagePath == "" {
-		log.Fatal("BASE_IMAGE_PATH environment variable not set")
+	userRep := repositories.NewGormUserRepository(db)
+	refreshToken, _ := uuid.NewRandom()
+	newUser := models.User{
+		RefreshToken: refreshToken.String(),
 	}
+	userRep.Save(&newUser)
 
-	tokenId := flag.Arg(0)
+	cryptogotchiRep := repositories.NewGormCryptogotchiRepository(db)
+	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRep, g)
 
+	wg := sync.WaitGroup{}
+	wg.Add(amount)
+	for i := 0; i < amount; i++ {
+		go func() {
+			defer wg.Done()
+			crypt, err := cryptogotchiSvc.GenerateCryptogotchiForUser(&newUser)
+			if err != nil {
+				log.Printf("WARNING - error occured: %e", err)
+				return
+			}
+			log.Printf("User registered with id: %s and cryptogotchi tokenId: %s", newUser.Id, crypt.Id)
+		}()
+	}
+	wg.Wait()
+}
+
+func drawImage(g *generator.Generator, drawPrimaryColor bool) {
+
+	tokenId := flag.Arg(1)
+
+	originalTokenId := tokenId
 	if tokenId == "" {
-		log.Fatal("No token id provided as first argument (example: $ crypto-koi-cli <token id>)")
+		log.Fatal("No token id provided as first argument (example: $ crypto-koi-cli draw <token id>)")
 	}
 
-	// generate the image based on the token id
-	preloader := generator.NewMemoryPreloader(baseImagePath)
-	g := generator.NewGenerator(preloader)
+	// check if the token id needs to be converted.
+	if strings.IndexFunc(tokenId, isNotDigit) > -1 {
+		// not only digits - use as hex.
+		var err error
+		tokenId, err = util.TokenIdToIntString(tokenId)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	img, koi := g.TokenId2Image(tokenId)
 
-	if *drawPrimaryColor {
+	if drawPrimaryColor {
 		primaryColor := koi.PrimaryColor()
 
 		newImg := image.NewRGBA(image.Rect(0, 0, 100, 100))
@@ -57,7 +100,7 @@ func main() {
 		draw.Draw(img.(draw.Image), img.Bounds(), newImg, image.Point{}, draw.Over)
 	}
 
-	f, err := os.Create(fmt.Sprintf("%s.png", tokenId))
+	f, err := os.Create(fmt.Sprintf("%s.png", originalTokenId))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -67,9 +110,47 @@ func main() {
 		log.Fatal(err)
 	}
 
-	abs, err := filepath.Abs(fmt.Sprintf("%s.png", tokenId))
+	abs, err := filepath.Abs(fmt.Sprintf("%s.png", originalTokenId))
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Image generated and saved at:", abs)
+}
+
+// The cli can be used to generate koi images based upon the token id provided as the first argument.
+func main() {
+
+	err := godotenv.Load()
+
+	baseImagePath := os.Getenv("BASE_IMAGE_PATH")
+
+	if baseImagePath == "" {
+		log.Fatal("BASE_IMAGE_PATH environment variable not set")
+	}
+
+	drawPrimaryColor := flag.Bool("drawPrimaryColor", false, "draw the primary color onto the image")
+	debug := flag.Bool("debug", false, "enable debug mode")
+	amount := flag.Int("amount", 1, "amount of users to register")
+
+	flag.Parse()
+
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// generate the image based on the token id
+	preloader := generator.NewMemoryPreloader(baseImagePath)
+	g := generator.NewGenerator(preloader)
+	g.SetDebug(*debug)
+
+	command := flag.Arg(0)
+
+	switch command {
+	case "draw":
+		drawImage(&g, *drawPrimaryColor)
+	case "register":
+		registerRandomUser(&g, *amount)
+	default:
+		log.Fatalf("command: %s not found. Please use one of the following commands: register, draw", command)
+	}
 }
