@@ -11,7 +11,7 @@ RUN go build -o crypto-koi-api ./cmd/crypto-koi-api
 
 FROM gcr.io/distroless/base
 
-COPY --from=build-env /go/src/app/crypto-koi-api /go/src/app/crypto-koi-api
+COPY --from=build-env /go/src/app /go/src/app
 ENV GIN_MODE release
 WORKDIR /go/src/app
 EXPOSE 8080
