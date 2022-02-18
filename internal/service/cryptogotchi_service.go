@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/generator"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
@@ -30,8 +31,8 @@ func NewCryptogotchiService(rep repositories.CryptogotchiRepository, g *generato
 }
 
 func (svc *CryptogotchiService) GenerateWithFixedTokenId(user *models.User, id uuid.UUID) (models.Cryptogotchi, error) {
-	foodValue := 50.
-	foodDrainValue := 0.5
+	foodValue := config.DEFAULT_FOOD_VALUE
+	foodDrainValue := config.DEFAULT_FOOD_DRAIN
 	now := time.Now()
 
 	tokenId, err := util.TokenIdToIntString(id.String())

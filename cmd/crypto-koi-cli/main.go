@@ -66,13 +66,15 @@ func registerRandomUser(g *generator.Generator, amount int) {
 	wg.Wait()
 }
 
-func drawImage(g *generator.Generator, drawPrimaryColor bool) {
-
-	tokenId := flag.Arg(1)
+func drawImage(g *generator.Generator, drawPrimaryColor bool, tokenId string) {
 
 	originalTokenId := tokenId
 	if tokenId == "" {
-		log.Fatal("No token id provided as first argument (example: $ crypto-koi-cli draw <token id>)")
+		log.Println("No token id provided as first argument (example: $ crypto-koi-cli draw <token id>)")
+		id, _ := uuid.NewRandom()
+		tokenId = id.String()
+		originalTokenId = tokenId
+		log.Println("using random token id:", tokenId)
 	}
 
 	// check if the token id needs to be converted.
@@ -147,7 +149,7 @@ func main() {
 
 	switch command {
 	case "draw":
-		drawImage(&g, *drawPrimaryColor)
+		drawImage(&g, *drawPrimaryColor, flag.Arg(1))
 	case "register":
 		registerRandomUser(&g, *amount)
 	default:
