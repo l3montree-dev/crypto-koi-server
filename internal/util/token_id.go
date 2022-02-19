@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
-func TokenIdToIntString(tokenId string) (string, error) {
+func UuidToUint256(tokenId string) (*big.Int, error) {
 	hexStr := strings.ReplaceAll(tokenId, "-", "")
-	i := new(big.Int)
-	_, success := i.SetString(hexStr, 16)
+
+	uInt256, success := math.ParseBig256("0x" + hexStr)
+
 	if !success {
-		return "", fmt.Errorf("failed to convert hex string to big int")
+		return nil, fmt.Errorf("failed to convert hex string to big int")
 	}
-	return i.String(), nil
+	return uInt256, nil
 }

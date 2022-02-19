@@ -9,7 +9,7 @@ import (
 func TestConvertCryptogotchi2TokenId(t *testing.T) {
 
 	// the private key does not matter
-	tokenId, err := TokenIdToIntString("b400af616cb4456589c4d6ba43f948b7")
+	tokenId, err := UuidToUint256("b400af616cb4456589c4d6ba43f948b7")
 	if err != nil {
 		t.Fatal(err)
 	}

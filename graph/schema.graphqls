@@ -65,6 +65,7 @@ type NftData {
     signature: String!
     address: String!
     tokenId: String!
+    chainId: Int!
 }
 
 type Mutation {

@@ -10,4 +10,5 @@ type NftData struct {
 	Signature string `json:"signature"`
 	Address   string `json:"address"`
 	TokenID   string `json:"tokenId"`
+	ChainID   int    `json:"chainId"`
 }

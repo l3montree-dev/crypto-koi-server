@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai';
 import { Contract, Signer, Wallet } from 'ethers';
 import { ethers } from 'hardhat';
-import { expect } from 'chai';
 import tokens from './tokens.json';
 
 const otherUserAddress = '0xa111C225A0aFd5aD64221B1bc1D5d817e5D3Ca15';
@@ -12,8 +12,7 @@ const expectedHexHash =
   '8e130016394d7e04194944001ec36c64de13a73e81c716cd10016d5d83347a00';
 
 const expectedSignature =
-  '0x0577530589f065fdb25b8f29132865782ab2a4ea75a294ba56deecddeeefb77b18755f1811bb76dfadf417ff58f6bd2b593ddb4c80b1eaa85752e0df5a5b44f400';
-// '0x0577530589f065fdb25b8f29132865782ab2a4ea75a294ba56deecddeeefb77b18755f1811bb76dfadf417ff58f6bd2b593ddb4c80b1eaa85752e0df5a5b44f41b';
+  '0x0577530589f065fdb25b8f29132865782ab2a4ea75a294ba56deecddeeefb77b18755f1811bb76dfadf417ff58f6bd2b593ddb4c80b1eaa85752e0df5a5b44f41b';
 
 type TokenType = {
   tokenId?: string;
@@ -28,12 +27,6 @@ async function deploy(
 ) {
   const Contract = await ethers.getContractFactory(name, signer);
   return await Contract.deploy(...params).then((f) => f.deployed());
-}
-
-function bufferToHex(buffer: Buffer) {
-  return [...new Uint8Array(buffer)]
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
 }
 
 function hashToken(tokenId: string, account: string) {
@@ -66,8 +59,10 @@ describe('CryptoKoi', function () {
       // the fixed values are provided by the golang executable. The values can be found: web3_test.go
       const hash = hashToken(tokenId, otherUserAddress);
 
+      expect(hash.toString('hex')).to.eq(expectedHexHash);
+
       const signature = await admin.signMessage(hash);
-      // expect(signature).to.eq(expectedSignature);
+      expect(signature).to.eq(expectedSignature);
 
       // check if it is possible to redeem the token now with the provided values.
       // fist deploy the smart contract using the admin account.
@@ -148,6 +143,30 @@ describe('CryptoKoi', function () {
           token.account,
           token.tokenId,
         );
+    });
+
+    it('should return the correct current balance', async () => {
+      await contract.redeem(
+        token.account,
+        token.tokenId,
+        token.signature,
+      );
+
+      expect(await contract.balanceOf(token.account)).to.equal(
+        BigInt(1),
+      );
+    });
+
+    it('should return the correct owner', async () => {
+      await contract.redeem(
+        token.account,
+        token.tokenId,
+        token.signature,
+      );
+
+      expect(await contract.ownerOf(token.tokenId)).to.equal(
+        token.account,
+      );
     });
 
     it('mint twice - failure', async function () {

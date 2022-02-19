@@ -26,12 +26,12 @@ import (
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph/generated"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/controller"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/cryptokoi"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/generator"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/http_util"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
-	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/web3"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 	"gorm.io/gorm"
 )
@@ -150,13 +150,13 @@ func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
 func (s *GraphqlServer) thumbnailHandler(w http.ResponseWriter, r *http.Request) {
 	tokenId := chi.URLParam(r, "tokenId")
 	// the tokenId is the uuid of the cryptogotchi.
-	tokenIdIntStr, err := util.TokenIdToIntString(tokenId)
+	tokenIdUint256, err := util.UuidToUint256(tokenId)
 	if err != nil {
 		http_util.WriteHttpError(w, http.StatusBadRequest, "invalid tokenId")
 		return
 	}
 
-	img, koi := s.generator.TokenId2Image(tokenIdIntStr)
+	img, koi := s.generator.TokenId2Image(tokenIdUint256.String())
 
 	primaryColor := koi.PrimaryColor()
 
@@ -177,13 +177,13 @@ func (s *GraphqlServer) thumbnailHandler(w http.ResponseWriter, r *http.Request)
 func (s *GraphqlServer) imageHandler(w http.ResponseWriter, r *http.Request) {
 	tokenId := chi.URLParam(r, "tokenId")
 	// the tokenId is the uuid of the cryptogotchi.
-	tokenIdIntStr, err := util.TokenIdToIntString(tokenId)
+	tokenIdUint256, err := util.UuidToUint256(tokenId)
 	if err != nil {
 		http_util.WriteHttpError(w, http.StatusBadRequest, "invalid tokenId")
 		return
 	}
 
-	img, _ := s.generator.TokenId2Image(tokenIdIntStr)
+	img, _ := s.generator.TokenId2Image(tokenIdUint256.String())
 	/*
 		primaryColor := koi.PrimaryColor()
 
@@ -286,9 +286,9 @@ func (s *GraphqlServer) Start() {
 		orchardclient.Logger.Fatal("PRIVATE_KEY environment variable is not defined")
 	}
 
-	web3 := web3.NewWeb3(privateKey)
+	cryptokoiApi := cryptokoi.NewCryptokoiApi(privateKey)
 	// attach the graphql handler to the router
-	resolver := graph.NewResolver(s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, web3, s.generator)
+	resolver := graph.NewResolver(s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, cryptokoiApi, s.generator)
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver}))
 
 	// authorized routes

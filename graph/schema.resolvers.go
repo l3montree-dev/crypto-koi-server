@@ -51,11 +51,11 @@ func (r *cryptogotchiResolver) NextFeeding(ctx context.Context, obj *models.Cryp
 }
 
 func (r *cryptogotchiResolver) Color(ctx context.Context, obj *models.Cryptogotchi) (string, error) {
-	tokenId, err := util.TokenIdToIntString(obj.Id.String())
+	tokenId, err := util.UuidToUint256(obj.Id.String())
 	if err != nil {
 		return "", err
 	}
-	koi, _ := r.generator.GetKoi(tokenId)
+	koi, _ := r.generator.GetKoi(tokenId.String())
 	red, g, b, _ := koi.PrimaryColor().RGBA()
 	return fmt.Sprintf("#%02x%02x%02x", red>>8, g>>8, b>>8), nil
 }
@@ -185,7 +185,7 @@ func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, addre
 		return nil, fmt.Errorf("could not find cryptogotchi with id %s", id)
 	}
 
-	signature, tokenId, err := r.web3.GetNftSignatureForCryptogotchi(&cryptogotchi, address)
+	signature, tokenId, err := r.cryptokoiApi.GetNftSignatureForCryptogotchi(&cryptogotchi, address)
 
 	if err != nil {
 		return nil, err
@@ -195,6 +195,7 @@ func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, addre
 		Signature: signature,
 		TokenID:   tokenId,
 		Address:   address,
+		ChainID:   1,
 	}, nil
 }
 

@@ -6,7 +6,7 @@ import '@nomiclabs/hardhat-ethers';
 import 'dotenv/config';
 import 'hardhat-gas-reporter';
 
-const { HARDHAT_PORT } = process.env;
+const { HARDHAT_PORT, ALCHEMY_API_KEY } = process.env;
 
 export = {
   gasReporter: {
@@ -17,8 +17,12 @@ export = {
   },
   solidity: '0.8.1',
   networks: {
+    ropsten: {
+      url: 'https://eth-ropsten.alchemyapi.io/v2/' + ALCHEMY_API_KEY,
+    },
     localhost: { url: `http://127.0.0.1:${HARDHAT_PORT}` },
     hardhat: {
+      chainId: 1337,
       accounts: [
         {
           privateKey:

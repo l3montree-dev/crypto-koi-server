@@ -99,6 +99,7 @@ type ComplexityRoot struct {
 
 	NftData struct {
 		Address   func(childComplexity int) int
+		ChainID   func(childComplexity int) int
 		Signature func(childComplexity int) int
 		TokenID   func(childComplexity int) int
 	}
@@ -444,6 +445,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NftData.Address(childComplexity), true
 
+	case "NftData.chainId":
+		if e.complexity.NftData.ChainID == nil {
+			break
+		}
+
+		return e.complexity.NftData.ChainID(childComplexity), true
+
 	case "NftData.signature":
 		if e.complexity.NftData.Signature == nil {
 			break
@@ -667,6 +675,7 @@ type NftData {
     signature: String!
     address: String!
     tokenId: String!
+    chainId: Int!
 }
 
 type Mutation {
@@ -2231,6 +2240,41 @@ func (ec *executionContext) _NftData_tokenId(ctx context.Context, field graphql.
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NftData_chainId(ctx context.Context, field graphql.CollectedField, obj *input.NftData) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NftData",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChainID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_leaderboard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4359,6 +4403,16 @@ func (ec *executionContext) _NftData(ctx context.Context, sel ast.SelectionSet, 
 		case "tokenId":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._NftData_tokenId(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "chainId":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._NftData_chainId(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

@@ -35,13 +35,13 @@ func (svc *CryptogotchiService) GenerateWithFixedTokenId(user *models.User, id u
 	foodDrainValue := config.DEFAULT_FOOD_DRAIN
 	now := time.Now()
 
-	tokenId, err := util.TokenIdToIntString(id.String())
+	tokenId, err := util.UuidToUint256(id.String())
 
 	if err != nil {
 		return models.Cryptogotchi{}, err
 	}
 
-	koi, _ := svc.generator.GetKoi(tokenId)
+	koi, _ := svc.generator.GetKoi(tokenId.String())
 	name := strings.Title((koi.GetType()))
 
 	newCrypt := models.Cryptogotchi{
