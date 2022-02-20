@@ -16,6 +16,8 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/golang-jwt/jwt/v4"
@@ -286,7 +288,41 @@ func (s *GraphqlServer) Start() {
 		orchardclient.Logger.Fatal("PRIVATE_KEY environment variable is not defined")
 	}
 
-	cryptokoiApi := cryptokoi.NewCryptokoiApi(privateKey)
+	chainUrl := os.Getenv("CHAIN_URL")
+	if chainUrl == "" {
+		orchardclient.Logger.Fatal("CHAIN_URL environment variable is not defined")
+	}
+	chainWs := os.Getenv("CHAIN_WS")
+	if chainWs == "" {
+		orchardclient.Logger.Fatal("CHAIN_WS environment variable is not defined")
+	}
+
+	ethHttpClient, err := ethclient.Dial(chainUrl)
+	if err != nil {
+		orchardclient.Logger.Fatal(err)
+	}
+	defer ethHttpClient.Close()
+
+	ethWsClient, err := ethclient.Dial(chainWs)
+	if err != nil {
+		orchardclient.Logger.Fatal(err)
+	}
+	defer ethWsClient.Close()
+
+	contractAddress := os.Getenv("CONTRACT_ADDRESS")
+	if contractAddress == "" {
+		orchardclient.Logger.Fatal("CONTRACT_ADDRESS is not set")
+	}
+
+	httpBinding, err := cryptokoi.NewCryptoKoiBinding(common.HexToAddress(contractAddress), ethHttpClient)
+	orchardclient.FailOnError(err, "Failed to instantiate a CryptoKoi contract binding (HTTP)")
+	wsBinding, err := cryptokoi.NewCryptoKoiBinding(common.HexToAddress(contractAddress), ethWsClient)
+	orchardclient.FailOnError(err, "Failed to instantiate a CryptoKoi contract binding (WS)")
+
+	cryptokoiApi := cryptokoi.NewCryptokoiApi(privateKey, httpBinding)
+	cryptokoiListener := cryptokoi.NewCryptoKoiEventListener(wsBinding)
+
+	cryptokoiListener.StartListener()
 	// attach the graphql handler to the router
 	resolver := graph.NewResolver(s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, cryptokoiApi, s.generator)
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver}))

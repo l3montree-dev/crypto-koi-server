@@ -80,11 +80,12 @@ func drawImage(g *generator.Generator, drawPrimaryColor bool, tokenId string) {
 	// check if the token id needs to be converted.
 	if strings.IndexFunc(tokenId, isNotDigit) > -1 {
 		// not only digits - use as hex.
-		var err error
-		tokenId, err = util.UuidToUint256(tokenId)
+		tmp, err := util.UuidToUint256(tokenId)
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		tokenId = tmp.String()
 	}
 
 	img, koi := g.TokenId2Image(tokenId)

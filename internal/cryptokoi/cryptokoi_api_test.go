@@ -18,7 +18,7 @@ const (
 func TestRedeemToken(t *testing.T) {
 	os.Setenv("CHAIN_URL", "http://localhost:8545")
 	os.Setenv("CONTRACT_ADDRESS", "0x133c4b6c69322D09C5B266EFa9559173B6c9F029")
-	cryptokoiApi := NewCryptokoiApi(privateKey)
+	cryptokoiApi := NewCryptokoiApi(privateKey, nil)
 	cryptogotchi := &models.Cryptogotchi{
 		Base: models.Base{Id: uuid.MustParse("b400af616cb4456589c4d6ba43f948b7")},
 	}

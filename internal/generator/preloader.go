@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
 // preload all images into ram for faster generation
@@ -21,15 +23,15 @@ type Preloader interface {
 func loadImage(basePath string, name string) image.Image {
 	abs, err := filepath.Abs(filepath.Join(basePath, name))
 	if err != nil {
-		panic(err)
+		orchardclient.Logger.Fatal(err)
 	}
 	file, err := os.Open(abs)
 	if err != nil {
-		panic(err)
+		orchardclient.Logger.Fatal(err)
 	}
 	img, err := png.Decode(file)
 	if err != nil {
-		panic(err)
+		orchardclient.Logger.Fatal(err)
 	}
 	return img
 }
@@ -41,7 +43,7 @@ func NewMemoryPreloader(basePath string) Preloader {
 	}
 	entries, err := os.ReadDir(basePath)
 	if err != nil {
-		panic(err)
+		orchardclient.Logger.Fatal(err)
 	}
 	for _, entry := range entries {
 		if entry.IsDir() || filepath.Ext(entry.Name()) != ".png" {

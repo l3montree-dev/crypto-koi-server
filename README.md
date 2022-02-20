@@ -2,6 +2,10 @@
 
 [![coverage report](https://gitlab.com/l3montree/crypto-koi/crypto-koi-api/badges/main/coverage.svg)](https://gitlab.com/l3montree/crypto-koi/crypto-koi-api/-/commits/main)
 
+## Requirements
+
+1. Docker
+2. Geth (https://geth.ethereum.org/docs/install-and-build/installing-geth)
 ## Setup
 
 Install gqlgen - this is the utility to generate the go structs based on the defined graphql types.
