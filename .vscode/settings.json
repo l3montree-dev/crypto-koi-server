@@ -4,6 +4,7 @@
         "cryptogotchis",
         "gorm",
         "gqlerror",
+        "Kubernetes",
         "randomizers"
     ],
     "mochaExplorer.files": "test/**/*.{j,t}s"

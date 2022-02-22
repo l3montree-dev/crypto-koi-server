@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/access/AccessControl.sol';
-import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+import '@openzeppelin/contracts/token/ERC712/ERC712.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 
-contract CryptoKoi is ERC721, AccessControl {
+contract CryptoKoi is ERC712, AccessControl {
     constructor(string memory name, string memory symbol)
         ERC721(name, symbol)
     {
@@ -33,6 +33,15 @@ contract CryptoKoi is ERC721, AccessControl {
             'Invalid signature'
         );
         _safeMint(account, tokenId);
+    }
+
+    function _baseURI()
+        internal
+        view
+        virtual
+        returns (string memory)
+    {
+        return 'https://api.crypto-koi.io/v1/tokens/';
     }
 
     function _hash(address account, uint256 tokenId)

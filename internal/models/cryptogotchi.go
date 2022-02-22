@@ -9,8 +9,11 @@ import (
 
 type Cryptogotchi struct {
 	Base
-	Name               *string    `json:"name" gorm:"type:varchar(255);default:null"`
-	OwnerId            uuid.UUID  `json:"owner" gorm:"type:char(36); not null"`
+	Name    *string   `json:"name" gorm:"type:varchar(255);default:null"`
+	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36); not null"`
+
+	IsValidNft bool `json:"isValidNft" gorm:"default:false"`
+
 	PredictedDeathDate time.Time  `json:"-" gorm:"not null"`
 	LastFed            *time.Time `json:"-" gorm:"default:null"`
 	// values between 100 and 0.

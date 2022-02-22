@@ -24,7 +24,7 @@ func NewOpenseaController(eventRepository repositories.EventRepository, cryptogo
 func (c *OpenseaController) GetCryptogotchi(w http.ResponseWriter, req *http.Request) {
 	tokenId := chi.URLParam(req, "tokenId")
 	// fetch the correct cryptogotchi using the token.
-	cryptogotchi, err := c.cryptogotchiSvc.GetCryptogotchiByTokenId(tokenId)
+	cryptogotchi, err := c.cryptogotchiSvc.GetCryptogotchiByUint256(tokenId)
 	if err != nil {
 		http_util.WriteHttpError(w, http.StatusNotFound, "could not get cryptogotchi: %e", err)
 		return

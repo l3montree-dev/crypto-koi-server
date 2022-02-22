@@ -3,12 +3,14 @@ package repositories
 import (
 	"time"
 
+	"github.com/ethereum/go-ethereum/common/math"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 	"gorm.io/gorm"
 )
 
 type CryptogotchiRepository interface {
-	GetCryptogotchiByTokenId(tokenId string) (models.Cryptogotchi, error)
+	GetCryptogotchiByUint256(tokenId string) (models.Cryptogotchi, error)
 	GetCryptogotchiesByUserId(userId string) ([]models.Cryptogotchi, error)
 	GetCryptogotchiById(id string) (models.Cryptogotchi, error)
 	Save(*models.Cryptogotchi) error
@@ -23,10 +25,15 @@ func NewGormCryptogotchiRepository(db *gorm.DB) CryptogotchiRepository {
 	return &GormCryptogotchiRepository{db: db}
 }
 
-func (rep *GormCryptogotchiRepository) GetCryptogotchiByTokenId(tokenId string) (models.Cryptogotchi, error) {
-	var cryptogotchi models.Cryptogotchi
-	err := rep.db.Preload("Events", orderEventsASC).Where("token_id = ?", tokenId).First(&cryptogotchi).Error
-	return cryptogotchi, err
+func (rep *GormCryptogotchiRepository) GetCryptogotchiByUint256(tokenId string) (models.Cryptogotchi, error) {
+	bigInt := math.MustParseBig256(tokenId)
+
+	id, err := util.Uint256ToUuid(bigInt)
+	if err != nil {
+		return models.Cryptogotchi{}, err
+	}
+
+	return rep.GetCryptogotchiById(id.String())
 }
 
 func (rep *GormCryptogotchiRepository) Save(m *models.Cryptogotchi) error {

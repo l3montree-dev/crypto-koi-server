@@ -34,15 +34,19 @@ import (
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/pkg/leader"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 	"gorm.io/gorm"
 )
 
 type GraphqlServer struct {
-	db        *gorm.DB
-	tokenSvc  service.TokenSvc
-	userSvc   service.UserSvc
-	generator generator.Generator
+	db                *gorm.DB
+	tokenSvc          service.TokenSvc
+	userSvc           service.UserSvc
+	cryptogotchiSvc   service.CryptogotchiSvc
+	generator         generator.Generator
+	leaderElection    leader.LeaderElection
+	cryptokoiListener *cryptokoi.CryptoKoiEventListener
 }
 
 type responseData struct {
@@ -144,9 +148,9 @@ func graphqlTimeout(timeout time.Duration) func(next http.Handler) http.Handler 
 		return http.HandlerFunc(fn)
 	}
 }
-func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
+func NewGraphqlServer(db *gorm.DB, leaderElection leader.LeaderElection, imagesBasePath string) Server {
 	preloader := generator.NewMemoryPreloader(imagesBasePath)
-	return &GraphqlServer{db: db, generator: generator.NewGenerator(preloader)}
+	return &GraphqlServer{db: db, generator: generator.NewGenerator(preloader), leaderElection: leaderElection}
 }
 
 func (s *GraphqlServer) thumbnailHandler(w http.ResponseWriter, r *http.Request) {
@@ -202,6 +206,61 @@ func (s *GraphqlServer) imageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// send the image back
 	png.Encode(w, img)
+}
+
+func (s *GraphqlServer) getBlockchainListener() leader.Listener {
+	return leader.NewListener(func(cancelChan <-chan struct{}) {
+		eventChan := s.cryptokoiListener.StartListener()
+		for {
+			select {
+			case <-cancelChan:
+				return
+			case ev := <-eventChan:
+				crypt, err := s.cryptogotchiSvc.GetCryptogotchiByUint256(ev.TokenId)
+				if err != nil {
+					orchardclient.Logger.Error(err)
+					continue
+				}
+
+				err = s.cryptogotchiSvc.MarkAsNft(&crypt)
+				if err != nil {
+					orchardclient.Logger.Error(err)
+					continue
+				}
+
+				user, err := s.userSvc.GetById(crypt.OwnerId.String())
+				if err != nil {
+					orchardclient.Logger.Error(err)
+					continue
+				}
+				// check if the user already has a wallet address - if so do not overwrite it.
+				if user.WalletAddress == nil {
+					user.WalletAddress = &ev.To
+				} else if *user.WalletAddress != ev.To {
+					// if the user already has a wallet address, but it is different from the one which did sell the nft.
+					// this means there is a fraud attempt.
+					orchardclient.Logger.Error("User already has a wallet address, but it is different from the one which did sell the nft.")
+					continue
+				}
+				orchardclient.Logger.Infof("sold nft: [%s] to user: [%s] - cryptogotchiId: [%s]", ev.TokenId, user.Id.String(), crypt.Id.String())
+
+			}
+		}
+	})
+}
+
+func (s *GraphqlServer) getLeaderElection() leader.LeaderElection {
+	// create new leader election object to make sure, that we run the listener only once - even in a distributed environment.
+	podName := os.Getenv("POD_NAME")
+	var leaderElection leader.LeaderElection
+	if podName != "" {
+		// distributed environment detected.
+		leaderElection = leader.NewKubernetesLeaderElection(context.Background(), "leaderelection", "cryptokoi-api")
+	} else {
+		// local environment detected.
+		leaderElection = leader.NewAlwaysLeader()
+	}
+	return leaderElection
 }
 
 func (s *GraphqlServer) Start() {
@@ -260,9 +319,10 @@ func (s *GraphqlServer) Start() {
 	authController := controller.NewAuthController(userRepository, cryptogotchiSvc, authSvc)
 	openseaController := controller.NewOpenseaController(eventRepository, cryptogotchiSvc)
 
-	// set services to server instance for middleware
+	// set services to server instance for middleware and listeners
 	s.tokenSvc = tokenSvc
 	s.userSvc = userSvc
+	s.cryptogotchiSvc = cryptogotchiSvc
 
 	// add all routes.
 	if isDev {
@@ -275,12 +335,12 @@ func (s *GraphqlServer) Start() {
 		r.Post("/refresh", authController.Refresh)
 	})
 
-	router.Route("/integrations", func(r chi.Router) {
+	router.Route("/v1", func(r chi.Router) {
 		// make sure to stop processing after 10 seconds.
 		r.Use(middleware.Timeout(10 * time.Second))
 		// opensea.io integration.
 		// gets called by their API and wallet applications.
-		r.Get("/opensea/{tokenId}", openseaController.GetCryptogotchi)
+		r.Get("/tokens/{tokenId}", openseaController.GetCryptogotchi)
 	})
 
 	privateKey := os.Getenv("PRIVATE_KEY")
@@ -320,9 +380,14 @@ func (s *GraphqlServer) Start() {
 	orchardclient.FailOnError(err, "Failed to instantiate a CryptoKoi contract binding (WS)")
 
 	cryptokoiApi := cryptokoi.NewCryptokoiApi(privateKey, httpBinding)
-	cryptokoiListener := cryptokoi.NewCryptoKoiEventListener(wsBinding)
+	s.cryptokoiListener = cryptokoi.NewCryptoKoiEventListener(wsBinding)
 
-	cryptokoiListener.StartListener()
+	s.leaderElection = s.getLeaderElection()
+	// start the listener.
+	s.leaderElection.AddListener(s.getBlockchainListener())
+	// start all listeners
+	s.leaderElection.RunElection()
+
 	// attach the graphql handler to the router
 	resolver := graph.NewResolver(s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, cryptokoiApi, s.generator)
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver}))

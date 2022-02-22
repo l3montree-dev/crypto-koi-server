@@ -153,6 +153,8 @@ func main() {
 		drawImage(&g, *drawPrimaryColor, flag.Arg(1))
 	case "register":
 		registerRandomUser(&g, *amount)
+	case "sync-with-blockchain":
+		// syncWithBlockchain()
 	default:
 		log.Fatalf("command: %s not found. Please use one of the following commands: register, draw", command)
 	}

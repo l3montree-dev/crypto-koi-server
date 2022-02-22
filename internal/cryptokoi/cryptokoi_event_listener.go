@@ -63,7 +63,7 @@ func (c *CryptoKoiEventListener) connect(eventChan chan<- CryptoKoiEvent) {
 }
 
 // has basic reconnection logic
-func (c *CryptoKoiEventListener) StartListener() chan<- CryptoKoiEvent {
+func (c *CryptoKoiEventListener) StartListener() <-chan CryptoKoiEvent {
 	eventChan := make(chan CryptoKoiEvent)
 	go c.connect(eventChan)
 	return eventChan

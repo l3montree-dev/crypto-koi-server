@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/google/uuid"
 )
 
 func UuidToUint256(tokenId string) (*big.Int, error) {
@@ -17,4 +18,9 @@ func UuidToUint256(tokenId string) (*big.Int, error) {
 		return nil, fmt.Errorf("failed to convert hex string to big int")
 	}
 	return uInt256, nil
+}
+
+func Uint256ToUuid(uInt *big.Int) (uuid.UUID, error) {
+	hex := fmt.Sprintf("%x", uInt)
+	return uuid.Parse(hex)
 }

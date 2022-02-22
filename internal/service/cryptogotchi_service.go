@@ -16,6 +16,7 @@ type CryptogotchiSvc interface {
 	repositories.CryptogotchiRepository
 	GenerateCryptogotchiForUser(user *models.User) (models.Cryptogotchi, error)
 	GenerateWithFixedTokenId(user *models.User, id uuid.UUID) (models.Cryptogotchi, error)
+	MarkAsNft(crypt *models.Cryptogotchi) error
 }
 
 type CryptogotchiService struct {
@@ -66,4 +67,9 @@ func (svc *CryptogotchiService) GenerateCryptogotchiForUser(user *models.User) (
 		return models.Cryptogotchi{}, err
 	}
 	return svc.GenerateWithFixedTokenId(user, id)
+}
+
+func (svc *CryptogotchiService) MarkAsNft(crypt *models.Cryptogotchi) error {
+	crypt.IsValidNft = true
+	return svc.Save(crypt)
 }
