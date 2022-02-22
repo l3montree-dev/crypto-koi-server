@@ -3,12 +3,14 @@ package graph
 import (
 	"context"
 
+	"github.com/sirupsen/logrus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/cryptokoi"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/generator"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
+	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
 // This file will not be regenerated automatically.
@@ -23,6 +25,7 @@ type Resolver struct {
 	authSvc         service.AuthSvc
 	cryptokoiApi    cryptokoi.CryptoKoiApi
 	generator       generator.Generator
+	logger          *logrus.Entry
 }
 
 func NewResolver(
@@ -42,6 +45,7 @@ func NewResolver(
 		authSvc:         authSvc,
 		cryptokoiApi:    cryptokoiApi,
 		generator:       generator,
+		logger:          orchardclient.Logger.WithField("package", "graph"),
 	}
 }
 

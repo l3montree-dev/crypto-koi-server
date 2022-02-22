@@ -4,11 +4,13 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/sirupsen/logrus"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
 type CryptoKoiEventListener struct {
 	binding *CryptoKoiBinding
+	logger  *logrus.Entry
 }
 
 type CryptoKoiEvent struct {
@@ -20,6 +22,7 @@ type CryptoKoiEvent struct {
 func NewCryptoKoiEventListener(binding *CryptoKoiBinding) *CryptoKoiEventListener {
 	return &CryptoKoiEventListener{
 		binding: binding,
+		logger:  orchardclient.Logger.WithField("component", "CryptoKoiEventListener"),
 	}
 }
 
@@ -32,19 +35,19 @@ func (c *CryptoKoiEventListener) init() (event.Subscription, chan *CryptoKoiBind
 func (c *CryptoKoiEventListener) connect(eventChan chan<- CryptoKoiEvent) {
 	sub, ch, err := c.init()
 	if err != nil {
-		orchardclient.Logger.Error(err)
+		c.logger.Error(err)
 		// try to reconnect.
 		time.Sleep(time.Second * 5)
-		orchardclient.Logger.Info("reconnecting...")
+		c.logger.Info("reconnecting...")
 		c.connect(eventChan)
 		return
 	}
 
-	orchardclient.Logger.Info("websocket connection established")
+	c.logger.Info("websocket connection established")
 	for {
 		select {
 		case transfer := <-ch:
-			orchardclient.Logger.Info("Transfer: ", transfer.TokenId.String(), " ", transfer.From.String(), " ", transfer.To.String())
+			c.logger.Info("Transfer: ", transfer.TokenId.String(), " ", transfer.From.String(), " ", transfer.To.String())
 			eventChan <- CryptoKoiEvent{
 				TokenId: transfer.TokenId.String(),
 				From:    transfer.From.String(),
@@ -52,10 +55,10 @@ func (c *CryptoKoiEventListener) connect(eventChan chan<- CryptoKoiEvent) {
 			}
 
 		case err := <-sub.Err():
-			orchardclient.Logger.Error(err)
+			c.logger.Error(err)
 			// try to reconnect.
 			time.Sleep(time.Second * 5)
-			orchardclient.Logger.Info("reconnecting...")
+			c.logger.Info("reconnecting...")
 			c.connect(eventChan)
 			return
 		}

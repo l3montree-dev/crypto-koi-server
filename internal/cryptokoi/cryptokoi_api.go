@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	solsha3 "github.com/miguelmota/go-solidity-sha3"
+	"github.com/sirupsen/logrus"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
@@ -19,17 +20,20 @@ import (
 type CryptoKoiApi struct {
 	privateKey *ecdsa.PrivateKey
 	binding    *CryptoKoiBinding
+	logger     *logrus.Entry
 }
 
 func NewCryptokoiApi(privateHexKey string, binding *CryptoKoiBinding) CryptoKoiApi {
 	privKey, err := crypto.HexToECDSA(strings.Replace(privateHexKey, "0x", "", 1))
+	logger := orchardclient.Logger.WithField("component", "CryptoKoiApi")
 	if err != nil {
-		orchardclient.Logger.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	return CryptoKoiApi{
 		privateKey: privKey,
 		binding:    binding,
+		logger:     logger,
 	}
 }
 

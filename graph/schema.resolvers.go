@@ -15,7 +15,6 @@ import (
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/db"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
-	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
 func (r *cryptogotchiResolver) ID(ctx context.Context, obj *models.Cryptogotchi) (string, error) {
@@ -163,7 +162,6 @@ func (r *mutationResolver) FinishGame(ctx context.Context, token string, score f
 func (r *mutationResolver) ChangeCryptogotchiName(ctx context.Context, id string, newName string) (*models.Cryptogotchi, error) {
 	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiById(id)
 	if err != nil {
-		orchardclient.Logger.Errorf("could not find cryptogotchi with id:%s", id)
 		return nil, gqlerror.Errorf("could not find cryptogotchi with id %s", id)
 	}
 

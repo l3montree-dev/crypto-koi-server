@@ -21,6 +21,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/sirupsen/logrus"
 
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/go-chi/chi/v5"
@@ -47,6 +48,7 @@ type GraphqlServer struct {
 	generator         generator.Generator
 	leaderElection    leader.LeaderElection
 	cryptokoiListener *cryptokoi.CryptoKoiEventListener
+	logger            *logrus.Entry
 }
 
 type responseData struct {
@@ -90,7 +92,7 @@ func (s *GraphqlServer) authMiddleware(next http.Handler) http.Handler {
 		// get the token from the header
 		token := r.Header.Get("Authorization")
 		if token == "" {
-			orchardclient.Logger.Warn("auth middleware called without token")
+			s.logger.Warn("auth middleware called without token")
 			next.ServeHTTP(w, r)
 			// http_util.WriteHttpError(w, http.StatusUnauthorized, "no token provided")
 			return
@@ -104,14 +106,14 @@ func (s *GraphqlServer) authMiddleware(next http.Handler) http.Handler {
 			// log it.
 			if ve, ok := err.(*jwt.ValidationError); ok {
 				if ve.Errors&jwt.ValidationErrorMalformed != 0 {
-					orchardclient.Logger.Errorf("invalid token: %s", err)
+					s.logger.Errorf("invalid token: %s", err)
 					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e", err)
 				} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
 					// Token is either expired or not active yet
-					orchardclient.Logger.Infof("token is either expired or not active yet: %s", err)
+					s.logger.Infof("token is either expired or not active yet: %s", err)
 					http_util.WriteHttpError(w, http.StatusUnauthorized, "token is either expired or not active yet: %e", err)
 				} else {
-					orchardclient.Logger.Errorf("invalid token: %s", err)
+					s.logger.Errorf("invalid token: %s", err)
 					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e", err)
 				}
 			}
@@ -123,7 +125,7 @@ func (s *GraphqlServer) authMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			// invalid user
 			// log it.
-			orchardclient.Logger.Errorf("invalid user: %s", err)
+			s.logger.Errorf("invalid user: %s", err)
 			http_util.WriteHttpError(w, http.StatusInternalServerError, "could not fetch user from database")
 			return
 		}
@@ -148,9 +150,9 @@ func graphqlTimeout(timeout time.Duration) func(next http.Handler) http.Handler 
 		return http.HandlerFunc(fn)
 	}
 }
-func NewGraphqlServer(db *gorm.DB, leaderElection leader.LeaderElection, imagesBasePath string) Server {
+func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
 	preloader := generator.NewMemoryPreloader(imagesBasePath)
-	return &GraphqlServer{db: db, generator: generator.NewGenerator(preloader), leaderElection: leaderElection}
+	return &GraphqlServer{db: db, generator: generator.NewGenerator(preloader), logger: orchardclient.Logger.WithField("component", "GraphqlServer")}
 }
 
 func (s *GraphqlServer) thumbnailHandler(w http.ResponseWriter, r *http.Request) {
@@ -218,19 +220,19 @@ func (s *GraphqlServer) getBlockchainListener() leader.Listener {
 			case ev := <-eventChan:
 				crypt, err := s.cryptogotchiSvc.GetCryptogotchiByUint256(ev.TokenId)
 				if err != nil {
-					orchardclient.Logger.Error(err)
+					s.logger.Error(err)
 					continue
 				}
 
 				err = s.cryptogotchiSvc.MarkAsNft(&crypt)
 				if err != nil {
-					orchardclient.Logger.Error(err)
+					s.logger.Error(err)
 					continue
 				}
 
 				user, err := s.userSvc.GetById(crypt.OwnerId.String())
 				if err != nil {
-					orchardclient.Logger.Error(err)
+					s.logger.Error(err)
 					continue
 				}
 				// check if the user already has a wallet address - if so do not overwrite it.
@@ -239,10 +241,10 @@ func (s *GraphqlServer) getBlockchainListener() leader.Listener {
 				} else if *user.WalletAddress != ev.To {
 					// if the user already has a wallet address, but it is different from the one which did sell the nft.
 					// this means there is a fraud attempt.
-					orchardclient.Logger.Error("User already has a wallet address, but it is different from the one which did sell the nft.")
+					s.logger.Error("User already has a wallet address, but it is different from the one which did sell the nft.")
 					continue
 				}
-				orchardclient.Logger.Infof("sold nft: [%s] to user: [%s] - cryptogotchiId: [%s]", ev.TokenId, user.Id.String(), crypt.Id.String())
+				s.logger.Infof("sold nft: [%s] to user: [%s] - cryptogotchiId: [%s]", ev.TokenId, user.Id.String(), crypt.Id.String())
 
 			}
 		}
@@ -345,33 +347,33 @@ func (s *GraphqlServer) Start() {
 
 	privateKey := os.Getenv("PRIVATE_KEY")
 	if privateKey == "" {
-		orchardclient.Logger.Fatal("PRIVATE_KEY environment variable is not defined")
+		s.logger.Fatal("PRIVATE_KEY environment variable is not defined")
 	}
 
 	chainUrl := os.Getenv("CHAIN_URL")
 	if chainUrl == "" {
-		orchardclient.Logger.Fatal("CHAIN_URL environment variable is not defined")
+		s.logger.Fatal("CHAIN_URL environment variable is not defined")
 	}
 	chainWs := os.Getenv("CHAIN_WS")
 	if chainWs == "" {
-		orchardclient.Logger.Fatal("CHAIN_WS environment variable is not defined")
+		s.logger.Fatal("CHAIN_WS environment variable is not defined")
 	}
 
 	ethHttpClient, err := ethclient.Dial(chainUrl)
 	if err != nil {
-		orchardclient.Logger.Fatal(err)
+		s.logger.Fatal(err)
 	}
 	defer ethHttpClient.Close()
 
 	ethWsClient, err := ethclient.Dial(chainWs)
 	if err != nil {
-		orchardclient.Logger.Fatal(err)
+		s.logger.Fatal(err)
 	}
 	defer ethWsClient.Close()
 
 	contractAddress := os.Getenv("CONTRACT_ADDRESS")
 	if contractAddress == "" {
-		orchardclient.Logger.Fatal("CONTRACT_ADDRESS is not set")
+		s.logger.Fatal("CONTRACT_ADDRESS is not set")
 	}
 
 	httpBinding, err := cryptokoi.NewCryptoKoiBinding(common.HexToAddress(contractAddress), ethHttpClient)
@@ -401,6 +403,6 @@ func (s *GraphqlServer) Start() {
 		r.Handle("/query", srv)
 	})
 
-	orchardclient.Logger.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	s.logger.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

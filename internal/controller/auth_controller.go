@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"github.com/sirupsen/logrus"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/db"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/http_dto"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/http_util"
@@ -15,12 +16,14 @@ import (
 type AuthController struct {
 	authSvc         service.AuthSvc
 	cryptogotchiSvc service.CryptogotchiSvc
+	logger          *logrus.Entry
 }
 
 func NewAuthController(userRepository repositories.UserRepository, cryptogotchiSvc service.CryptogotchiSvc, authSvc service.AuthSvc) AuthController {
 	return AuthController{
 		authSvc:         authSvc,
 		cryptogotchiSvc: cryptogotchiSvc,
+		logger:          orchardclient.Logger.WithField("component", "AuthController"),
 	}
 }
 
@@ -29,7 +32,7 @@ func (c *AuthController) Refresh(w http.ResponseWriter, req *http.Request) {
 	err := http_util.ParseBody(req, &refreshRequest)
 
 	if err != nil {
-		orchardclient.Logger.Errorf("could not parse body: %e", err)
+		c.logger.Errorf("could not parse body: %e", err)
 		http_util.WriteHttpError(w, http.StatusBadRequest, "could not parse body: %e", err)
 		return
 	}
@@ -37,13 +40,13 @@ func (c *AuthController) Refresh(w http.ResponseWriter, req *http.Request) {
 	user, err := c.authSvc.GetByRefreshToken(refreshRequest.RefreshToken)
 
 	if db.IsNotFound(err) {
-		orchardclient.Logger.Warn("refresh token is not valid")
+		c.logger.Warn("refresh token is not valid")
 		http_util.WriteHttpError(w, http.StatusForbidden, "refresh token not valid: %e", err)
 		return
 	}
 
 	if err != nil {
-		orchardclient.Logger.Errorf("could not get user: %e", err)
+		c.logger.Errorf("could not get user: %e", err)
 		http_util.WriteHttpError(w, http.StatusInternalServerError, "could not get user: %e", err)
 		return
 	}
@@ -51,7 +54,7 @@ func (c *AuthController) Refresh(w http.ResponseWriter, req *http.Request) {
 	// create new refresh token for user.
 	res, err := c.authSvc.CreateTokenForUser(&user)
 	if err != nil {
-		orchardclient.Logger.Errorf("could not generate tokens: %e", err)
+		c.logger.Errorf("could not generate tokens: %e", err)
 		http_util.WriteHttpError(w, http.StatusInternalServerError, "could not generate tokens: %e", err)
 		return
 	}
@@ -64,7 +67,7 @@ func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 	var loginRequest http_dto.LoginRequest
 	err := http_util.ParseBody(req, &loginRequest)
 	if err != nil {
-		orchardclient.Logger.Warnf("could not parse body: %e", err)
+		c.logger.Warnf("could not parse body: %e", err)
 		http_util.WriteHttpError(w, http.StatusBadRequest, "could not parse body: %e", err)
 		return
 	}
@@ -90,7 +93,7 @@ func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 		err := c.authSvc.Save(&user)
 
 		if err != nil {
-			orchardclient.Logger.Errorf("could not save user: %e", err)
+			c.logger.Errorf("could not save user: %e", err)
 			http_util.WriteHttpError(w, http.StatusInternalServerError, "could not save user: %e", err)
 			return
 		}
@@ -99,14 +102,14 @@ func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 		_, err = c.cryptogotchiSvc.GenerateCryptogotchiForUser(&user)
 
 		if err != nil {
-			orchardclient.Logger.Errorf("could not generate cryptogotchi: %e", err)
+			c.logger.Errorf("could not generate cryptogotchi: %e", err)
 			// delete the created user to avoid having a user without a cryptogotchi.
 			c.authSvc.Delete(&user)
 			http_util.WriteHttpError(w, http.StatusInternalServerError, "could not generate cryptogotchi: %e", err)
 			return
 		}
 	} else if err != nil {
-		orchardclient.Logger.Errorf("could not get user: %e", err)
+		c.logger.Errorf("could not get user: %e", err)
 		http_util.WriteHttpError(w, http.StatusInternalServerError, "could not get user: %e", err)
 		return
 	}
@@ -115,7 +118,7 @@ func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 	// return a token for the user.
 	res, err := c.authSvc.CreateTokenForUser(&user)
 	if err != nil {
-		orchardclient.Logger.Errorf("could not generate tokens: %e", err)
+		c.logger.Errorf("could not generate tokens: %e", err)
 		http_util.WriteHttpError(w, http.StatusInternalServerError, "could not generate tokens: %e", err)
 		return
 	}

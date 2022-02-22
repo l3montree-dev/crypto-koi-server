@@ -32,8 +32,9 @@ func (hook *SentryErrorLoggingHook) Levels() []logrus.Level {
 
 func main() {
 	err := godotenv.Load()
+	mainLogger := orchardclient.Logger.WithField("component", "Main")
 	if err != nil {
-		orchardclient.Logger.Fatal("Error loading .env file")
+		mainLogger.Fatal("Error loading .env file")
 	}
 
 	isDev := os.Getenv("DEV") == "true"
@@ -42,7 +43,7 @@ func main() {
 			Dsn: "https://e56b8f4eedcf451e9b1cec93799f4443@sentry.l3montree.com/50",
 		})
 		if err != nil {
-			orchardclient.Logger.Fatalf("sentry.Init: %s", err)
+			mainLogger.Fatalf("sentry.Init: %s", err)
 		}
 	}
 
@@ -55,11 +56,13 @@ func main() {
 		DBName:   os.Getenv("DB_NAME"),
 		Host:     os.Getenv("DB_HOST"),
 	})
-	orchardclient.FailOnError(err, "could not connect to database")
+	if err != nil {
+		mainLogger.Fatal(err, "Error connecting to database")
+	}
 
 	baseImagePath := os.Getenv("BASE_IMAGE_PATH")
 	if baseImagePath == "" {
-		orchardclient.Logger.Fatal("BASE_IMAGE_PATH is not set")
+		mainLogger.Fatal("BASE_IMAGE_PATH is not set")
 	}
 	server := server.NewGraphqlServer(db, baseImagePath)
 	server.Start()

@@ -20,7 +20,7 @@ func (errorc *ErrorC) Error() string {
 
 func (errorc ErrorC) ToJSON() []byte {
 	b, err := json.Marshal(errorc)
-	orchardclient.FailOnError(err, "could not marshal ErrorC to JSON")
+	orchardclient.Logger.Error(err, "could not marshal ErrorC to JSON")
 	return b
 }
 

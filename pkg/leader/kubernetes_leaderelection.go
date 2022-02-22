@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -22,16 +23,18 @@ type KubernetesLeaderElection struct {
 	ctx           context.Context
 	client        *kubernetes.Clientset
 	listeners     []Listener
+	logger        *logrus.Entry
 }
 
 func NewKubernetesLeaderElection(ctx context.Context, lockName, lockNamespace string) LeaderElection {
+	logger := orchardclient.Logger.WithField("component", "KubernetesLeaderElection")
 	config, err := rest.InClusterConfig()
 	orchardclient.FailOnError(err, "failed to retrieve kubernetes config")
 
 	// get the pod name of the current pod
 	podName := os.Getenv("POD_NAME")
 	if podName == "" {
-		orchardclient.Logger.Fatal("failed to retrieve pod name. Running in kubernetes?")
+		logger.Fatal("failed to retrieve pod name. Running in kubernetes?")
 	}
 
 	client := kubernetes.NewForConfigOrDie(config)
@@ -41,6 +44,7 @@ func NewKubernetesLeaderElection(ctx context.Context, lockName, lockNamespace st
 		ctx:           ctx,
 		client:        client,
 		podName:       podName,
+		logger:        logger,
 	}
 }
 
@@ -66,6 +70,7 @@ func (k *KubernetesLeaderElection) GetChannel() chan bool {
 }
 
 func (k *KubernetesLeaderElection) RunElection() {
+	k.logger.Info("running leader election in kubernetes mode")
 	lock := k.getNewLock()
 	leaderelection.RunOrDie(k.ctx, leaderelection.LeaderElectionConfig{
 		Lock:            lock,
@@ -75,19 +80,23 @@ func (k *KubernetesLeaderElection) RunElection() {
 		RetryPeriod:     2 * time.Second,
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(c context.Context) {
+				k.logger.Info("we are the leader")
 				k.isLeader = true
 				k.ch <- true
 				// call start on each listener.
-				for _, lst := range k.listeners {
+				for i, lst := range k.listeners {
+					k.logger.Info("starting listener: ", i)
 					// each listener will run in its own goroutine
 					go lst.Start()
 				}
 			},
 			OnStoppedLeading: func() {
+				k.logger.Info("stopped leading")
 				k.isLeader = false
 				k.ch <- false
 				// call stop on each listener.
-				for _, lst := range k.listeners {
+				for i, lst := range k.listeners {
+					k.logger.Info("stopping listener: ", i)
 					lst.Stop()
 				}
 			},
