@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
-	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/generator"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/cryptokoi"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/repositories"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
@@ -21,13 +21,11 @@ type CryptogotchiSvc interface {
 
 type CryptogotchiService struct {
 	repositories.CryptogotchiRepository
-	generator *generator.Generator
 }
 
-func NewCryptogotchiService(rep repositories.CryptogotchiRepository, g *generator.Generator) CryptogotchiSvc {
+func NewCryptogotchiService(rep repositories.CryptogotchiRepository) CryptogotchiSvc {
 	return &CryptogotchiService{
 		CryptogotchiRepository: rep,
-		generator:              g,
 	}
 }
 
@@ -42,8 +40,8 @@ func (svc *CryptogotchiService) GenerateWithFixedTokenId(user *models.User, id u
 		return models.Cryptogotchi{}, err
 	}
 
-	koi, _ := svc.generator.GetKoi(tokenId.String())
-	name := strings.Title((koi.GetType()))
+	koi := cryptokoi.NewKoi(tokenId.String())
+	name := strings.Title((koi.GetAttributes().KoiType))
 
 	newCrypt := models.Cryptogotchi{
 		// TODO: generate a random name

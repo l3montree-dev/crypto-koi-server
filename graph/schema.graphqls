@@ -35,6 +35,7 @@ type Cryptogotchi {
   food: Float!
   minutesTillDeath: Float!
   maxLifetimeMinutes: Float!
+  isValidNft: Boolean!
   #funDrain: Float!
   #affectionDrain: Float!
  

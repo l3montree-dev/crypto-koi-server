@@ -12,7 +12,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	solsha3 "github.com/miguelmota/go-solidity-sha3"
 	"github.com/sirupsen/logrus"
-	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
@@ -38,8 +37,8 @@ func NewCryptokoiApi(privateHexKey string, binding *CryptoKoiBinding) CryptoKoiA
 }
 
 // pass the address in hex format
-func (c *CryptoKoiApi) GetNftSignatureForCryptogotchi(cryptogotchi *models.Cryptogotchi, address string) (string, string, error) {
-	tokenId, err := util.UuidToUint256(cryptogotchi.Id.String())
+func (c *CryptoKoiApi) GetNftSignatureForCryptogotchi(cryptogotchiId string, address string) (string, string, error) {
+	tokenId, err := util.UuidToUint256(cryptogotchiId)
 	if err != nil {
 		return "", "", err
 	}

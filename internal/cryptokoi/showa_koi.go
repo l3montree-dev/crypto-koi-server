@@ -1,8 +1,13 @@
-package generator
+package cryptokoi
 
-import "image/color"
+import (
+	"image/color"
+
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
+)
 
 type ShowaKoi struct {
+	*CryptoKoi
 	koiType KoiType
 	// kohaku kois should have the same color for all patterns.
 	redColor        color.Color
@@ -22,59 +27,59 @@ func NewShowaKoi(randomSeed int) Koi {
 	}
 }
 
-func (koi ShowaKoi) PrimaryColor() color.Color {
+func (koi ShowaKoi) primaryColor() color.Color {
 	return koi.redColor
 }
 
-func (koi ShowaKoi) GetType() KoiType {
+func (koi ShowaKoi) getType() KoiType {
 	return koi.koiType
 }
 
-func (koi ShowaKoi) GetFinImages(amount int, randomSeed int) []ImageWithColor {
+func (koi ShowaKoi) getFinImages(amount int, randomSeed int) []util.ImageWithColor {
 	return pickAmount(
 		amount,
 		randomSeed,
-		concatPreAllocate(
+		util.ConcatPreAllocate(
 			withColor("fin", 1, 2, koi.redColor),
 			withColor("fin", 1, 2, koi.blackColor),
 		),
 	)
 }
 
-func (koi ShowaKoi) AmountFinImages() (int, int) {
+func (koi ShowaKoi) amountFinImages() (int, int) {
 	return 0, 1
 }
 
-func (koi ShowaKoi) AmountHeadImages() (int, int) {
+func (koi ShowaKoi) amountHeadImages() (int, int) {
 	return 0, 1
 }
 
-func (koi ShowaKoi) AmountBodyImages() (int, int) {
+func (koi ShowaKoi) amountBodyImages() (int, int) {
 	return 1, 4
 }
 
-func (koi ShowaKoi) GetFinBackgroundColor(randomSeed int) color.Color {
+func (koi ShowaKoi) getFinBackgroundColor(randomSeed int) color.Color {
 	return koi.bodyAndFinColor
 }
 
-func (koi ShowaKoi) GetBodyColor(randomSeed int) color.Color {
+func (koi ShowaKoi) getBodyColor(randomSeed int) color.Color {
 	return koi.bodyAndFinColor
 }
 
-func (koi ShowaKoi) GetBodyImages(amount int, randomSeed int) []ImageWithColor {
+func (koi ShowaKoi) getBodyImages(amount int, randomSeed int) []util.ImageWithColor {
 	// generate the red color - so that all image patterns have the same red color
 	return pickAmount(
 		amount,
 		randomSeed,
-		concatPreAllocate(
+		util.ConcatPreAllocate(
 			withColor("body", 1, 10, koi.redColor),
 			withColor("body", 1, 10, koi.blackColor),
 		),
 	)
 }
 
-func (koi ShowaKoi) GetHeadImages(amount int, randomSeed int) []ImageWithColor {
-	return pickAmount(amount, randomSeed, concatPreAllocate(
+func (koi ShowaKoi) getHeadImages(amount int, randomSeed int) []util.ImageWithColor {
+	return pickAmount(amount, randomSeed, util.ConcatPreAllocate(
 		withColor("head", 1, 5, koi.redColor),
 		withColor("head", 1, 5, koi.redColor),
 	))

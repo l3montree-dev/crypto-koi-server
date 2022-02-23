@@ -1,10 +1,13 @@
-package generator
+package cryptokoi
 
 import (
 	"image/color"
+
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 )
 
 type UtsuriKoi struct {
+	*CryptoKoi
 	koiType KoiType
 	// Utsuri kois should have the same color for all patterns.
 	color color.Color
@@ -20,43 +23,43 @@ func NewUtsuriKoi(randomSeed int) Koi {
 	}
 }
 
-func (koi UtsuriKoi) PrimaryColor() color.Color {
+func (koi UtsuriKoi) primaryColor() color.Color {
 	return koi.color
 }
 
-func (koi UtsuriKoi) GetType() KoiType {
+func (koi UtsuriKoi) getType() KoiType {
 	return koi.koiType
 }
 
-func (koi UtsuriKoi) GetFinImages(amount int, randomSeed int) []ImageWithColor {
+func (koi UtsuriKoi) getFinImages(amount int, randomSeed int) []util.ImageWithColor {
 	return amountWithColor("fin", amount, randomSeed, 1, 2, koi.color)
 }
 
-func (koi UtsuriKoi) AmountFinImages() (int, int) {
+func (koi UtsuriKoi) amountFinImages() (int, int) {
 	return 0, 1
 }
 
-func (koi UtsuriKoi) AmountHeadImages() (int, int) {
+func (koi UtsuriKoi) amountHeadImages() (int, int) {
 	return 0, 1
 }
 
-func (koi UtsuriKoi) AmountBodyImages() (int, int) {
+func (koi UtsuriKoi) amountBodyImages() (int, int) {
 	return 1, 4
 }
 
-func (koi UtsuriKoi) GetFinBackgroundColor(randomSeed int) color.Color {
+func (koi UtsuriKoi) getFinBackgroundColor(randomSeed int) color.Color {
 	return WhiteColorRange.Apply(randomSeed)
 }
 
-func (koi UtsuriKoi) GetBodyColor(randomSeed int) color.Color {
+func (koi UtsuriKoi) getBodyColor(randomSeed int) color.Color {
 	return pickColorOutOf(randomSeed, WhiteColorRange, OrangeColorRange, RedColorRange)
 }
 
-func (koi UtsuriKoi) GetBodyImages(amount int, randomSeed int) []ImageWithColor {
+func (koi UtsuriKoi) getBodyImages(amount int, randomSeed int) []util.ImageWithColor {
 	// generate the red color - so that all image patterns have the same red color
 	return amountWithColor("body", amount, randomSeed, 1, 10, koi.color)
 }
 
-func (koi UtsuriKoi) GetHeadImages(amount int, randomSeed int) []ImageWithColor {
+func (koi UtsuriKoi) getHeadImages(amount int, randomSeed int) []util.ImageWithColor {
 	return amountWithColor("head", amount, randomSeed, 1, 5, koi.color)
 }

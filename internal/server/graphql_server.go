@@ -155,59 +155,35 @@ func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
 	return &GraphqlServer{db: db, generator: generator.NewGenerator(preloader), logger: orchardclient.Logger.WithField("component", "GraphqlServer")}
 }
 
-func (s *GraphqlServer) thumbnailHandler(w http.ResponseWriter, r *http.Request) {
-	tokenId := chi.URLParam(r, "tokenId")
-	// the tokenId is the uuid of the cryptogotchi.
-	tokenIdUint256, err := util.UuidToUint256(tokenId)
-	if err != nil {
-		http_util.WriteHttpError(w, http.StatusBadRequest, "invalid tokenId")
-		return
-	}
-
-	img, koi := s.generator.TokenId2Image(tokenIdUint256.String())
-
-	primaryColor := koi.PrimaryColor()
-
-	thumbnail := image.NewRGBA(image.Rect(0, 0, 200, 200))
-	for y := 0; y < thumbnail.Bounds().Max.Y; y++ {
-		for x := 0; x < thumbnail.Bounds().Max.X; x++ {
-			thumbnail.Set(x, y, primaryColor)
+func (s *GraphqlServer) imageHandlerFactory(size int, drawBackgroundColor bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tokenId := chi.URLParam(r, "tokenId")
+		// the tokenId is the uuid of the cryptogotchi.
+		tokenIdUint256, err := util.UuidToUint256(tokenId)
+		if err != nil {
+			http_util.WriteHttpError(w, http.StatusBadRequest, "invalid tokenId")
+			return
 		}
-	}
 
-	imageDraw.NearestNeighbor.Scale(thumbnail, thumbnail.Rect, img, img.Bounds(), draw.Over, nil)
+		img, koi := s.generator.TokenId2Image(tokenIdUint256.String())
 
-	w.Header().Set("Content-Type", "image/png")
+		scaledImg := image.NewRGBA(image.Rect(0, 0, size, size))
 
-	png.Encode(w, thumbnail)
-}
-
-func (s *GraphqlServer) imageHandler(w http.ResponseWriter, r *http.Request) {
-	tokenId := chi.URLParam(r, "tokenId")
-	// the tokenId is the uuid of the cryptogotchi.
-	tokenIdUint256, err := util.UuidToUint256(tokenId)
-	if err != nil {
-		http_util.WriteHttpError(w, http.StatusBadRequest, "invalid tokenId")
-		return
-	}
-
-	img, _ := s.generator.TokenId2Image(tokenIdUint256.String())
-	/*
-		primaryColor := koi.PrimaryColor()
-
-		primaryColorImg := image.NewRGBA(image.Rect(0, 0, 100, 100))
-
-		for x := 0; x < 100; x++ {
-			for y := 0; y < 100; y++ {
-				primaryColorImg.Set(x, y, primaryColor)
+		if drawBackgroundColor {
+			primaryColor := koi.GetAttributes().PrimaryColor
+			for y := 0; y < scaledImg.Bounds().Max.Y; y++ {
+				for x := 0; x < scaledImg.Bounds().Max.X; x++ {
+					scaledImg.Set(x, y, primaryColor)
+				}
 			}
 		}
-		draw.Draw(img.(draw.Image), img.Bounds(), primaryColorImg, image.Point{}, draw.Over)
-	*/
-	w.Header().Set("Content-Type", "image/png")
 
-	// send the image back
-	png.Encode(w, img)
+		imageDraw.NearestNeighbor.Scale(scaledImg, scaledImg.Rect, img, img.Bounds(), draw.Over, nil)
+
+		w.Header().Set("Content-Type", "image/png")
+
+		png.Encode(w, scaledImg)
+	}
 }
 
 func (s *GraphqlServer) getBlockchainListener() leader.Listener {
@@ -270,6 +246,11 @@ func (s *GraphqlServer) Start() {
 	isDev := os.Getenv("DEV") != ""
 	port := os.Getenv("PORT")
 
+	imageBaseUrl := os.Getenv("IMAGE_BASE_URL")
+	if imageBaseUrl == "" {
+		s.logger.Fatal("IMAGE_BASE_URL env variable is not set.")
+	}
+
 	if port == "" {
 		port = defaultPort
 	}
@@ -301,8 +282,8 @@ func (s *GraphqlServer) Start() {
 
 	router.Use(sentryMiddleware.Handle)
 
-	router.Get("/images/{tokenId}", s.imageHandler)
-	router.Get("/thumbnails/{tokenId}", s.thumbnailHandler)
+	router.Get("/images/{tokenId}", s.imageHandlerFactory(1024, false))
+	router.Get("/thumbnails/{tokenId}", s.imageHandlerFactory(200, true))
 
 	// init all repositories
 	cryptogotchiRepository := repositories.NewGormCryptogotchiRepository(s.db)
@@ -317,9 +298,9 @@ func (s *GraphqlServer) Start() {
 	eventSvc := service.NewEventService(eventRepository)
 	gameSvc := service.NewGameService(gameRepository, eventSvc, tokenSvc)
 	// init all controllers
-	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRepository, &s.generator)
+	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRepository)
 	authController := controller.NewAuthController(userRepository, cryptogotchiSvc, authSvc)
-	openseaController := controller.NewOpenseaController(eventRepository, cryptogotchiSvc)
+	openseaController := controller.NewOpenseaController(imageBaseUrl, &s.generator, eventRepository, cryptogotchiSvc)
 
 	// set services to server instance for middleware and listeners
 	s.tokenSvc = tokenSvc
@@ -343,6 +324,7 @@ func (s *GraphqlServer) Start() {
 		// opensea.io integration.
 		// gets called by their API and wallet applications.
 		r.Get("/tokens/{tokenId}", openseaController.GetCryptogotchi)
+		r.Get("/images/{tokenId}", s.imageHandlerFactory(350, false))
 	})
 
 	privateKey := os.Getenv("PRIVATE_KEY")

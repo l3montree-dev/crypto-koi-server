@@ -12,6 +12,7 @@ import (
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph/generated"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph/input"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/cryptokoi"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/db"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
@@ -54,8 +55,9 @@ func (r *cryptogotchiResolver) Color(ctx context.Context, obj *models.Cryptogotc
 	if err != nil {
 		return "", err
 	}
-	koi, _ := r.generator.GetKoi(tokenId.String())
-	red, g, b, _ := koi.PrimaryColor().RGBA()
+	koi := cryptokoi.NewKoi(tokenId.String())
+	attributes := koi.GetAttributes()
+	red, g, b, _ := attributes.PrimaryColor.RGBA()
 	return fmt.Sprintf("#%02x%02x%02x", red>>8, g>>8, b>>8), nil
 }
 
@@ -183,7 +185,7 @@ func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, addre
 		return nil, fmt.Errorf("could not find cryptogotchi with id %s", id)
 	}
 
-	signature, tokenId, err := r.cryptokoiApi.GetNftSignatureForCryptogotchi(&cryptogotchi, address)
+	signature, tokenId, err := r.cryptokoiApi.GetNftSignatureForCryptogotchi(cryptogotchi.Id.String(), address)
 
 	if err != nil {
 		return nil, err

@@ -4,10 +4,10 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"log"
-	"math/rand"
-	"strconv"
 	"sync"
+
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/cryptokoi"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 )
 
 const (
@@ -29,40 +29,14 @@ type imageProcessingResult struct {
 	id     int
 }
 
-func concatPreAllocate(slices ...[]ImageWithColor) []ImageWithColor {
-	var totalLen int
-	for _, s := range slices {
-		totalLen += len(s)
-	}
-	tmp := make([]ImageWithColor, totalLen)
-
-	i := 0
-	for _, s := range slices {
-		for _, img := range s {
-			tmp[i] = img
-			i++
-		}
-	}
-	return tmp
-}
-
-type koiCtr = func(randomSeed int) Koi
 type Generator struct {
 	preloader Preloader
-	koiCtrs   []koiCtr
 	debug     bool
 }
 
 func NewGenerator(preloader Preloader) Generator {
 	return Generator{
 		preloader: preloader,
-		koiCtrs: []koiCtr{
-			NewKohakuKoi,
-			NewShowaKoi,
-			NewUtsuriKoi,
-			NewMonochromeKoi,
-			NewShigureKoi,
-		},
 	}
 }
 
@@ -115,72 +89,17 @@ func (generator *Generator) applyColorToImage(c color.Color, img image.Image) im
 	return result
 }
 
-func (g *Generator) GetKoi(tokenId string) (Koi, struct {
-	r2 *rand.Rand
-	r3 *rand.Rand
-	r4 *rand.Rand
-}) {
-	// chunk the tokenId into 4 different sizes and create a random generator out of each.
-	chunkSize := len(tokenId) / 4
-	firstChunk, _ := strconv.ParseInt(tokenId[:chunkSize], 10, 64)
-	secondChunk, _ := strconv.ParseInt(tokenId[chunkSize:chunkSize*2], 10, 64)
-	thirdChunk, _ := strconv.ParseInt(tokenId[chunkSize*2:chunkSize*3], 10, 64)
-	fourthChunk, _ := strconv.ParseInt(tokenId[chunkSize*3:], 10, 64)
+func (g *Generator) TokenId2Image(tokenId string) (image.Image, cryptokoi.CryptoKoi) {
+	koi := cryptokoi.NewKoi(tokenId)
 
-	// this is just so random :-)
-	r1, r2, r3, r4 := rand.New(rand.NewSource(firstChunk)), rand.New(rand.NewSource(secondChunk)), rand.New(rand.NewSource(thirdChunk)), rand.New(rand.NewSource(fourthChunk))
-	// now the token id is 39 characters long.
-	// extract all seed values. Just crop a few characters and convert them into integers.
-	// start applying all seeds to first get the koy, and afterwards get all images.
-	koi := g.koiCtrs[r1.Intn(len(g.koiCtrs))](r1.Int())
-
-	if g.debug {
-		log.Println("firstChunk:", firstChunk)
-		log.Println("secondChunk:", secondChunk)
-		log.Println("thirdChunk:", thirdChunk)
-		log.Println("fourthChunk:", fourthChunk)
-		log.Println("koi type", koi.GetType())
-	}
-
-	return koi, struct {
-		r2 *rand.Rand
-		r3 *rand.Rand
-		r4 *rand.Rand
-	}{r2, r3, r4}
-}
-
-func (g *Generator) TokenId2Image(tokenId string) (image.Image, Koi) {
-	koi, randomizers := g.GetKoi(tokenId)
-	r2, r3, r4 := randomizers.r2, randomizers.r3, randomizers.r4
-
-	minBodyImages, maxBodyImages := koi.AmountBodyImages()
-	minHeadImages, maxHeadImages := koi.AmountHeadImages()
-	minFinImages, maxFinImages := koi.AmountFinImages()
-
-	amountOfBodyImages := maxBodyImages
-	if maxBodyImages != minBodyImages {
-		// increment by 1 to include the max value into the possible values
-		amountOfBodyImages = r2.Intn(maxBodyImages+1-minBodyImages) + minBodyImages
-	}
-	amountOfFinImages := maxFinImages
-	if maxFinImages != minFinImages {
-		// increment by 1 to include the max value into the possible values
-		amountOfFinImages = r2.Intn(maxFinImages+1-minFinImages) + minFinImages
-	}
-	amountOfHeadImages := maxHeadImages
-	if maxHeadImages != minHeadImages {
-		// increment by 1 to include the max value into the possible values
-		amountOfHeadImages = r2.Intn(maxHeadImages+1-minHeadImages) + minHeadImages
-	}
-
-	allImages := concatPreAllocate(
+	attributes := koi.GetAttributes()
+	allImages := util.ConcatPreAllocate(
 		// avoid providing zero to the r.Intn function. This will cause a panic.
 		// therefore increase it to be at least 1 and then decrease it again after the call
-		koi.GetBodyImages(amountOfBodyImages, r3.Intn(255)),
-		koi.GetHeadImages(amountOfHeadImages, r3.Intn(255)),
-		koi.GetFinImages(amountOfFinImages, r3.Intn(255)),
+		attributes.BodyImages,
+		attributes.HeadImages,
+		attributes.FinImages,
 	)
-
 	// add 2 for the body and fin image
 	imgProcessingChan, imgResultChan := g.createChannels(len(allImages) + 2)
 
@@ -189,13 +108,13 @@ func (g *Generator) TokenId2Image(tokenId string) (image.Image, Koi) {
 	imgProcessingChan <- imageProcessingMessage{
 		id:        0,
 		baseImage: g.preloader.GetImage("body"),
-		color:     koi.GetBodyColor(r4.Intn(255)),
+		color:     attributes.BodyColor,
 	}
 
 	imgProcessingChan <- imageProcessingMessage{
 		id:        1,
 		baseImage: g.preloader.GetImage("fins"),
-		color:     koi.GetFinBackgroundColor(r4.Intn(255)),
+		color:     attributes.FinColor,
 	}
 
 	for i, img := range allImages {

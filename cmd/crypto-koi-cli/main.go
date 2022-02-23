@@ -48,7 +48,7 @@ func registerRandomUser(g *generator.Generator, amount int) {
 	userRep.Save(&newUser)
 
 	cryptogotchiRep := repositories.NewGormCryptogotchiRepository(db)
-	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRep, g)
+	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRep)
 
 	wg := sync.WaitGroup{}
 	wg.Add(amount)
@@ -91,7 +91,7 @@ func drawImage(g *generator.Generator, drawPrimaryColor bool, tokenId string) {
 	img, koi := g.TokenId2Image(tokenId)
 
 	if drawPrimaryColor {
-		primaryColor := koi.PrimaryColor()
+		primaryColor := koi.GetAttributes().PrimaryColor
 
 		newImg := image.NewRGBA(image.Rect(0, 0, 100, 100))
 		for x := 0; x < newImg.Bounds().Max.X; x++ {
@@ -149,6 +149,9 @@ func main() {
 	command := flag.Arg(0)
 
 	switch command {
+	case "uint256":
+		uuidStr := flag.Arg(1)
+		fmt.Println(util.UuidToUint256(uuidStr))
 	case "draw":
 		drawImage(&g, *drawPrimaryColor, flag.Arg(1))
 	case "register":

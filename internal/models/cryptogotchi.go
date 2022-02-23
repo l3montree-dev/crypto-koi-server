@@ -5,6 +5,8 @@ import (
 
 	"github.com/google/uuid"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/generator"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 )
 
 type Cryptogotchi struct {
@@ -31,8 +33,15 @@ type Cryptogotchi struct {
 	SnapshotValid time.Time `json:"-" gorm:"not null"`
 }
 
-func (c *Cryptogotchi) ToOpenseaNFT() OpenseaNFT {
-	return OpenseaNFT{}
+func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string, generator *generator.Generator) (OpenseaNFT, error) {
+	uintStr, err := util.UuidToUint256(c.Id.String())
+	if err != nil {
+		return OpenseaNFT{}, err
+	}
+	return OpenseaNFT{
+		Name:  *c.Name,
+		Image: baseUrl + "v1/images/" + uintStr.String(),
+	}, nil
 }
 
 // make sure to only call this function after the food value has been updated.
