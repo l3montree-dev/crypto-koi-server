@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/config"
-	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/generator"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/cryptokoi"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 )
 
@@ -33,15 +33,50 @@ type Cryptogotchi struct {
 	SnapshotValid time.Time `json:"-" gorm:"not null"`
 }
 
-func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string, generator *generator.Generator) (OpenseaNFT, error) {
+func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {
 	uintStr, err := util.UuidToUint256(c.Id.String())
+	koi := cryptokoi.NewKoi(c.Id.String())
+	attributes := koi.GetAttributes()
 	if err != nil {
 		return OpenseaNFT{}, err
 	}
 	return OpenseaNFT{
-		Name:  *c.Name,
-		Image: baseUrl + "v1/images/" + uintStr.String(),
-	}, nil
+		Name:            *c.Name,
+		Image:           baseUrl + "v1/images/" + uintStr.String(),
+		BackgroundColor: util.ConvertColor2Hex(attributes.PrimaryColor),
+		Attributes: []OpenseaNFTAttribute{
+			{
+				TraitType:   "Birthday",
+				DisplayType: DateDisplayType,
+				Value:       c.CreatedAt.Unix(),
+			},
+			{
+				TraitType: "Primary Color",
+				Value:     util.ConvertColor2Hex(attributes.PrimaryColor),
+			},
+			{
+				TraitType: "Body Color",
+				Value:     util.ConvertColor2Hex(attributes.BodyColor),
+			},
+			{
+				TraitType: "Fin Color",
+				Value:     util.ConvertColor2Hex(attributes.FinColor),
+			},
+			{
+				TraitType:   "Pattern quantity",
+				DisplayType: NumberDisplayType,
+				Value:       len(attributes.BodyImages) + len(attributes.FinImages) + len(attributes.HeadImages),
+			},
+			{
+				TraitType:   "Food",
+				DisplayType: BoostPercentageDisplayType,
+				Value:       c.Food,
+			},
+			{
+				TraitType: "Species",
+				Value:     attributes.KoiType,
+			},
+		}}, nil
 }
 
 // make sure to only call this function after the food value has been updated.

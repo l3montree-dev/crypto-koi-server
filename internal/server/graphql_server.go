@@ -300,7 +300,7 @@ func (s *GraphqlServer) Start() {
 	// init all controllers
 	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRepository)
 	authController := controller.NewAuthController(userRepository, cryptogotchiSvc, authSvc)
-	openseaController := controller.NewOpenseaController(imageBaseUrl, &s.generator, eventRepository, cryptogotchiSvc)
+	openseaController := controller.NewOpenseaController(imageBaseUrl, eventRepository, cryptogotchiSvc)
 
 	// set services to server instance for middleware and listeners
 	s.tokenSvc = tokenSvc

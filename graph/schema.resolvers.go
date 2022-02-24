@@ -57,8 +57,8 @@ func (r *cryptogotchiResolver) Color(ctx context.Context, obj *models.Cryptogotc
 	}
 	koi := cryptokoi.NewKoi(tokenId.String())
 	attributes := koi.GetAttributes()
-	red, g, b, _ := attributes.PrimaryColor.RGBA()
-	return fmt.Sprintf("#%02x%02x%02x", red>>8, g>>8, b>>8), nil
+
+	return util.ConvertColor2Hex(attributes.PrimaryColor), nil
 }
 
 func (r *eventResolver) ID(ctx context.Context, obj *models.Event) (string, error) {

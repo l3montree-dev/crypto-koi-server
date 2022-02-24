@@ -6,6 +6,7 @@
 
 1. Docker
 2. Geth (https://geth.ethereum.org/docs/install-and-build/installing-geth)
+3. gqlgen (`go install github.com/99designs/gqlgen`)
 ## Setup
 
 Install gqlgen - this is the utility to generate the go structs based on the defined graphql types.

@@ -3,9 +3,10 @@ package models
 type DisplayType string
 
 const (
-	NumberDisplayType          = "number"
-	BoostNumberDisplayType     = "boost_number"
-	BoostPercentageDisplayType = "boost_percentage"
+	NumberDisplayType          DisplayType = "number"
+	BoostNumberDisplayType     DisplayType = "boost_number"
+	BoostPercentageDisplayType DisplayType = "boost_percentage"
+	DateDisplayType            DisplayType = "date"
 )
 
 // https://docs.opensea.io/docs/metadata-standards#attributes
