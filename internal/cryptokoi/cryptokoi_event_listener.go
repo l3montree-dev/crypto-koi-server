@@ -53,7 +53,6 @@ func (c *CryptoKoiEventListener) connect(eventChan chan<- CryptoKoiEvent) {
 				From:    transfer.From.String(),
 				To:      transfer.To.String(),
 			}
-
 		case err := <-sub.Err():
 			c.logger.Error(err)
 			// try to reconnect.

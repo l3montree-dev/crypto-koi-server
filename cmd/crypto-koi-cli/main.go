@@ -22,10 +22,6 @@ import (
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 )
 
-func isNotDigit(c rune) bool {
-	return c < '0' || c > '9'
-}
-
 func registerRandomUser(g *generator.Generator, amount int) {
 	// register the user with the token id
 	db, err := db.NewMySQL(db.MySQLConfig{
@@ -78,7 +74,7 @@ func drawImage(g *generator.Generator, drawPrimaryColor bool, tokenId string) {
 	}
 
 	// check if the token id needs to be converted.
-	if strings.IndexFunc(tokenId, isNotDigit) > -1 {
+	if strings.IndexFunc(tokenId, util.IsNotDigit) > -1 {
 		// not only digits - use as hex.
 		tmp, err := util.UuidToUint256(tokenId)
 		if err != nil {

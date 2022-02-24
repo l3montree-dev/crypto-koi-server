@@ -158,14 +158,19 @@ func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
 func (s *GraphqlServer) imageHandlerFactory(size int, drawBackgroundColor bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenId := chi.URLParam(r, "tokenId")
-		// the tokenId is the uuid of the cryptogotchi.
-		tokenIdUint256, err := util.UuidToUint256(tokenId)
-		if err != nil {
-			http_util.WriteHttpError(w, http.StatusBadRequest, "invalid tokenId")
-			return
+		// check if hex.
+		if strings.IndexFunc(tokenId, util.IsNotDigit) > -1 {
+			// not only digits - use as hex.
+			tmp, err := util.UuidToUint256(tokenId)
+			if err != nil {
+				http_util.WriteHttpError(w, http.StatusBadRequest, "invalid tokenId")
+				return
+			}
+
+			tokenId = tmp.String()
 		}
 
-		img, koi := s.generator.TokenId2Image(tokenIdUint256.String())
+		img, koi := s.generator.TokenId2Image(tokenId)
 
 		scaledImg := image.NewRGBA(image.Rect(0, 0, size, size))
 
@@ -178,7 +183,7 @@ func (s *GraphqlServer) imageHandlerFactory(size int, drawBackgroundColor bool) 
 			}
 		}
 
-		imageDraw.NearestNeighbor.Scale(scaledImg, scaledImg.Rect, img, img.Bounds(), draw.Over, nil)
+		imageDraw.BiLinear.Scale(scaledImg, scaledImg.Rect, img, img.Bounds(), draw.Over, nil)
 
 		w.Header().Set("Content-Type", "image/png")
 

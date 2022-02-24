@@ -24,3 +24,7 @@ func Uint256ToUuid(uInt *big.Int) (uuid.UUID, error) {
 	hex := fmt.Sprintf("%x", uInt)
 	return uuid.Parse(hex)
 }
+
+func IsNotDigit(c rune) bool {
+	return c < '0' || c > '9'
+}
