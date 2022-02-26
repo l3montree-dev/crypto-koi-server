@@ -89,7 +89,7 @@ func (generator *Generator) applyColorToImage(c color.Color, img image.Image) im
 	return result
 }
 
-func (g *Generator) TokenId2Image(tokenId string) (image.Image, cryptokoi.CryptoKoi) {
+func (g *Generator) TokenId2Image(tokenId string) (image.Image, *cryptokoi.CryptoKoi) {
 	koi := cryptokoi.NewKoi(tokenId)
 
 	attributes := koi.GetAttributes()

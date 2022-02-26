@@ -200,6 +200,7 @@ func (s *GraphqlServer) getBlockchainListener() leader.Listener {
 				return
 			case ev := <-eventChan:
 				crypt, err := s.cryptogotchiSvc.GetCryptogotchiByUint256(ev.TokenId)
+
 				if err != nil {
 					s.logger.Error(err)
 					continue
@@ -210,23 +211,6 @@ func (s *GraphqlServer) getBlockchainListener() leader.Listener {
 					s.logger.Error(err)
 					continue
 				}
-
-				user, err := s.userSvc.GetById(crypt.OwnerId.String())
-				if err != nil {
-					s.logger.Error(err)
-					continue
-				}
-				// check if the user already has a wallet address - if so do not overwrite it.
-				if user.WalletAddress == nil {
-					user.WalletAddress = &ev.To
-				} else if *user.WalletAddress != ev.To {
-					// if the user already has a wallet address, but it is different from the one which did sell the nft.
-					// this means there is a fraud attempt.
-					s.logger.Error("User already has a wallet address, but it is different from the one which did sell the nft.")
-					continue
-				}
-				s.logger.Infof("sold nft: [%s] to user: [%s] - cryptogotchiId: [%s]", ev.TokenId, user.Id.String(), crypt.Id.String())
-
 			}
 		}
 	})
@@ -288,7 +272,7 @@ func (s *GraphqlServer) Start() {
 	router.Use(sentryMiddleware.Handle)
 
 	router.Get("/images/{tokenId}", s.imageHandlerFactory(1024, false))
-	router.Get("/thumbnails/{tokenId}", s.imageHandlerFactory(200, true))
+	router.Get("/thumbnails/{tokenId}", s.imageHandlerFactory(200, false))
 
 	// init all repositories
 	cryptogotchiRepository := repositories.NewGormCryptogotchiRepository(s.db)

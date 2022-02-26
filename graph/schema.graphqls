@@ -26,6 +26,16 @@ type Event {
   cryptogotchiId: ID!
 }
 
+type CryptogotchiAttributes {
+    birthday: Int!
+    primaryColor: String!
+    bodyColor: String!
+    finColor: String!
+    patternQuantity: Int!
+    species: String!
+    food: Float!
+}
+
 type Cryptogotchi {
   id: ID!
   isAlive: Boolean!
@@ -38,20 +48,21 @@ type Cryptogotchi {
   isValidNft: Boolean!
   #funDrain: Float!
   #affectionDrain: Float!
- 
   deathDate: Time
-  ownerId: String!
   # unix timestamp
   createdAt: Time!
   updatedAt: Time!
   nextFeeding: Time!
   snapshotValid: Time!
   color: String!
+  ownerAddress: String!
+
+  attributes: CryptogotchiAttributes!
 }
 
 type User {
     id: ID!
-    name: String
+    walletAddress: String!
     # at least an empty array is provided as default value
     cryptogotchies: [Cryptogotchi!]!
     createdAt: Time!

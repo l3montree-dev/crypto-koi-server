@@ -2,6 +2,16 @@
 
 package input
 
+type CryptogotchiAttributes struct {
+	Birthday        int     `json:"birthday"`
+	PrimaryColor    string  `json:"primaryColor"`
+	BodyColor       string  `json:"bodyColor"`
+	FinColor        string  `json:"finColor"`
+	PatternQuantity int     `json:"patternQuantity"`
+	Species         string  `json:"species"`
+	Food            float64 `json:"food"`
+}
+
 type GameStartResponse struct {
 	Token string `json:"token"`
 }

@@ -124,36 +124,6 @@ var koiCtrs = []koiCtr{
 	NewShigureKoi,
 }
 
-func NewKoi(tokenId string) CryptoKoi {
-	// chunk the tokenId into 4 different sizes and create a random generator out of each.
-	chunkSize := len(tokenId) / 4
-	firstChunk, _ := strconv.ParseInt(tokenId[:chunkSize], 10, 64)
-	secondChunk, _ := strconv.ParseInt(tokenId[chunkSize:chunkSize*2], 10, 64)
-	thirdChunk, _ := strconv.ParseInt(tokenId[chunkSize*2:chunkSize*3], 10, 64)
-	fourthChunk, _ := strconv.ParseInt(tokenId[chunkSize*3:], 10, 64)
-
-	// this is just so random :-)
-	r1, r2, r3, r4 := rand.New(rand.NewSource(firstChunk)), rand.New(rand.NewSource(secondChunk)), rand.New(rand.NewSource(thirdChunk)), rand.New(rand.NewSource(fourthChunk))
-	// now the token id is 39 characters long.
-	// extract all seed values. Just crop a few characters and convert them into integers.
-	// start applying all seeds to first get the koy, and afterwards get all images.
-	koi := koiCtrs[r1.Intn(len(koiCtrs))](r1.Int())
-
-	return CryptoKoi{
-		wrappedKoi: koi,
-		randomizers: struct {
-			r1 *rand.Rand
-			r2 *rand.Rand
-			r3 *rand.Rand
-		}{
-			// WE ALREADY USED THE FIRST RANDOMIZER to determine the type of the koi.
-			r1: r2,
-			r2: r3,
-			r3: r4,
-		},
-	}
-}
-
 func pickAmount(amount, randomSeed int, images []util.ImageWithColor) []util.ImageWithColor {
 	if amount == 0 {
 		return []util.ImageWithColor{}

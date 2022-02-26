@@ -50,6 +50,7 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Cryptogotchi struct {
+		Attributes         func(childComplexity int) int
 		Color              func(childComplexity int) int
 		CreatedAt          func(childComplexity int) int
 		DeathDate          func(childComplexity int) int
@@ -61,9 +62,19 @@ type ComplexityRoot struct {
 		MinutesTillDeath   func(childComplexity int) int
 		Name               func(childComplexity int) int
 		NextFeeding        func(childComplexity int) int
-		OwnerID            func(childComplexity int) int
+		OwnerAddress       func(childComplexity int) int
 		SnapshotValid      func(childComplexity int) int
 		UpdatedAt          func(childComplexity int) int
+	}
+
+	CryptogotchiAttributes struct {
+		Birthday        func(childComplexity int) int
+		BodyColor       func(childComplexity int) int
+		FinColor        func(childComplexity int) int
+		Food            func(childComplexity int) int
+		PatternQuantity func(childComplexity int) int
+		PrimaryColor    func(childComplexity int) int
+		Species         func(childComplexity int) int
 	}
 
 	Event struct {
@@ -116,8 +127,8 @@ type ComplexityRoot struct {
 		CreatedAt      func(childComplexity int) int
 		Cryptogotchies func(childComplexity int) int
 		ID             func(childComplexity int) int
-		Name           func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
+		WalletAddress  func(childComplexity int) int
 	}
 }
 
@@ -128,11 +139,12 @@ type CryptogotchiResolver interface {
 	MaxLifetimeMinutes(ctx context.Context, obj *models.Cryptogotchi) (float64, error)
 
 	DeathDate(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error)
-	OwnerID(ctx context.Context, obj *models.Cryptogotchi) (string, error)
 
 	NextFeeding(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error)
 
 	Color(ctx context.Context, obj *models.Cryptogotchi) (string, error)
+	OwnerAddress(ctx context.Context, obj *models.Cryptogotchi) (string, error)
+	Attributes(ctx context.Context, obj *models.Cryptogotchi) (*input.CryptogotchiAttributes, error)
 }
 type EventResolver interface {
 	ID(ctx context.Context, obj *models.Event) (string, error)
@@ -178,6 +190,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Cryptogotchi.attributes":
+		if e.complexity.Cryptogotchi.Attributes == nil {
+			break
+		}
+
+		return e.complexity.Cryptogotchi.Attributes(childComplexity), true
 
 	case "Cryptogotchi.color":
 		if e.complexity.Cryptogotchi.Color == nil {
@@ -256,12 +275,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Cryptogotchi.NextFeeding(childComplexity), true
 
-	case "Cryptogotchi.ownerId":
-		if e.complexity.Cryptogotchi.OwnerID == nil {
+	case "Cryptogotchi.ownerAddress":
+		if e.complexity.Cryptogotchi.OwnerAddress == nil {
 			break
 		}
 
-		return e.complexity.Cryptogotchi.OwnerID(childComplexity), true
+		return e.complexity.Cryptogotchi.OwnerAddress(childComplexity), true
 
 	case "Cryptogotchi.snapshotValid":
 		if e.complexity.Cryptogotchi.SnapshotValid == nil {
@@ -276,6 +295,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Cryptogotchi.UpdatedAt(childComplexity), true
+
+	case "CryptogotchiAttributes.birthday":
+		if e.complexity.CryptogotchiAttributes.Birthday == nil {
+			break
+		}
+
+		return e.complexity.CryptogotchiAttributes.Birthday(childComplexity), true
+
+	case "CryptogotchiAttributes.bodyColor":
+		if e.complexity.CryptogotchiAttributes.BodyColor == nil {
+			break
+		}
+
+		return e.complexity.CryptogotchiAttributes.BodyColor(childComplexity), true
+
+	case "CryptogotchiAttributes.finColor":
+		if e.complexity.CryptogotchiAttributes.FinColor == nil {
+			break
+		}
+
+		return e.complexity.CryptogotchiAttributes.FinColor(childComplexity), true
+
+	case "CryptogotchiAttributes.food":
+		if e.complexity.CryptogotchiAttributes.Food == nil {
+			break
+		}
+
+		return e.complexity.CryptogotchiAttributes.Food(childComplexity), true
+
+	case "CryptogotchiAttributes.patternQuantity":
+		if e.complexity.CryptogotchiAttributes.PatternQuantity == nil {
+			break
+		}
+
+		return e.complexity.CryptogotchiAttributes.PatternQuantity(childComplexity), true
+
+	case "CryptogotchiAttributes.primaryColor":
+		if e.complexity.CryptogotchiAttributes.PrimaryColor == nil {
+			break
+		}
+
+		return e.complexity.CryptogotchiAttributes.PrimaryColor(childComplexity), true
+
+	case "CryptogotchiAttributes.species":
+		if e.complexity.CryptogotchiAttributes.Species == nil {
+			break
+		}
+
+		return e.complexity.CryptogotchiAttributes.Species(childComplexity), true
 
 	case "Event.createdAt":
 		if e.complexity.Event.CreatedAt == nil {
@@ -539,19 +607,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.ID(childComplexity), true
 
-	case "User.name":
-		if e.complexity.User.Name == nil {
-			break
-		}
-
-		return e.complexity.User.Name(childComplexity), true
-
 	case "User.updatedAt":
 		if e.complexity.User.UpdatedAt == nil {
 			break
 		}
 
 		return e.complexity.User.UpdatedAt(childComplexity), true
+
+	case "User.walletAddress":
+		if e.complexity.User.WalletAddress == nil {
+			break
+		}
+
+		return e.complexity.User.WalletAddress(childComplexity), true
 
 	}
 	return 0, false
@@ -645,6 +713,16 @@ type Event {
   cryptogotchiId: ID!
 }
 
+type CryptogotchiAttributes {
+    birthday: Int!
+    primaryColor: String!
+    bodyColor: String!
+    finColor: String!
+    patternQuantity: Int!
+    species: String!
+    food: Float!
+}
+
 type Cryptogotchi {
   id: ID!
   isAlive: Boolean!
@@ -657,20 +735,21 @@ type Cryptogotchi {
   isValidNft: Boolean!
   #funDrain: Float!
   #affectionDrain: Float!
- 
   deathDate: Time
-  ownerId: String!
   # unix timestamp
   createdAt: Time!
   updatedAt: Time!
   nextFeeding: Time!
   snapshotValid: Time!
   color: String!
+  ownerAddress: String!
+
+  attributes: CryptogotchiAttributes!
 }
 
 type User {
     id: ID!
-    name: String
+    walletAddress: String!
     # at least an empty array is provided as default value
     cryptogotchies: [Cryptogotchi!]!
     createdAt: Time!
@@ -1236,41 +1315,6 @@ func (ec *executionContext) _Cryptogotchi_deathDate(ctx context.Context, field g
 	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Cryptogotchi_ownerId(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Cryptogotchi",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Cryptogotchi().OwnerID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Cryptogotchi_createdAt(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1444,6 +1488,321 @@ func (ec *executionContext) _Cryptogotchi_color(ctx context.Context, field graph
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Cryptogotchi_ownerAddress(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Cryptogotchi",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Cryptogotchi().OwnerAddress(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Cryptogotchi_attributes(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Cryptogotchi",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Cryptogotchi().Attributes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*input.CryptogotchiAttributes)
+	fc.Result = res
+	return ec.marshalNCryptogotchiAttributes2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐCryptogotchiAttributes(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CryptogotchiAttributes_birthday(ctx context.Context, field graphql.CollectedField, obj *input.CryptogotchiAttributes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CryptogotchiAttributes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Birthday, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CryptogotchiAttributes_primaryColor(ctx context.Context, field graphql.CollectedField, obj *input.CryptogotchiAttributes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CryptogotchiAttributes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PrimaryColor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CryptogotchiAttributes_bodyColor(ctx context.Context, field graphql.CollectedField, obj *input.CryptogotchiAttributes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CryptogotchiAttributes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BodyColor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CryptogotchiAttributes_finColor(ctx context.Context, field graphql.CollectedField, obj *input.CryptogotchiAttributes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CryptogotchiAttributes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FinColor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CryptogotchiAttributes_patternQuantity(ctx context.Context, field graphql.CollectedField, obj *input.CryptogotchiAttributes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CryptogotchiAttributes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PatternQuantity, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CryptogotchiAttributes_species(ctx context.Context, field graphql.CollectedField, obj *input.CryptogotchiAttributes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CryptogotchiAttributes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Species, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CryptogotchiAttributes_food(ctx context.Context, field graphql.CollectedField, obj *input.CryptogotchiAttributes) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CryptogotchiAttributes",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Food, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Event_id(ctx context.Context, field graphql.CollectedField, obj *models.Event) (ret graphql.Marshaler) {
@@ -2586,7 +2945,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
+func (ec *executionContext) _User_walletAddress(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2604,18 +2963,21 @@ func (ec *executionContext) _User_name(ctx context.Context, field graphql.Collec
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
+		return obj.WalletAddress, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_cryptogotchies(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -3977,26 +4339,6 @@ func (ec *executionContext) _Cryptogotchi(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
-		case "ownerId":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Cryptogotchi_ownerId(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "createdAt":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Cryptogotchi_createdAt(ctx, field, obj)
@@ -4067,6 +4409,137 @@ func (ec *executionContext) _Cryptogotchi(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
+		case "ownerAddress":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Cryptogotchi_ownerAddress(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "attributes":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Cryptogotchi_attributes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var cryptogotchiAttributesImplementors = []string{"CryptogotchiAttributes"}
+
+func (ec *executionContext) _CryptogotchiAttributes(ctx context.Context, sel ast.SelectionSet, obj *input.CryptogotchiAttributes) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cryptogotchiAttributesImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CryptogotchiAttributes")
+		case "birthday":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CryptogotchiAttributes_birthday(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "primaryColor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CryptogotchiAttributes_primaryColor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "bodyColor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CryptogotchiAttributes_bodyColor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "finColor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CryptogotchiAttributes_finColor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "patternQuantity":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CryptogotchiAttributes_patternQuantity(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "species":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CryptogotchiAttributes_species(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "food":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CryptogotchiAttributes_food(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4649,13 +5122,16 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 				return innerFunc(ctx)
 
 			})
-		case "name":
+		case "walletAddress":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._User_name(ctx, field, obj)
+				return ec._User_walletAddress(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "cryptogotchies":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._User_cryptogotchies(ctx, field, obj)
@@ -5221,6 +5697,20 @@ func (ec *executionContext) marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋc
 		return graphql.Null
 	}
 	return ec._Cryptogotchi(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCryptogotchiAttributes2gitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐCryptogotchiAttributes(ctx context.Context, sel ast.SelectionSet, v input.CryptogotchiAttributes) graphql.Marshaler {
+	return ec._CryptogotchiAttributes(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCryptogotchiAttributes2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐCryptogotchiAttributes(ctx context.Context, sel ast.SelectionSet, v *input.CryptogotchiAttributes) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CryptogotchiAttributes(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNEvent2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Event) graphql.Marshaler {

@@ -37,10 +37,6 @@ func (r *cryptogotchiResolver) DeathDate(ctx context.Context, obj *models.Crypto
 	return nil, nil
 }
 
-func (r *cryptogotchiResolver) OwnerID(ctx context.Context, obj *models.Cryptogotchi) (string, error) {
-	return obj.OwnerId.String(), nil
-}
-
 func (r *cryptogotchiResolver) NextFeeding(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error) {
 	if obj.LastFed == nil {
 		now := time.Now()
@@ -59,6 +55,32 @@ func (r *cryptogotchiResolver) Color(ctx context.Context, obj *models.Cryptogotc
 	attributes := koi.GetAttributes()
 
 	return util.ConvertColor2Hex(attributes.PrimaryColor), nil
+}
+
+func (r *cryptogotchiResolver) OwnerAddress(ctx context.Context, obj *models.Cryptogotchi) (string, error) {
+	owner, err := r.userSvc.GetById(obj.OwnerId.String())
+	return owner.WalletAddress, err
+}
+
+func (r *cryptogotchiResolver) Attributes(ctx context.Context, obj *models.Cryptogotchi) (*input.CryptogotchiAttributes, error) {
+	uInt, err := util.UuidToUint256(obj.Id.String())
+	if err != nil {
+		return nil, err
+	}
+
+	koi := cryptokoi.NewKoi(uInt.String())
+
+	attributes := koi.GetAttributes()
+
+	return &input.CryptogotchiAttributes{
+		PrimaryColor:    util.ConvertColor2Hex(attributes.PrimaryColor),
+		BodyColor:       util.ConvertColor2Hex(attributes.BodyColor),
+		FinColor:        util.ConvertColor2Hex(attributes.FinColor),
+		PatternQuantity: len(attributes.HeadImages) + len(attributes.BodyImages) + len(attributes.FinImages),
+		Food:            obj.Food,
+		Species:         attributes.KoiType,
+		Birthday:        int(obj.CreatedAt.Unix()),
+	}, nil
 }
 
 func (r *eventResolver) ID(ctx context.Context, obj *models.Event) (string, error) {
@@ -185,7 +207,14 @@ func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, addre
 		return nil, fmt.Errorf("could not find cryptogotchi with id %s", id)
 	}
 
-	signature, tokenId, err := r.cryptokoiApi.GetNftSignatureForCryptogotchi(cryptogotchi.Id.String(), address)
+	user := ctx.Value(config.USER_CTX_KEY).(*models.User)
+	if user.Id.String() != cryptogotchi.OwnerId.String() {
+		// the current user is not the owner.
+		// only the owner is allowed to transform the cryptogotchi into an nft.
+		return nil, fmt.Errorf("only the owner is allowed to transform the cryptogotchi into an nft")
+	}
+
+	signature, tokenId, err := r.cryptokoiApi.GetNftSignatureForCryptogotchi(cryptogotchi.Id.String(), user.WalletAddress)
 
 	if err != nil {
 		return nil, err
@@ -194,7 +223,7 @@ func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, addre
 	return &input.NftData{
 		Signature: signature,
 		TokenID:   tokenId,
-		Address:   address,
+		Address:   user.WalletAddress,
 		ChainID:   1,
 	}, nil
 }
@@ -285,3 +314,13 @@ type gameStatResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *cryptogotchiResolver) OwnerID(ctx context.Context, obj *models.Cryptogotchi) (string, error) {
+	return obj.OwnerId.String(), nil
+}
