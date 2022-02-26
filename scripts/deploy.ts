@@ -24,10 +24,20 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
     abi: ContractInterface,
     bytecode: string,
     signer: ethers.Signer,
-    options: { name: string; symbol: string },
+    options: {
+      name: string;
+      symbol: string;
+      baseURI: string;
+      priceInGwei: number;
+    },
   ): Promise<ethers.Contract> => {
     const contract = new ContractFactory(abi, bytecode, signer);
-    return contract.deploy(options.name, options.symbol);
+    return contract.deploy(
+      options.name,
+      options.symbol,
+      options.baseURI,
+      options.priceInGwei,
+    );
   };
 
   const privateKey = process.env.PRIVATE_KEY;
@@ -43,7 +53,12 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
     CryptoKoi.abi,
     CryptoKoi.bytecode,
     signer,
-    { name: 'CryptoKoi', symbol: 'CK' },
+    {
+      name: 'CryptoKoi',
+      symbol: 'CK',
+      baseURI: 'api.crypto-koi.io/tokens/',
+      priceInGwei: 952608 * 1000 * 1000 * 1000, // around 1,99€
+    },
   );
 
   const contractAddress = (await contract.deployTransaction.wait())
