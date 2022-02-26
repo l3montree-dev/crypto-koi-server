@@ -17,7 +17,7 @@ func TestConvertCryptogotchi2TokenId(t *testing.T) {
 	}
 
 	// "340282366920938463463374607431768211455"
-	assert.Equal(t, "239264596381739575473221873891232270519", tokenId)
+	assert.Equal(t, "239264596381739575473221873891232270519", tokenId.String())
 }
 
 func TestSymmetry(t *testing.T) {
