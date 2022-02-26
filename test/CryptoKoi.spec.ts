@@ -1,8 +1,8 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { expect } from 'chai';
 import { Contract, Signer, Wallet } from 'ethers';
 import { ethers } from 'hardhat';
 import tokens from './tokens.json';
+import { expect } from 'chai';
 
 const otherUserAddress = '0xa111C225A0aFd5aD64221B1bc1D5d817e5D3Ca15';
 const privateKey =
@@ -50,7 +50,14 @@ describe('CryptoKoi', function () {
     let contract: Contract;
     let admin: Wallet;
     before(async () => {
-      contract = await deploy('CryptoKoi', admin, 'Name', 'Symbol');
+      contract = await deploy(
+        'CryptoKoi',
+        admin,
+        'Name',
+        'Symbol',
+        'http://localhost:8080/tokens/',
+        1,
+      );
 
       admin = new ethers.Wallet(privateKey);
     });
@@ -70,7 +77,9 @@ describe('CryptoKoi', function () {
       await expect(
         contract
           .connect(accounts[2])
-          .redeem(otherUserAddress, tokenId, signature),
+          .redeem(otherUserAddress, tokenId, signature, {
+            value: 1 * 1000 * 1000 * 1000,
+          }),
       )
         .to.emit(contract, 'Transfer')
         .withArgs(
@@ -85,7 +94,14 @@ describe('CryptoKoi', function () {
     let contract: Contract;
 
     before(async function () {
-      contract = await deploy('CryptoKoi', signer, 'Name', 'Symbol');
+      contract = await deploy(
+        'CryptoKoi',
+        signer,
+        'Name',
+        'Symbol',
+        'http://localhost:8080/tokens/',
+        1,
+      );
     });
 
     for (const [tokenId, account] of Object.entries(tokens)) {
@@ -104,10 +120,18 @@ describe('CryptoKoi', function () {
           await expect(
             contract
               .connect(accounts[2])
-              .redeem(account, tokenId, signature),
+              .redeem(account, tokenId, signature, {
+                value: 1 * 1000 * 1000 * 1000,
+              }),
           )
             .to.emit(contract, 'Transfer')
             .withArgs(ethers.constants.AddressZero, account, tokenId);
+
+          expect(await contract.balanceOf(account)).to.equal(
+            BigInt(1),
+          );
+
+          expect(await contract.ownerOf(tokenId)).to.equal(account);
         },
       );
     }
@@ -117,7 +141,14 @@ describe('CryptoKoi', function () {
     let contract: Contract;
     let token: TokenType;
     before(async function () {
-      contract = await deploy('CryptoKoi', signer, 'Name', 'Symbol');
+      contract = await deploy(
+        'CryptoKoi',
+        signer,
+        'Name',
+        'Symbol',
+        'http://localhost:8080/tokens/',
+        1,
+      );
 
       token = {};
       const t = Object.entries(tokens).find(Boolean);
@@ -135,6 +166,7 @@ describe('CryptoKoi', function () {
           token.account,
           token.tokenId,
           token.signature,
+          { value: 1 * 1000 * 1000 * 1000 },
         ),
       )
         .to.emit(contract, 'Transfer')
@@ -145,36 +177,13 @@ describe('CryptoKoi', function () {
         );
     });
 
-    it('should return the correct current balance', async () => {
-      await contract.redeem(
-        token.account,
-        token.tokenId,
-        token.signature,
-      );
-
-      expect(await contract.balanceOf(token.account)).to.equal(
-        BigInt(1),
-      );
-    });
-
-    it('should return the correct owner', async () => {
-      await contract.redeem(
-        token.account,
-        token.tokenId,
-        token.signature,
-      );
-
-      expect(await contract.ownerOf(token.tokenId)).to.equal(
-        token.account,
-      );
-    });
-
     it('mint twice - failure', async function () {
       await expect(
         contract.redeem(
           token.account,
           token.tokenId,
           token.signature,
+          { value: 1 * 1000 * 1000 * 1000 },
         ),
       ).to.be.revertedWith('ERC721: token already minted');
     });
@@ -184,7 +193,14 @@ describe('CryptoKoi', function () {
     let contract: Contract;
     let token: TokenType;
     before(async function () {
-      contract = await deploy('CryptoKoi', signer, 'Name', 'Symbol');
+      contract = await deploy(
+        'CryptoKoi',
+        signer,
+        'Name',
+        'Symbol',
+        'http://localhost:8080/tokens/',
+        1,
+      );
 
       token = {};
       const t = Object.entries(tokens).find(Boolean);
@@ -202,6 +218,7 @@ describe('CryptoKoi', function () {
           accounts[0].address,
           token.tokenId,
           token.signature,
+          { value: 1 * 1000 * 1000 * 1000 },
         ),
       ).to.be.revertedWith('Invalid signature');
     });
