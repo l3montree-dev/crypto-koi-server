@@ -229,7 +229,7 @@ func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, addre
 }
 
 func (r *queryResolver) Leaderboard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error) {
-	cryptogotchis, err := r.cryptogotchiSvc.GetLeaderboard(offset, limit)
+	cryptogotchis, err := r.cryptogotchiSvc.GetCachedLeaderboard(offset, limit)
 	if err != nil {
 		return nil, err
 	}

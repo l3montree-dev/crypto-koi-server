@@ -22,6 +22,9 @@ func UuidToUint256(tokenId string) (*big.Int, error) {
 
 func Uint256ToUuid(uInt *big.Int) (uuid.UUID, error) {
 	hex := fmt.Sprintf("%x", uInt)
+	for len(hex) < 32 {
+		hex = "0" + hex
+	}
 	return uuid.Parse(hex)
 }
 

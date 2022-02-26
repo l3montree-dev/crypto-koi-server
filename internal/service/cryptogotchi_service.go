@@ -17,6 +17,7 @@ type CryptogotchiSvc interface {
 	GenerateCryptogotchiForUser(user *models.User) (models.Cryptogotchi, error)
 	GenerateWithFixedTokenId(user *models.User, id uuid.UUID) (models.Cryptogotchi, error)
 	MarkAsNft(crypt *models.Cryptogotchi) error
+	UpdateRanks() error
 }
 
 type CryptogotchiService struct {
@@ -27,6 +28,21 @@ func NewCryptogotchiService(rep repositories.CryptogotchiRepository) Cryptogotch
 	return &CryptogotchiService{
 		CryptogotchiRepository: rep,
 	}
+}
+
+func (svc *CryptogotchiService) UpdateRanks() error {
+	elements, err := svc.GetLeaderboard()
+	if err != nil {
+		return err
+	}
+	for rank, el := range elements {
+		el.Rank = rank + 1
+		err = svc.Save(&el)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (svc *CryptogotchiService) GenerateWithFixedTokenId(user *models.User, id uuid.UUID) (models.Cryptogotchi, error) {

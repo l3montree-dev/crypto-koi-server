@@ -14,7 +14,8 @@ type CryptogotchiRepository interface {
 	GetCryptogotchiesByUserId(userId string) ([]models.Cryptogotchi, error)
 	GetCryptogotchiById(id string) (models.Cryptogotchi, error)
 	Save(*models.Cryptogotchi) error
-	GetLeaderboard(offset, limit int) ([]models.Cryptogotchi, error)
+	GetLeaderboard() ([]models.Cryptogotchi, error)
+	GetCachedLeaderboard(offset, limit int) ([]models.Cryptogotchi, error)
 }
 
 type GormCryptogotchiRepository struct {
@@ -52,8 +53,14 @@ func (rep *GormCryptogotchiRepository) GetCryptogotchiById(id string) (models.Cr
 	return cryptogotchi, err
 }
 
-func (rep *GormCryptogotchiRepository) GetLeaderboard(offset, limit int) ([]models.Cryptogotchi, error) {
+func (rep *GormCryptogotchiRepository) GetLeaderboard() ([]models.Cryptogotchi, error) {
 	var cryptogotchies []models.Cryptogotchi
-	err := rep.db.Where("predicted_death_date > ?", time.Now()).Order("created_at ASC").Offset(offset).Limit(limit).Find(&cryptogotchies).Error
+	err := rep.db.Where("predicted_death_date > ?", time.Now()).Order("created_at ASC").Find(&cryptogotchies).Error
+	return cryptogotchies, err
+}
+
+func (rep *GormCryptogotchiRepository) GetCachedLeaderboard(offset, limit int) ([]models.Cryptogotchi, error) {
+	var cryptogotchies []models.Cryptogotchi
+	err := rep.db.Where("predicted_death_date > ?", time.Now()).Order("'rank' ASC").Offset(offset).Limit(limit).Find(&cryptogotchies).Error
 	return cryptogotchies, err
 }

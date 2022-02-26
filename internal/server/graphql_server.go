@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"image"
+	"strconv"
 
 	imageDraw "golang.org/x/image/draw"
 
@@ -191,6 +193,29 @@ func (s *GraphqlServer) imageHandlerFactory(size int, drawBackgroundColor bool) 
 	}
 }
 
+func (s *GraphqlServer) getLeaderboardUpdateRoutine() leader.Listener {
+	sleepTime := os.Getenv("LEADERBOARD_UPDATE_INTERVAL")
+	if sleepTime == "" {
+		sleepTime = fmt.Sprint(60 * 5)
+	}
+	sleepTimeInt, err := strconv.Atoi(sleepTime)
+	orchardclient.FailOnError(err, "could not parse leaderboard update interval")
+	return leader.NewListener(func(cancelChan <-chan struct{}) {
+		for {
+			select {
+			case <-cancelChan:
+				return
+			default:
+				now := time.Now()
+				s.logger.Info("leaderboard update routine started")
+				err := s.cryptogotchiSvc.UpdateRanks()
+				s.logger.WithField("took", time.Since(now).String()).Infof("leaderboard update routine finished. Err: %v", err)
+				time.Sleep(time.Second * time.Duration(sleepTimeInt))
+			}
+		}
+	})
+}
+
 func (s *GraphqlServer) getBlockchainListener() leader.Listener {
 	return leader.NewListener(func(cancelChan <-chan struct{}) {
 		eventChan := s.cryptokoiListener.StartListener()
@@ -358,6 +383,7 @@ func (s *GraphqlServer) Start() {
 	s.leaderElection = s.getLeaderElection()
 	// start the listener.
 	s.leaderElection.AddListener(s.getBlockchainListener())
+	s.leaderElection.AddListener(s.getLeaderboardUpdateRoutine())
 	// start all listeners
 	s.leaderElection.RunElection()
 

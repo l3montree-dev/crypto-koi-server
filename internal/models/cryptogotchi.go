@@ -31,6 +31,7 @@ type Cryptogotchi struct {
 	// future proof, we store the timestamp of the snapshot in the database as a separate column.
 	// currently this affects only the food value.
 	SnapshotValid time.Time `json:"-" gorm:"not null"`
+	Rank          int       `json:"rank" gorm:"default:-1"`
 }
 
 func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {

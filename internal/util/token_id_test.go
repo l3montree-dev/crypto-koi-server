@@ -3,6 +3,7 @@ package util
 import (
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -36,4 +37,15 @@ func TestSymmetry(t *testing.T) {
 	}
 
 	assert.Equal(t, expectedId.String(), actualUuid.String())
+}
+
+func TestHexPrefixWith0(t *testing.T) {
+	bigI := math.MustParseBig256("15077513574957955258113965027546720253")
+	// will return the hex: b57d2d01d964fc3b2e3580a366567fd
+	// which is invalid. To parse it, a leading 0 is required
+
+	_, err := Uint256ToUuid(bigI)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
