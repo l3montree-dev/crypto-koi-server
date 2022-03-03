@@ -104,6 +104,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		ChangeCryptogotchiName func(childComplexity int, id string, newName string) int
 		ChangeUserName         func(childComplexity int, newName string) int
+		ConnectWallet          func(childComplexity int, walletAddress string) int
 		CreateCryptogotchi     func(childComplexity int, _ *string) int
 		Feed                   func(childComplexity int, cryptogotchiID string) int
 		FinishGame             func(childComplexity int, token string, score float64) int
@@ -128,6 +129,7 @@ type ComplexityRoot struct {
 	User struct {
 		CreatedAt      func(childComplexity int) int
 		Cryptogotchies func(childComplexity int) int
+		DeviceId       func(childComplexity int) int
 		ID             func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
 		WalletAddress  func(childComplexity int) int
@@ -145,7 +147,7 @@ type CryptogotchiResolver interface {
 	NextFeeding(ctx context.Context, obj *models.Cryptogotchi) (*time.Time, error)
 
 	Color(ctx context.Context, obj *models.Cryptogotchi) (string, error)
-	OwnerAddress(ctx context.Context, obj *models.Cryptogotchi) (string, error)
+	OwnerAddress(ctx context.Context, obj *models.Cryptogotchi) (*string, error)
 
 	Attributes(ctx context.Context, obj *models.Cryptogotchi) (*input.CryptogotchiAttributes, error)
 }
@@ -169,6 +171,7 @@ type MutationResolver interface {
 	ChangeUserName(ctx context.Context, newName string) (*models.User, error)
 	GetNftSignature(ctx context.Context, id string, address string) (*input.NftData, error)
 	CreateCryptogotchi(ctx context.Context, _ *string) (*models.Cryptogotchi, error)
+	ConnectWallet(ctx context.Context, walletAddress string) (*models.User, error)
 }
 type QueryResolver interface {
 	Leaderboard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error)
@@ -478,6 +481,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ChangeUserName(childComplexity, args["newName"].(string)), true
 
+	case "Mutation.connectWallet":
+		if e.complexity.Mutation.ConnectWallet == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_connectWallet_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ConnectWallet(childComplexity, args["walletAddress"].(string)), true
+
 	case "Mutation.createCryptogotchi":
 		if e.complexity.Mutation.CreateCryptogotchi == nil {
 			break
@@ -623,6 +638,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Cryptogotchies(childComplexity), true
 
+	case "User.deviceId":
+		if e.complexity.User.DeviceId == nil {
+			break
+		}
+
+		return e.complexity.User.DeviceId(childComplexity), true
+
 	case "User.id":
 		if e.complexity.User.ID == nil {
 			break
@@ -765,7 +787,7 @@ type Cryptogotchi {
   nextFeeding: Time!
   snapshotValid: Time!
   color: String!
-  ownerAddress: String!
+  ownerAddress: String
   rank: Int!
 
   attributes: CryptogotchiAttributes!
@@ -773,7 +795,8 @@ type Cryptogotchi {
 
 type User {
     id: ID!
-    walletAddress: String!
+    walletAddress: String
+    deviceId: String
     # at least an empty array is provided as default value
     cryptogotchies: [Cryptogotchi!]!
     createdAt: Time!
@@ -800,6 +823,7 @@ type Mutation {
   changeUserName(newName: String!): User!
   getNftSignature(id: ID!, address: String!): NftData!
   createCryptogotchi(_: String): Cryptogotchi!
+  connectWallet(walletAddress: String!): User!
 }
 
 type Query {
@@ -851,6 +875,21 @@ func (ec *executionContext) field_Mutation_changeUserName_args(ctx context.Conte
 		}
 	}
 	args["newName"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_connectWallet_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["walletAddress"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("walletAddress"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["walletAddress"] = arg0
 	return args, nil
 }
 
@@ -1555,14 +1594,11 @@ func (ec *executionContext) _Cryptogotchi_ownerAddress(ctx context.Context, fiel
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Cryptogotchi_rank(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
@@ -2658,6 +2694,48 @@ func (ec *executionContext) _Mutation_createCryptogotchi(ctx context.Context, fi
 	return ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_connectWallet(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_connectWallet_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ConnectWallet(rctx, args["walletAddress"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐUser(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _NftData_signature(ctx context.Context, field graphql.CollectedField, obj *input.NftData) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3087,14 +3165,43 @@ func (ec *executionContext) _User_walletAddress(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_deviceId(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeviceId, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_cryptogotchies(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -4536,9 +4643,6 @@ func (ec *executionContext) _Cryptogotchi(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._Cryptogotchi_ownerAddress(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			}
 
@@ -5024,6 +5128,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "connectWallet":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_connectWallet(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5266,9 +5380,13 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 			out.Values[i] = innerFunc(ctx)
 
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+		case "deviceId":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._User_deviceId(ctx, field, obj)
 			}
+
+			out.Values[i] = innerFunc(ctx)
+
 		case "cryptogotchies":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._User_cryptogotchies(ctx, field, obj)

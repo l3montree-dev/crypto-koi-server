@@ -55,7 +55,7 @@ type Cryptogotchi {
   nextFeeding: Time!
   snapshotValid: Time!
   color: String!
-  ownerAddress: String!
+  ownerAddress: String
   rank: Int!
 
   attributes: CryptogotchiAttributes!
@@ -63,7 +63,8 @@ type Cryptogotchi {
 
 type User {
     id: ID!
-    walletAddress: String!
+    walletAddress: String
+    deviceId: String
     # at least an empty array is provided as default value
     cryptogotchies: [Cryptogotchi!]!
     createdAt: Time!
@@ -90,6 +91,7 @@ type Mutation {
   changeUserName(newName: String!): User!
   getNftSignature(id: ID!, address: String!): NftData!
   createCryptogotchi(_: String): Cryptogotchi!
+  connectWallet(walletAddress: String!): User!
 }
 
 type Query {

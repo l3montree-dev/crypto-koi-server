@@ -72,19 +72,28 @@ func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if loginRequest.WalletAddress == "" {
-		c.logger.Warnf("called with empty wallet address")
-		http_util.WriteHttpError(w, http.StatusBadRequest, "wallet address is empty")
+	if loginRequest.WalletAddress == nil && loginRequest.DeviceId == nil {
+		c.logger.Warnf("called with empty wallet address and empty device token")
+		http_util.WriteHttpError(w, http.StatusBadRequest, "wallet address and device token is empty")
 		return
 	}
 
-	user, err := c.authSvc.GetByWalletAddress(loginRequest.WalletAddress)
+	var user models.User
+	if loginRequest.WalletAddress != nil {
+		user, err = c.authSvc.GetByWalletAddress(*loginRequest.WalletAddress)
+	} else {
+		user, err = c.authSvc.GetByDeviceId(*loginRequest.DeviceId)
+	}
 
 	if db.IsNotFound(err) {
 		// first time the user logs in.
 		// create the user
 		user = models.User{}
-		user.WalletAddress = loginRequest.WalletAddress
+		if loginRequest.WalletAddress != nil {
+			user.WalletAddress = loginRequest.WalletAddress
+		} else {
+			user.DeviceId = loginRequest.DeviceId
+		}
 
 		err := c.authSvc.Save(&user)
 
