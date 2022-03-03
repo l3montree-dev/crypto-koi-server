@@ -104,6 +104,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		ChangeCryptogotchiName func(childComplexity int, id string, newName string) int
 		ChangeUserName         func(childComplexity int, newName string) int
+		CreateCryptogotchi     func(childComplexity int, _ *string) int
 		Feed                   func(childComplexity int, cryptogotchiID string) int
 		FinishGame             func(childComplexity int, token string, score float64) int
 		GetNftSignature        func(childComplexity int, id string, address string) int
@@ -167,6 +168,7 @@ type MutationResolver interface {
 	ChangeCryptogotchiName(ctx context.Context, id string, newName string) (*models.Cryptogotchi, error)
 	ChangeUserName(ctx context.Context, newName string) (*models.User, error)
 	GetNftSignature(ctx context.Context, id string, address string) (*input.NftData, error)
+	CreateCryptogotchi(ctx context.Context, _ *string) (*models.Cryptogotchi, error)
 }
 type QueryResolver interface {
 	Leaderboard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error)
@@ -475,6 +477,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ChangeUserName(childComplexity, args["newName"].(string)), true
+
+	case "Mutation.createCryptogotchi":
+		if e.complexity.Mutation.CreateCryptogotchi == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createCryptogotchi_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateCryptogotchi(childComplexity, args["_"].(*string)), true
 
 	case "Mutation.feed":
 		if e.complexity.Mutation.Feed == nil {
@@ -785,6 +799,7 @@ type Mutation {
   changeCryptogotchiName(id: ID!, newName: String!): Cryptogotchi!
   changeUserName(newName: String!): User!
   getNftSignature(id: ID!, address: String!): NftData!
+  createCryptogotchi(_: String): Cryptogotchi!
 }
 
 type Query {
@@ -836,6 +851,21 @@ func (ec *executionContext) field_Mutation_changeUserName_args(ctx context.Conte
 		}
 	}
 	args["newName"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createCryptogotchi_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["_"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("_"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["_"] = arg0
 	return args, nil
 }
 
@@ -2584,6 +2614,48 @@ func (ec *executionContext) _Mutation_getNftSignature(ctx context.Context, field
 	res := resTmp.(*input.NftData)
 	fc.Result = res
 	return ec.marshalNNftData2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐNftData(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createCryptogotchi(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createCryptogotchi_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateCryptogotchi(rctx, args["_"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Cryptogotchi)
+	fc.Result = res
+	return ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _NftData_signature(ctx context.Context, field graphql.CollectedField, obj *input.NftData) (ret graphql.Marshaler) {
@@ -4935,6 +5007,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "getNftSignature":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_getNftSignature(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createCryptogotchi":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createCryptogotchi(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)

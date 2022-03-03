@@ -71,7 +71,7 @@ func (svc *CryptogotchiService) GenerateWithFixedTokenId(user *models.User, id u
 		PredictedDeathDate: now.Add(time.Duration(foodValue/foodDrainValue) * time.Minute),
 		SnapshotValid:      now,
 	}
-	err = svc.Save(&newCrypt)
+	err = svc.Create(&newCrypt)
 	return newCrypt, err
 }
 
