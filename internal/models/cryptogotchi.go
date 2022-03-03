@@ -41,15 +41,31 @@ func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {
 	if err != nil {
 		return OpenseaNFT{}, err
 	}
+
+	state := "Alive"
+	if !c.IsAlive() {
+		state = "Dead"
+	}
+
+	backgroundColor := util.Shade(attributes.PrimaryColor, -20)
+	if util.IsDark(attributes.PrimaryColor) {
+		backgroundColor = util.Shade(attributes.PrimaryColor, 20)
+	}
+
 	return OpenseaNFT{
 		Name:            *c.Name,
 		Image:           baseUrl + "v1/images/" + uintStr.String(),
-		BackgroundColor: util.ConvertColor2Hex(attributes.PrimaryColor),
+		BackgroundColor: util.ConvertColor2HexWithoutHash(backgroundColor),
+
 		Attributes: []OpenseaNFTAttribute{
 			{
 				TraitType:   "Birthday",
 				DisplayType: DateDisplayType,
 				Value:       c.CreatedAt.Unix(),
+			},
+			{
+				TraitType: "State",
+				Value:     state,
 			},
 			{
 				TraitType: "Primary Color",
@@ -64,14 +80,9 @@ func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {
 				Value:     util.ConvertColor2Hex(attributes.FinColor),
 			},
 			{
-				TraitType:   "Pattern quantity",
+				TraitType:   "Pattern Quantity",
 				DisplayType: NumberDisplayType,
 				Value:       len(attributes.BodyImages) + len(attributes.FinImages) + len(attributes.HeadImages),
-			},
-			{
-				TraitType:   "Food",
-				DisplayType: BoostPercentageDisplayType,
-				Value:       c.Food,
 			},
 			{
 				TraitType: "Species",
