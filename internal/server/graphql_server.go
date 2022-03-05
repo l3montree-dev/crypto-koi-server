@@ -243,7 +243,7 @@ func (s *GraphqlServer) getBlockchainListener() leader.Listener {
 
 func (s *GraphqlServer) getLeaderElection() leader.LeaderElection {
 	// create new leader election object to make sure, that we run the listener only once - even in a distributed environment.
-	podName := os.Getenv("POD_NAME")
+	podName := os.Getenv("KUBERNETES_PORT")
 	var leaderElection leader.LeaderElection
 	if podName != "" {
 		// distributed environment detected.
