@@ -389,7 +389,7 @@ func (s *GraphqlServer) Start() {
 	s.leaderElection.AddListener(s.getBlockchainListener())
 	s.leaderElection.AddListener(s.getLeaderboardUpdateRoutine())
 	// start all listeners
-	s.leaderElection.RunElection()
+	go s.leaderElection.RunElection()
 
 	chainIdEnv := os.Getenv("CHAIN_ID")
 	if chainIdEnv == "" {
