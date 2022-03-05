@@ -243,11 +243,15 @@ func (s *GraphqlServer) getBlockchainListener() leader.Listener {
 
 func (s *GraphqlServer) getLeaderElection() leader.LeaderElection {
 	// create new leader election object to make sure, that we run the listener only once - even in a distributed environment.
-	podName := os.Getenv("KUBERNETES_PORT")
+	podName := os.Getenv("POD_NAME")
 	var leaderElection leader.LeaderElection
 	if podName != "" {
+		namespace := os.Getenv("NAMESPACE")
+		if namespace == "" {
+			namespace = "default"
+		}
 		// distributed environment detected.
-		leaderElection = leader.NewKubernetesLeaderElection(context.Background(), "leaderelection", "cryptokoi-api")
+		leaderElection = leader.NewKubernetesLeaderElection(context.Background(), "leaderelection", namespace)
 	} else {
 		// local environment detected.
 		leaderElection = leader.NewAlwaysLeader()
