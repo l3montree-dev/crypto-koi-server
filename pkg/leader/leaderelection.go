@@ -1,8 +1,6 @@
 package leader
 
 type LeaderElection interface {
-	// will emit a value on leader change
-	GetChannel() chan bool
 	IsLeader() bool
 	RunElection()
 	AddListener(listener Listener)

@@ -18,7 +18,6 @@ type KubernetesLeaderElection struct {
 	lockName      string
 	lockNamespace string
 	podName       string
-	ch            chan bool
 	isLeader      bool
 	ctx           context.Context
 	client        *kubernetes.Clientset
@@ -65,10 +64,6 @@ func (k *KubernetesLeaderElection) IsLeader() bool {
 	return k.isLeader
 }
 
-func (k *KubernetesLeaderElection) GetChannel() chan bool {
-	return k.ch
-}
-
 func (k *KubernetesLeaderElection) RunElection() {
 	k.logger.Info("running leader election in kubernetes mode")
 	lock := k.getNewLock()
@@ -82,7 +77,6 @@ func (k *KubernetesLeaderElection) RunElection() {
 			OnStartedLeading: func(c context.Context) {
 				k.logger.Info("we are the leader")
 				k.isLeader = true
-				k.ch <- true
 				// call start on each listener.
 				for i, lst := range k.listeners {
 					k.logger.Info("starting listener: ", i)
@@ -93,7 +87,6 @@ func (k *KubernetesLeaderElection) RunElection() {
 			OnStoppedLeading: func() {
 				k.logger.Info("stopped leading")
 				k.isLeader = false
-				k.ch <- false
 				// call stop on each listener.
 				for i, lst := range k.listeners {
 					k.logger.Info("stopping listener: ", i)
