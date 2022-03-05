@@ -387,8 +387,17 @@ func (s *GraphqlServer) Start() {
 	// start all listeners
 	s.leaderElection.RunElection()
 
+	chainIdEnv := os.Getenv("CHAIN_ID")
+	if chainIdEnv == "" {
+		s.logger.Fatal("CHAIN_ID is not set")
+	}
+	chainId, err := strconv.ParseInt(chainIdEnv, 10, 64)
+	if err != nil {
+		s.logger.Fatal(err)
+	}
+
 	// attach the graphql handler to the router
-	resolver := graph.NewResolver(s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, cryptokoiApi, s.generator)
+	resolver := graph.NewResolver(int(chainId), s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, cryptokoiApi, s.generator)
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver}))
 
 	// authorized routes

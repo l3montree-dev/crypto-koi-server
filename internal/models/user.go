@@ -8,7 +8,8 @@ type User struct {
 	Cryptogotchies []Cryptogotchi `json:"cryptogotchies" gorm:"foreignKey:OwnerId;references:Id"`
 	Name           *string        `json:"name" gorm:"type:varchar(255);default:null"`
 	// never return the wallet address of the user.
-	WalletAddress *string `json:"-" gorm:"type:varchar(255);unique"`
-	DeviceId      *string `json:"-" gorm:"type:varchar(255);unique"`
-	RefreshToken  string  `json:"-" gorm:"type:varchar(255);not null;unique"`
+	WalletAddress         *string `json:"-" gorm:"type:varchar(255);unique"`
+	DeviceId              *string `json:"-" gorm:"type:varchar(255);unique"`
+	RefreshToken          string  `json:"-" gorm:"type:varchar(255);not null;unique"`
+	PushNotificationToken *string `json:"-" gorm:"type:varchar(255)"`
 }

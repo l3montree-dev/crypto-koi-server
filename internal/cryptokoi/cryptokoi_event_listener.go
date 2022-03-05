@@ -67,6 +67,8 @@ func (c *CryptoKoiEventListener) connect(eventChan chan<- CryptoKoiEvent) {
 				To:      transfer.To.String(),
 			}
 		case err := <-sub.Err():
+			// not required for matic network.
+			// the bug seems to be related to geth.
 			if strings.Contains(err.Error(), "EOF") {
 				c.log = false
 			} else {

@@ -228,7 +228,7 @@ func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, addre
 		Signature: signature,
 		TokenID:   tokenId,
 		Address:   *user.WalletAddress,
-		ChainID:   1,
+		ChainID:   r.chainId,
 	}, nil
 }
 
