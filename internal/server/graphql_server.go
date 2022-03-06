@@ -413,6 +413,6 @@ func (s *GraphqlServer) Start() {
 		r.Handle("/query", srv)
 	})
 
-	s.logger.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	s.logger.Infof("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

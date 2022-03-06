@@ -75,13 +75,18 @@ func (k *KubernetesLeaderElection) RunElection() {
 		RetryPeriod:     2 * time.Second,
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(c context.Context) {
-				k.logger.Info("we are the leader")
+				k.logger.Info("elected as the leader")
 				k.isLeader = true
 				// call start on each listener.
 				for i, lst := range k.listeners {
 					k.logger.Info("starting listener: ", i)
 					// each listener will run in its own goroutine
 					go lst.Start()
+				}
+			},
+			OnNewLeader: func(identity string) {
+				if k.podName != identity {
+					k.logger.Info("new leader: ", identity)
 				}
 			},
 			OnStoppedLeading: func() {
