@@ -10,3 +10,5 @@ cache
 
 /*.bin
 /*.abi
+
+google-services.json

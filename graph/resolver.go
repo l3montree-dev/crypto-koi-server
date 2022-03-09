@@ -26,9 +26,11 @@ type Resolver struct {
 	cryptokoiApi    cryptokoi.CryptoKoiApi
 	generator       generator.Generator
 	logger          *logrus.Entry
+	chainId         int
 }
 
 func NewResolver(
+	chainId int,
 	userSvc service.UserSvc,
 	eventSvc service.EventSvc,
 	cryptogotchiSvc service.CryptogotchiSvc,
@@ -38,6 +40,7 @@ func NewResolver(
 	generator generator.Generator,
 ) Resolver {
 	return Resolver{
+		chainId:         chainId,
 		eventSvc:        eventSvc,
 		userSvc:         userSvc,
 		cryptogotchiSvc: cryptogotchiSvc,

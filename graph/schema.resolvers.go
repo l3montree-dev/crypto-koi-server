@@ -57,8 +57,12 @@ func (r *cryptogotchiResolver) Color(ctx context.Context, obj *models.Cryptogotc
 	return util.ConvertColor2Hex(attributes.PrimaryColor), nil
 }
 
-func (r *cryptogotchiResolver) OwnerAddress(ctx context.Context, obj *models.Cryptogotchi) (string, error) {
+func (r *cryptogotchiResolver) OwnerAddress(ctx context.Context, obj *models.Cryptogotchi) (*string, error) {
 	owner, err := r.userSvc.GetById(obj.OwnerId.String())
+	if err != nil {
+		return nil, err
+	}
+
 	return owner.WalletAddress, err
 }
 
@@ -214,7 +218,7 @@ func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, addre
 		return nil, fmt.Errorf("only the owner is allowed to transform the cryptogotchi into an nft")
 	}
 
-	signature, tokenId, err := r.cryptokoiApi.GetNftSignatureForCryptogotchi(cryptogotchi.Id.String(), user.WalletAddress)
+	signature, tokenId, err := r.cryptokoiApi.GetNftSignatureForCryptogotchi(cryptogotchi.Id.String(), *user.WalletAddress)
 
 	if err != nil {
 		return nil, err
@@ -223,9 +227,38 @@ func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, addre
 	return &input.NftData{
 		Signature: signature,
 		TokenID:   tokenId,
-		Address:   user.WalletAddress,
-		ChainID:   1,
+		Address:   *user.WalletAddress,
+		ChainID:   r.chainId,
 	}, nil
+}
+
+func (r *mutationResolver) CreateCryptogotchi(ctx context.Context, _ *string) (*models.Cryptogotchi, error) {
+	cryptogotchi, err := r.cryptogotchiSvc.GenerateCryptogotchiForUser(ctx.Value(config.USER_CTX_KEY).(*models.User))
+	return &cryptogotchi, err
+}
+
+func (r *mutationResolver) ConnectWallet(ctx context.Context, walletAddress string) (*models.User, error) {
+	user := ctx.Value(config.USER_CTX_KEY).(*models.User)
+	if user == nil {
+		r.logger.Errorf("could not find user in context")
+		return nil, fmt.Errorf("user not found")
+	}
+	if user.WalletAddress != nil {
+		r.logger.Info("wallet already connected")
+		return nil, fmt.Errorf("wallet: [%s] already connected", *user.WalletAddress)
+	}
+	// check if a user does already exist.
+	_, err := r.userSvc.GetByWalletAddress(walletAddress)
+
+	if err == nil {
+		r.logger.Errorf("wallet: [%s] already connected", walletAddress)
+		// there is already a user with this wallet address.
+		return nil, fmt.Errorf("wallet: [%s] already connected", walletAddress)
+	}
+
+	user.WalletAddress = &walletAddress
+	err = r.userSvc.Save(user)
+	return user, err
 }
 
 func (r *queryResolver) Leaderboard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error) {

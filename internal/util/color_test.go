@@ -41,3 +41,32 @@ func TestColor2Hex(t *testing.T) {
 	assert.Equal(t, "#c87d0a", ConvertColor2Hex(c3))
 	assert.Equal(t, "#000000", ConvertColor2Hex(c4))
 }
+
+func TestColorIsDark(t *testing.T) {
+	c := color.RGBA{
+		R: 125,
+		G: 125,
+		B: 125,
+	}
+
+	if !IsDark(c) {
+		t.Fatal("Expected color to be dark")
+	}
+}
+
+func TestShadeColor(t *testing.T) {
+	c := color.RGBA{
+		R: 125,
+		G: 125,
+		B: 125,
+	}
+
+	c2 := Shade(c, -50)
+
+	assert.Equal(t, color.RGBA{
+		R: 62,
+		G: 62,
+		B: 62,
+		A: 255,
+	}, c2)
+}

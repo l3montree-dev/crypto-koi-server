@@ -16,6 +16,7 @@ type CryptogotchiRepository interface {
 	Save(*models.Cryptogotchi) error
 	GetLeaderboard() ([]models.Cryptogotchi, error)
 	GetCachedLeaderboard(offset, limit int) ([]models.Cryptogotchi, error)
+	Create(m *models.Cryptogotchi) error
 }
 
 type GormCryptogotchiRepository struct {
@@ -39,6 +40,10 @@ func (rep *GormCryptogotchiRepository) GetCryptogotchiByUint256(tokenId string) 
 
 func (rep *GormCryptogotchiRepository) Save(m *models.Cryptogotchi) error {
 	return rep.db.Save(m).Error
+}
+
+func (rep *GormCryptogotchiRepository) Create(m *models.Cryptogotchi) error {
+	return rep.db.Create(m).Error
 }
 
 func (rep *GormCryptogotchiRepository) GetCryptogotchiesByUserId(userId string) ([]models.Cryptogotchi, error) {

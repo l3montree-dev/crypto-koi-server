@@ -1,6 +1,7 @@
 package cryptokoi
 
 import (
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/event"
@@ -9,8 +10,13 @@ import (
 )
 
 type CryptoKoiEventListener struct {
-	binding *CryptoKoiBinding
-	logger  *logrus.Entry
+	binding      *CryptoKoiBinding
+	logger       *logrus.Entry
+	failureCount int
+	// the websocket client will interpret pings as errors - this is annoying and logs are not necessary for this case.
+	// to avoid it, this flag is used.
+	// https://github.com/ethereum/go-ethereum/issues/22266
+	log bool
 }
 
 type CryptoKoiEvent struct {
@@ -21,8 +27,10 @@ type CryptoKoiEvent struct {
 
 func NewCryptoKoiEventListener(binding *CryptoKoiBinding) *CryptoKoiEventListener {
 	return &CryptoKoiEventListener{
-		binding: binding,
-		logger:  orchardclient.Logger.WithField("component", "CryptoKoiEventListener"),
+		binding:      binding,
+		logger:       orchardclient.Logger.WithField("component", "CryptoKoiEventListener"),
+		failureCount: 0,
+		log:          true,
 	}
 }
 
@@ -35,15 +43,20 @@ func (c *CryptoKoiEventListener) init() (event.Subscription, chan *CryptoKoiBind
 func (c *CryptoKoiEventListener) connect(eventChan chan<- CryptoKoiEvent) {
 	sub, ch, err := c.init()
 	if err != nil {
+		c.failureCount += 1
 		c.logger.Error(err)
 		// try to reconnect.
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * time.Duration(c.failureCount))
 		c.logger.Info("reconnecting...")
 		c.connect(eventChan)
 		return
 	}
+	c.failureCount = 0
 
-	c.logger.Info("websocket connection established")
+	if c.log {
+		c.logger.Info("websocket connection established")
+	}
+
 	for {
 		select {
 		case transfer := <-ch:
@@ -54,10 +67,14 @@ func (c *CryptoKoiEventListener) connect(eventChan chan<- CryptoKoiEvent) {
 				To:      transfer.To.String(),
 			}
 		case err := <-sub.Err():
-			c.logger.Error(err)
+			// not required for matic network.
+			// the bug seems to be related to geth.
+			if strings.Contains(err.Error(), "EOF") {
+				c.log = false
+			} else {
+				c.log = true
+			}
 			// try to reconnect.
-			time.Sleep(time.Second * 5)
-			c.logger.Info("reconnecting...")
 			c.connect(eventChan)
 			return
 		}

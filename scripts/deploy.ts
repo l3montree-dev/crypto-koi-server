@@ -56,8 +56,9 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
     {
       name: 'CryptoKoi',
       symbol: 'CK',
-      baseURI: 'api.crypto-koi.io/tokens/',
-      priceInGwei: 952608 * 1000 * 1000 * 1000, // around 1,99€
+      baseURI: 'https://dev.api.crypto-koi.io/v1/tokens/',
+      // MATIC calculation
+      priceInGwei: 1.466 * Math.pow(10, 9), // around 1,99€
     },
   );
 

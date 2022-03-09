@@ -246,8 +246,12 @@ func (s *GraphqlServer) getLeaderElection() leader.LeaderElection {
 	podName := os.Getenv("POD_NAME")
 	var leaderElection leader.LeaderElection
 	if podName != "" {
+		namespace := os.Getenv("NAMESPACE")
+		if namespace == "" {
+			namespace = "default"
+		}
 		// distributed environment detected.
-		leaderElection = leader.NewKubernetesLeaderElection(context.Background(), "leaderelection", "cryptokoi-api")
+		leaderElection = leader.NewKubernetesLeaderElection(context.Background(), "leaderelection", namespace)
 	} else {
 		// local environment detected.
 		leaderElection = leader.NewAlwaysLeader()
@@ -385,10 +389,19 @@ func (s *GraphqlServer) Start() {
 	s.leaderElection.AddListener(s.getBlockchainListener())
 	s.leaderElection.AddListener(s.getLeaderboardUpdateRoutine())
 	// start all listeners
-	s.leaderElection.RunElection()
+	go s.leaderElection.RunElection()
+
+	chainIdEnv := os.Getenv("CHAIN_ID")
+	if chainIdEnv == "" {
+		s.logger.Fatal("CHAIN_ID is not set")
+	}
+	chainId, err := strconv.ParseInt(chainIdEnv, 10, 64)
+	if err != nil {
+		s.logger.Fatal(err)
+	}
 
 	// attach the graphql handler to the router
-	resolver := graph.NewResolver(s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, cryptokoiApi, s.generator)
+	resolver := graph.NewResolver(int(chainId), s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, cryptokoiApi, s.generator)
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver}))
 
 	// authorized routes
@@ -400,6 +413,6 @@ func (s *GraphqlServer) Start() {
 		r.Handle("/query", srv)
 	})
 
-	s.logger.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	s.logger.Infof("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

@@ -3,7 +3,8 @@ package http_dto
 type LoginType string
 
 type LoginRequest struct {
-	WalletAddress string `json:"walletAddress"`
+	WalletAddress *string `json:"walletAddress"`
+	DeviceId      *string `json:"deviceId"`
 }
 
 type TokenResponse struct {

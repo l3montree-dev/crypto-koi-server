@@ -3,9 +3,7 @@ import * as dotenv from 'dotenv';
 
 (async function () {
   dotenv.config();
-  const provider = ethers.getDefaultProvider(
-    'https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-  );
+  const provider = ethers.getDefaultProvider(process.env.CHAIN_URL);
 
   const network = await provider.getNetwork();
 

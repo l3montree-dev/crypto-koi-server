@@ -31,3 +31,12 @@ func Uint256ToUuid(uInt *big.Int) (uuid.UUID, error) {
 func IsNotDigit(c rune) bool {
 	return c < '0' || c > '9'
 }
+
+func IsHex(toCheck string) bool {
+	for _, c := range toCheck {
+		if IsNotDigit(c) {
+			return false
+		}
+	}
+	return true
+}
