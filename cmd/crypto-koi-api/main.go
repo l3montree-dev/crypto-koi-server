@@ -40,7 +40,7 @@ func main() {
 	isDev := os.Getenv("DEV") == "true"
 	if !isDev {
 		err = sentry.Init(sentry.ClientOptions{
-			Dsn: "https://e56b8f4eedcf451e9b1cec93799f4443@sentry.l3montree.com/50",
+			Dsn: "https://e56b8f4eedcf451e9b1cec93799f4443@sentry.l3montree.com/11",
 		})
 		if err != nil {
 			mainLogger.Fatalf("sentry.Init: %s", err)
