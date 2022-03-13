@@ -106,7 +106,7 @@ func (svc *CryptogotchiService) MarkAsNft(crypt *models.Cryptogotchi) error {
 }
 
 func (svc *CryptogotchiService) getUserForNotifications(phase string) ([]models.User, error) {
-	duration := config.NotificationPhases[phase]
+	duration := time.Duration(config.GetNotifications()[phase].HoursBeforeDeath) * time.Hour
 	startTime := time.Now().Add(duration)
 	endTime := startTime.Add(svc.timeBetweenNotifications)
 	cryptogotchies, err := svc.GetCryptogotchiesWithPredictedDeathDateBetween(startTime, endTime)
@@ -139,8 +139,8 @@ func (svc *CryptogotchiService) sendPhaseNotification(phase string) error {
 		go func(u models.User) {
 			defer wg.Done()
 			// get the notification
-			r := rand.Intn(len(svc.notifications[phase]))
-			notification := svc.notifications[phase][r]
+			r := rand.Intn(len(svc.notifications[phase].Notifications))
+			notification := svc.notifications[phase].Notifications[r]
 			err = svc.notificationSvc.SendNotification(&u, notification.Title, notification.Body, nil)
 			orchardclient.Logger.Error(err)
 		}(user)
@@ -159,8 +159,8 @@ func (svc *CryptogotchiService) GetNotificationListener() leader.Listener {
 			case <-time.After(svc.timeBetweenNotifications):
 				now := time.Now()
 				wg := sync.WaitGroup{}
-				wg.Add(len(config.NotificationPhases))
-				for phase := range config.NotificationPhases {
+				wg.Add(len(svc.notifications))
+				for phase := range svc.notifications {
 					go func(p string) {
 						defer wg.Done()
 						err := svc.sendPhaseNotification(p)

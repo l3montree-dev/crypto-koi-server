@@ -27,23 +27,17 @@ const DEFAULT_FOOD_DRAIN = 100. / (48 * 60) /* 2 days */
 // the amount of food each cryptogotchi has when created. Value between 0 and 100
 const DEFAULT_FOOD_VALUE = 75.
 
-// will be used to construct an interval query.
-// get every cryptogotchi, where the predicted death date is between start and end.
-// that this works precise, without the need to store any send notification state, the start and end date
-var NotificationPhases map[string]time.Duration = map[string]time.Duration{
-	"phase1": 12 * time.Hour,
-	"phase2": 8 * time.Hour,
-	"phase3": 5 * time.Hour,
-	"phase4": 2 * time.Hour,
-	"phase5": 1 * time.Hour,
-}
-
 type Notification struct {
 	Title string `json:"title"`
 	Body  string `json:"body"`
 }
 
-type PreloadedNotifications = map[string][]Notification
+type NotificationDefinition struct {
+	Notifications    []Notification `json:"notifications"`
+	HoursBeforeDeath int            `json:"hoursBeforeDeath"`
+}
+
+type PreloadedNotifications = map[string]NotificationDefinition
 
 var preloadedNotifications PreloadedNotifications
 
