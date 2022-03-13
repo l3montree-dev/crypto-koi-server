@@ -131,7 +131,7 @@ func (svc *CryptogotchiService) sendPhaseNotification(phase string) error {
 		return err
 	}
 
-	orchardclient.Logger.Info("Sending:", len(users), "notifications for phase:", phase)
+	orchardclient.Logger.Info("Sending: ", len(users), " notifications for phase: ", phase)
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(users))
