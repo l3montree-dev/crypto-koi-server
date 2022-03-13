@@ -17,6 +17,7 @@ type CryptogotchiRepository interface {
 	GetLeaderboard() ([]models.Cryptogotchi, error)
 	GetCachedLeaderboard(offset, limit int) ([]models.Cryptogotchi, error)
 	Create(m *models.Cryptogotchi) error
+	GetCryptogotchiesWithPredictedDeathDateBetween(start, end time.Time) ([]models.Cryptogotchi, error)
 }
 
 type GormCryptogotchiRepository struct {
@@ -56,6 +57,12 @@ func (rep *GormCryptogotchiRepository) GetCryptogotchiById(id string) (models.Cr
 	var cryptogotchi models.Cryptogotchi
 	err := rep.db.Where("id = ?", id).First(&cryptogotchi).Error
 	return cryptogotchi, err
+}
+
+func (rep *GormCryptogotchiRepository) GetCryptogotchiesWithPredictedDeathDateBetween(start, end time.Time) ([]models.Cryptogotchi, error) {
+	var cryptogotchies []models.Cryptogotchi
+	err := rep.db.Where("predicted_death_date > ? AND predicted_death_date < ?", start, end).Order("'predicted_death_date' ASC").Find(&cryptogotchies).Error
+	return cryptogotchies, err
 }
 
 func (rep *GormCryptogotchiRepository) GetLeaderboard() ([]models.Cryptogotchi, error) {

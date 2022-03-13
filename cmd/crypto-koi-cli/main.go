@@ -44,7 +44,7 @@ func registerRandomUser(g *generator.Generator, amount int) {
 	userRep.Save(&newUser)
 
 	cryptogotchiRep := repositories.NewGormCryptogotchiRepository(db)
-	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRep)
+	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRep, userRep, nil)
 
 	wg := sync.WaitGroup{}
 	wg.Add(amount)

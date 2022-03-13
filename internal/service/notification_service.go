@@ -12,6 +12,11 @@ type NotificationSvc struct {
 	logger    *logrus.Entry
 }
 
+type NotificationService interface {
+	SendNotifications(to []*models.User, title, body string, data map[string]interface{}) map[*models.User]error
+	SendNotification(to *models.User, title, body string, data map[string]interface{}) error
+}
+
 func NewNotificationSvc(apiKey string) *NotificationSvc {
 
 	logger := orchardclient.Logger.WithField("component", "NotificationSvc")

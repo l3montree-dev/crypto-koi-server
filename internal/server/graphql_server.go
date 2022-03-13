@@ -311,12 +311,18 @@ func (s *GraphqlServer) Start() {
 
 	// init all services
 	tokenSvc := service.NewTokenService()
+	apiKey := os.Getenv("FCM_API_KEY")
+	if apiKey == "" {
+		orchardclient.Logger.Panic("FCM_API_KEY is not defined")
+	}
+
+	notificationSvc := service.NewNotificationSvc(apiKey)
 	userSvc := service.NewUserService(userRepository)
 	authSvc := service.NewAuthService(userRepository, tokenSvc)
 	eventSvc := service.NewEventService(eventRepository)
 	gameSvc := service.NewGameService(gameRepository, eventSvc, tokenSvc)
 	// init all controllers
-	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRepository)
+	cryptogotchiSvc := service.NewCryptogotchiService(cryptogotchiRepository, userRepository, notificationSvc)
 	authController := controller.NewAuthController(userRepository, cryptogotchiSvc, authSvc)
 	openseaController := controller.NewOpenseaController(imageBaseUrl, eventRepository, cryptogotchiSvc)
 
@@ -388,6 +394,7 @@ func (s *GraphqlServer) Start() {
 	// start the listener.
 	s.leaderElection.AddListener(s.getBlockchainListener())
 	s.leaderElection.AddListener(s.getLeaderboardUpdateRoutine())
+	s.leaderElection.AddListener(cryptogotchiSvc.GetNotificationListener())
 	// start all listeners
 	go s.leaderElection.RunElection()
 
