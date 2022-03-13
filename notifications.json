@@ -1,0 +1,11 @@
+{
+    "phase1": {
+        "hoursBeforeDeath": 1,
+        "notifications": [
+            {
+                "title": "Test Title",
+                "body": "Test Body"
+            }
+        ]
+    }
+}
