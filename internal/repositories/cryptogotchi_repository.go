@@ -61,7 +61,7 @@ func (rep *GormCryptogotchiRepository) GetCryptogotchiById(id string) (models.Cr
 
 func (rep *GormCryptogotchiRepository) GetCryptogotchiesWithPredictedDeathDateBetween(start, end time.Time) ([]models.Cryptogotchi, error) {
 	var cryptogotchies []models.Cryptogotchi
-	err := rep.db.Where("predicted_death_date > ? AND predicted_death_date < ?", start, end).Order("'predicted_death_date' ASC").Find(&cryptogotchies).Error
+	err := rep.db.Where("predicted_death_date >= ? AND predicted_death_date < ?", start, end).Find(&cryptogotchies).Error
 	return cryptogotchies, err
 }
 

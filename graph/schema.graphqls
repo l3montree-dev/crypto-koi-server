@@ -92,6 +92,7 @@ type Mutation {
   getNftSignature(id: ID!, address: String!): NftData!
   createCryptogotchi(_: String): Cryptogotchi!
   connectWallet(walletAddress: String!): User!
+  acceptPushNotifications(pushNotificationToken: String!): User!
 }
 
 type Query {

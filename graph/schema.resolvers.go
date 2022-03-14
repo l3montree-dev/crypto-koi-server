@@ -261,6 +261,19 @@ func (r *mutationResolver) ConnectWallet(ctx context.Context, walletAddress stri
 	return user, err
 }
 
+func (r *mutationResolver) AcceptPushNotifications(ctx context.Context, pushNotificationToken string) (*models.User, error) {
+	user := ctx.Value(config.USER_CTX_KEY).(*models.User)
+	if user == nil {
+		r.logger.Errorf("could not find user in context")
+		return nil, fmt.Errorf("user not found")
+	}
+
+	user.PushNotificationToken = &pushNotificationToken
+	err := r.userSvc.Save(user)
+
+	return user, err
+}
+
 func (r *queryResolver) Leaderboard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error) {
 	cryptogotchis, err := r.cryptogotchiSvc.GetCachedLeaderboard(offset, limit)
 	if err != nil {
