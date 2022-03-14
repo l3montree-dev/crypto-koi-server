@@ -1,10 +1,126 @@
 {
     "phase1": {
+        "hoursBeforeDeath": 12,
+        "notifications": [
+            {
+                "title": "It can't believe that you don't want to feed me!",
+                "body": "It can't believe that you don't want to feed me!"
+            },
+            {
+                "title": "Hello, don't you want to feed me?",
+                "body": "Hello, don't you want to feed me?"
+            },
+            {
+                "title": "Could it be that you have forgotten to feed me? I'm hungry!",
+                "body": "Could it be that you have forgotten to feed me? I'm hungry!"
+            },
+            {
+                "title": "I'm sure you'll feed me in a minute. I've been waiting here so long.",
+                "body": "I'm sure you'll feed me in a minute. I've been waiting here so long."
+            },
+            {
+                "title": "Hello? I just wanted to remind you that it's feeding time.",
+                "body": "Hello? I just wanted to remind you that it's feeding time."
+            }
+        ]
+    },
+    "phase2": {
+        "hoursBeforeDeath": 9,
+        "notifications": [
+            {
+                "title": "Feed me! Now!",
+                "body": "Feed me! Now!"
+            },
+            {
+                "title": "Why don't you feed me, you arrogant human!",
+                "body": "Why don't you feed me, you arrogant human!"
+            },
+            {
+                "title": "Do you want to starve me? Me? Here?",
+                "body": "Do you want to starve me? Me? Here?"
+            },
+            {
+                "title": "Did you know that I have a black belt in Koi Karate? Without food, I'll use it!",
+                "body": "Did you know that I have a black belt in Koi Karate? Without food, I'll use it!"
+            },
+            {
+                "title": "Hello Veterinary Office... Yes, I'm not fed here. Come quickly!",
+                "body": "Hello Veterinary Office... Yes, I'm not fed here. Come quickly!"
+            }
+        ]
+    },
+    "phase3": {
+        "hoursBeforeDeath": 6,
+        "notifications": [
+            {
+                "title": "Could you please feed me? Then maybe I'll tell you a secret.",
+                "body": "Could you please feed me? Then maybe I'll tell you a secret."
+            },
+            {
+                "title": "Could you please feed me? Then I'll probably show you a trick!",
+                "body": "Could you please feed me? Then I'll probably show you a trick!"
+            },
+            {
+                "title": "If you feed me now, I will always be nice to you!",
+                "body": "If you feed me now, I will always be nice to you!"
+            },
+            {
+                "title": "Can you please feed me? I love you soooo much!",
+                "body": "Can you please feed me? I love you soooo much!"
+            }
+        ]
+    },
+    "phase4": {
+        "hoursBeforeDeath": 3,
+        "notifications": [
+            {
+                "title": "Why am I the only one not being fed",
+                "body": "Why am I the only one not being fed"
+            },
+            {
+                "title": "The world is wrong",
+                "body": "The world is wrong... I'm hungry..."
+            },
+            {
+                "title": "Why always me? I am so hungry",
+                "body": "Why always me? I am so hungry"
+            },
+            {
+                "title": "Don't you love me anymore and that's why you don't feed me?",
+                "body": "Don't you love me anymore and that's why you don't feed me?"
+            },
+            {
+                "title": "Why me? Why here?",
+                "body": "Why me? Why here?"
+            },
+            {
+                "title": "Not so... Not sooooo!",
+                "body": "Not so... Not sooooo!"
+            }
+        ]
+    },
+    "phase5": {
         "hoursBeforeDeath": 1,
         "notifications": [
             {
-                "title": "Test Title",
-                "body": "Test Body"
+                "title": "It's okay, let me starve.",
+                "body": "It's okay, let me starve."
+            },
+            {
+                "title": "I'm probably not worth feeding anyway.",
+                "body": "I'm probably not worth feeding anyway."
+            },
+            {
+                "title": "Let me starve, I've accepted it.",
+                "body": "Let me starve, I've accepted it."
+            },
+            {
+                "title": "Maybe it's a good thing, I'll be fed in the next life.",
+                "body": "Maybe it's a good thing, I'll be fed in the next life."
+            },
+            {
+                "title": "Do you think there's food in heaven? Then I could finally eat again.",
+                "body": "Do you think there's food in heaven? Then I could finally eat again."
             }
         ]
     }
