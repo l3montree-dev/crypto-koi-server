@@ -19,8 +19,8 @@ import (
 
 type CryptogotchiSvc interface {
 	repositories.CryptogotchiRepository
-	GenerateCryptogotchiForUser(user *models.User) (models.Cryptogotchi, error)
-	GenerateWithFixedTokenId(user *models.User, id uuid.UUID) (models.Cryptogotchi, error)
+	GenerateCryptogotchiForUser(user *models.User, active bool) (models.Cryptogotchi, error)
+	GenerateWithFixedTokenId(user *models.User, id uuid.UUID, active bool) (models.Cryptogotchi, error)
 	MarkAsNft(crypt *models.Cryptogotchi) error
 	GetNotificationListener() leader.Listener
 	UpdateRanks() error
@@ -63,7 +63,7 @@ func (svc *CryptogotchiService) UpdateRanks() error {
 	return nil
 }
 
-func (svc *CryptogotchiService) GenerateWithFixedTokenId(user *models.User, id uuid.UUID) (models.Cryptogotchi, error) {
+func (svc *CryptogotchiService) GenerateWithFixedTokenId(user *models.User, id uuid.UUID, active bool) (models.Cryptogotchi, error) {
 	foodValue := config.DEFAULT_FOOD_VALUE
 	foodDrainValue := config.DEFAULT_FOOD_DRAIN
 	now := time.Now()
@@ -85,6 +85,7 @@ func (svc *CryptogotchiService) GenerateWithFixedTokenId(user *models.User, id u
 		Name:               util.Str(name),
 		OwnerId:            user.Id,
 		Food:               foodValue,
+		Active:             active,
 		FoodDrain:          foodDrainValue,
 		PredictedDeathDate: now.Add(time.Duration(foodValue/foodDrainValue) * time.Minute),
 		SnapshotValid:      now,
@@ -93,16 +94,17 @@ func (svc *CryptogotchiService) GenerateWithFixedTokenId(user *models.User, id u
 	return newCrypt, err
 }
 
-func (svc *CryptogotchiService) GenerateCryptogotchiForUser(user *models.User) (models.Cryptogotchi, error) {
+func (svc *CryptogotchiService) GenerateCryptogotchiForUser(user *models.User, active bool) (models.Cryptogotchi, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return models.Cryptogotchi{}, err
 	}
-	return svc.GenerateWithFixedTokenId(user, id)
+	return svc.GenerateWithFixedTokenId(user, id, active)
 }
 
 func (svc *CryptogotchiService) MarkAsNft(crypt *models.Cryptogotchi) error {
 	crypt.IsValidNft = true
+	crypt.Active = true
 	return svc.Save(crypt)
 }
 

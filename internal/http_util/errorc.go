@@ -25,20 +25,7 @@ func (errorc ErrorC) ToJSON() []byte {
 }
 
 // returns a function to simply log the error
-func WriteHttpError(writer http.ResponseWriter, status int, message string, args ...interface{}) {
+func WriteHttpError(writer http.ResponseWriter, status int, message string) {
 	(writer).WriteHeader(status)
-	(writer).Write(NewError(status, message, args...).ToJSON())
-}
-
-func NewError(status int, message string, args ...interface{}) ErrorC {
-	if len(args) > 0 {
-		return ErrorC{
-			Status: status,
-			Err:    fmt.Sprintf(message, args...),
-		}
-	}
-	return ErrorC{
-		Status: status,
-		Err:    message,
-	}
+	(writer).Write([]byte(message))
 }

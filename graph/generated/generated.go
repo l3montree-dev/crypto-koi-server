@@ -106,7 +106,7 @@ type ComplexityRoot struct {
 		ChangeCryptogotchiName  func(childComplexity int, id string, newName string) int
 		ChangeUserName          func(childComplexity int, newName string) int
 		ConnectWallet           func(childComplexity int, walletAddress string) int
-		CreateCryptogotchi      func(childComplexity int, _ *string) int
+		CreateCryptogotchi      func(childComplexity int, walletAddress string) int
 		Feed                    func(childComplexity int, cryptogotchiID string) int
 		FinishGame              func(childComplexity int, token string, score float64) int
 		GetNftSignature         func(childComplexity int, id string, address string) int
@@ -171,7 +171,7 @@ type MutationResolver interface {
 	ChangeCryptogotchiName(ctx context.Context, id string, newName string) (*models.Cryptogotchi, error)
 	ChangeUserName(ctx context.Context, newName string) (*models.User, error)
 	GetNftSignature(ctx context.Context, id string, address string) (*input.NftData, error)
-	CreateCryptogotchi(ctx context.Context, _ *string) (*models.Cryptogotchi, error)
+	CreateCryptogotchi(ctx context.Context, walletAddress string) (*input.NftData, error)
 	ConnectWallet(ctx context.Context, walletAddress string) (*models.User, error)
 	AcceptPushNotifications(ctx context.Context, pushNotificationToken string) (*models.User, error)
 }
@@ -517,7 +517,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateCryptogotchi(childComplexity, args["_"].(*string)), true
+		return e.complexity.Mutation.CreateCryptogotchi(childComplexity, args["walletAddress"].(string)), true
 
 	case "Mutation.feed":
 		if e.complexity.Mutation.Feed == nil {
@@ -836,7 +836,7 @@ type Mutation {
   changeCryptogotchiName(id: ID!, newName: String!): Cryptogotchi!
   changeUserName(newName: String!): User!
   getNftSignature(id: ID!, address: String!): NftData!
-  createCryptogotchi(_: String): Cryptogotchi!
+  createCryptogotchi(walletAddress: String!): NftData!
   connectWallet(walletAddress: String!): User!
   acceptPushNotifications(pushNotificationToken: String!): User!
 }
@@ -926,15 +926,15 @@ func (ec *executionContext) field_Mutation_connectWallet_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_createCryptogotchi_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
-	if tmp, ok := rawArgs["_"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("_"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["walletAddress"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("walletAddress"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["_"] = arg0
+	args["walletAddress"] = arg0
 	return args, nil
 }
 
@@ -2707,7 +2707,7 @@ func (ec *executionContext) _Mutation_createCryptogotchi(ctx context.Context, fi
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCryptogotchi(rctx, args["_"].(*string))
+		return ec.resolvers.Mutation().CreateCryptogotchi(rctx, args["walletAddress"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2719,9 +2719,9 @@ func (ec *executionContext) _Mutation_createCryptogotchi(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*models.Cryptogotchi)
+	res := resTmp.(*input.NftData)
 	fc.Result = res
-	return ec.marshalNCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
+	return ec.marshalNNftData2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐNftData(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_connectWallet(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {

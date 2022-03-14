@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -28,14 +29,14 @@ func (c *OpenseaController) GetCryptogotchi(w http.ResponseWriter, req *http.Req
 	// fetch the correct cryptogotchi using the token.
 	cryptogotchi, err := c.cryptogotchiSvc.GetCryptogotchiByUint256(tokenId)
 	if err != nil {
-		http_util.WriteHttpError(w, http.StatusNotFound, "could not get cryptogotchi: %e", err)
+		http_util.WriteHttpError(w, http.StatusNotFound, fmt.Sprintf("could not get cryptogotchi: %e", err))
 		return
 	}
 
 	// transform the cryptogotchi to an opensea-NFT compatible json.
 	nft, err := cryptogotchi.ToOpenseaNFT(c.imageBaseUrl)
 	if err != nil {
-		http_util.WriteHttpError(w, http.StatusInternalServerError, "could not transform cryptogotchi to opensea-NFT: %e", err)
+		http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("could not transform cryptogotchi to opensea-NFT: %e", err))
 		return
 	}
 	http_util.WriteJSON(w, nft)

@@ -109,14 +109,14 @@ func (s *GraphqlServer) authMiddleware(next http.Handler) http.Handler {
 			if ve, ok := err.(*jwt.ValidationError); ok {
 				if ve.Errors&jwt.ValidationErrorMalformed != 0 {
 					s.logger.Errorf("invalid token: %s", err)
-					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e", err)
+					http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("invalid token: %e", err))
 				} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
 					// Token is either expired or not active yet
 					s.logger.Infof("token is either expired or not active yet: %s", err)
-					http_util.WriteHttpError(w, http.StatusUnauthorized, "token is either expired or not active yet: %e", err)
+					http_util.WriteHttpError(w, http.StatusUnauthorized, fmt.Sprintf("token is either expired or not active yet: %e", err))
 				} else {
 					s.logger.Errorf("invalid token: %s", err)
-					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e", err)
+					http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("invalid token: %e", err))
 				}
 			}
 			return

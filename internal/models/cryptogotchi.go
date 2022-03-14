@@ -26,6 +26,7 @@ type Cryptogotchi struct {
 	// mapping to the event struct.
 	Events    []Event    `json:"events"`
 	GameStats []GameStat `json:"game_stats" gorm:"foreignKey:cryptogotchi_id"`
+	Active    bool       `json:"released" gorm:"default:true"`
 	// the timestamp of the current snapshot stored inside the database.
 	// in most cases this equals the LastFeed value. - nevertheless to build the struct a bit more
 	// future proof, we store the timestamp of the snapshot in the database as a separate column.

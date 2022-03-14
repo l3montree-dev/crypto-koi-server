@@ -51,7 +51,7 @@ func registerRandomUser(g *generator.Generator, amount int) {
 	for i := 0; i < amount; i++ {
 		go func() {
 			defer wg.Done()
-			crypt, err := cryptogotchiSvc.GenerateCryptogotchiForUser(&newUser)
+			crypt, err := cryptogotchiSvc.GenerateCryptogotchiForUser(&newUser, true)
 			if err != nil {
 				log.Printf("WARNING - error occured: %e", err)
 				return

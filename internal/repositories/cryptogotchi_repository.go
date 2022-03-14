@@ -28,6 +28,10 @@ func NewGormCryptogotchiRepository(db *gorm.DB) CryptogotchiRepository {
 	return &GormCryptogotchiRepository{db: db}
 }
 
+func onlyActive(db *gorm.DB) *gorm.DB {
+	return db.Where("active = ?", true)
+}
+
 func (rep *GormCryptogotchiRepository) GetCryptogotchiByUint256(tokenId string) (models.Cryptogotchi, error) {
 	bigInt := math.MustParseBig256(tokenId)
 
@@ -49,7 +53,7 @@ func (rep *GormCryptogotchiRepository) Create(m *models.Cryptogotchi) error {
 
 func (rep *GormCryptogotchiRepository) GetCryptogotchiesByUserId(userId string) ([]models.Cryptogotchi, error) {
 	var cryptogotchies []models.Cryptogotchi
-	err := rep.db.Where("user_id = ?", userId).Find(&cryptogotchies).Error
+	err := rep.db.Scopes(onlyActive).Where("user_id = ?", userId).Find(&cryptogotchies).Error
 	return cryptogotchies, err
 }
 
