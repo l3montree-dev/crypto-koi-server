@@ -3,23 +3,23 @@
         "hoursBeforeDeath": 12,
         "notifications": [
             {
-                "title": "It can't believe that you don't want to feed me!",
+                "title": "Unbelievable! Feed me!",
                 "body": "It can't believe that you don't want to feed me!"
             },
             {
-                "title": "Hello, don't you want to feed me?",
+                "title": "Hello there?",
                 "body": "Hello, don't you want to feed me?"
             },
             {
-                "title": "Could it be that you have forgotten to feed me? I'm hungry!",
+                "title": "Forgot about me?",
                 "body": "Could it be that you have forgotten to feed me? I'm hungry!"
             },
             {
-                "title": "I'm sure you'll feed me in a minute. I've been waiting here so long.",
+                "title": "You could never have forgotten me",
                 "body": "I'm sure you'll feed me in a minute. I've been waiting here so long."
             },
             {
-                "title": "Hello? I just wanted to remind you that it's feeding time.",
+                "title": "Hello? Feeding time...",
                 "body": "Hello? I just wanted to remind you that it's feeding time."
             }
         ]
@@ -29,22 +29,22 @@
         "notifications": [
             {
                 "title": "Feed me! Now!",
-                "body": "Feed me! Now!"
+                "body": "Feed me! Now! It's very selfish, you are just getting yourself snacks but do not care about me!"
             },
             {
-                "title": "Why don't you feed me, you arrogant human!",
+                "title": "Wanna feed me!",
                 "body": "Why don't you feed me, you arrogant human!"
             },
             {
-                "title": "Do you want to starve me? Me? Here?",
-                "body": "Do you want to starve me? Me? Here?"
+                "title": "Do you want to starve me?",
+                "body": "Do you want to starve me? Me? Here? Just give me a little snack!"
             },
             {
-                "title": "Did you know that I have a black belt in Koi Karate? Without food, I'll use it!",
+                "title": "Your in danger - for sure...",
                 "body": "Did you know that I have a black belt in Koi Karate? Without food, I'll use it!"
             },
             {
-                "title": "Hello Veterinary Office... Yes, I'm not fed here. Come quickly!",
+                "title": "Hello Veterinary Office...",
                 "body": "Hello Veterinary Office... Yes, I'm not fed here. Come quickly!"
             }
         ]
@@ -53,19 +53,19 @@
         "hoursBeforeDeath": 6,
         "notifications": [
             {
-                "title": "Could you please feed me? Then maybe I'll tell you a secret.",
+                "title": "Wanna know a secret?",
                 "body": "Could you please feed me? Then maybe I'll tell you a secret."
             },
             {
-                "title": "Could you please feed me? Then I'll probably show you a trick!",
+                "title": "Wanna see a trick?",
                 "body": "Could you please feed me? Then I'll probably show you a trick!"
             },
             {
-                "title": "If you feed me now, I will always be nice to you!",
+                "title": "Got a promise for you!",
                 "body": "If you feed me now, I will always be nice to you!"
             },
             {
-                "title": "Can you please feed me? I love you soooo much!",
+                "title": "I love you soooo much!",
                 "body": "Can you please feed me? I love you soooo much!"
             }
         ]
@@ -74,28 +74,28 @@
         "hoursBeforeDeath": 3,
         "notifications": [
             {
-                "title": "Why am I the only one not being fed",
-                "body": "Why am I the only one not being fed"
+                "title": "Why am I the only one not being fed?",
+                "body": "Why am I the only one not being fed? All my friends are fine and fat..."
             },
             {
                 "title": "The world is wrong",
-                "body": "The world is wrong... I'm hungry..."
+                "body": "The world is wrong... I'm hungry...Pls, a piece of dry bread would be enough."
             },
             {
-                "title": "Why always me? I am so hungry",
-                "body": "Why always me? I am so hungry"
+                "title": "Why always me?",
+                "body": "Why always me? I am so hungry. Did your that? That was my tummy..."
             },
             {
-                "title": "Don't you love me anymore and that's why you don't feed me?",
+                "title": "Don't you love me anymore?",
                 "body": "Don't you love me anymore and that's why you don't feed me?"
             },
             {
                 "title": "Why me? Why here?",
-                "body": "Why me? Why here?"
+                "body": "Why me? Why here? I do not wanna die this early..."
             },
             {
                 "title": "Not so... Not sooooo!",
-                "body": "Not so... Not sooooo!"
+                "body": "Starving is a horrible death... Just think a bit about it..."
             }
         ]
     },
@@ -103,24 +103,24 @@
         "hoursBeforeDeath": 1,
         "notifications": [
             {
-                "title": "It's okay, let me starve.",
+                "title": "You've won...",
                 "body": "It's okay, let me starve."
             },
             {
-                "title": "I'm probably not worth feeding anyway.",
+                "title": "Maybe you're right...",
                 "body": "I'm probably not worth feeding anyway."
             },
             {
-                "title": "Let me starve, I've accepted it.",
-                "body": "Let me starve, I've accepted it."
+                "title": "I've accepted it.",
+                "body": "Let me starve, no problem for me anymore..."
             },
             {
-                "title": "Maybe it's a good thing, I'll be fed in the next life.",
+                "title": "I'll be fed in the next life.",
                 "body": "Maybe it's a good thing, I'll be fed in the next life."
             },
             {
-                "title": "Do you think there's food in heaven? Then I could finally eat again.",
-                "body": "Do you think there's food in heaven? Then I could finally eat again."
+                "title": "Do you think there's food in heaven?",
+                "body": "Do you think there's food in heaven? Then I could finally eat again and maybe get loved a bit..."
             }
         ]
     }
