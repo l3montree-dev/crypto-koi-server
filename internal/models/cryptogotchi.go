@@ -35,13 +35,9 @@ type Cryptogotchi struct {
 	Rank          int       `json:"rank" gorm:"default:-1"`
 }
 
-func ToOpenseaNFT(baseUrl, tokenId string, isAlive bool, name string, createdAt time.Time) (OpenseaNFT, error) {
-	uintStr, err := util.UuidToUint256(tokenId)
-	koi := cryptokoi.NewKoi(tokenId)
+func ToOpenseaNFT(baseUrl, tokenIdUint string, isAlive bool, name string, createdAt time.Time) (OpenseaNFT, error) {
+	koi := cryptokoi.NewKoi(tokenIdUint)
 	attributes := koi.GetAttributes()
-	if err != nil {
-		return OpenseaNFT{}, err
-	}
 
 	state := "Alive"
 	if isAlive {
@@ -50,7 +46,7 @@ func ToOpenseaNFT(baseUrl, tokenId string, isAlive bool, name string, createdAt 
 
 	return OpenseaNFT{
 		Name:  name,
-		Image: baseUrl + "v1/images/" + uintStr.String(),
+		Image: baseUrl + "v1/images/" + tokenIdUint,
 
 		Attributes: []OpenseaNFTAttribute{
 			{
@@ -87,7 +83,11 @@ func ToOpenseaNFT(baseUrl, tokenId string, isAlive bool, name string, createdAt 
 }
 
 func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {
-	return ToOpenseaNFT(baseUrl, c.Id.String(), c.IsAlive(), *c.Name, c.CreatedAt)
+	tokenIdUint, err := util.UuidToUint256(c.Id.String())
+	if err != nil {
+		return OpenseaNFT{}, err
+	}
+	return ToOpenseaNFT(baseUrl, tokenIdUint.String(), c.IsAlive(), *c.Name, c.CreatedAt)
 }
 
 // make sure to only call this function after the food value has been updated.
