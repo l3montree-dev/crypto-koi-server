@@ -35,28 +35,28 @@ type Cryptogotchi struct {
 	Rank          int       `json:"rank" gorm:"default:-1"`
 }
 
-func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {
-	uintStr, err := util.UuidToUint256(c.Id.String())
-	koi := cryptokoi.NewKoi(c.Id.String())
+func ToOpenseaNFT(baseUrl, tokenId string, isAlive bool, name string, createdAt time.Time) (OpenseaNFT, error) {
+	uintStr, err := util.UuidToUint256(tokenId)
+	koi := cryptokoi.NewKoi(tokenId)
 	attributes := koi.GetAttributes()
 	if err != nil {
 		return OpenseaNFT{}, err
 	}
 
 	state := "Alive"
-	if !c.IsAlive() {
+	if isAlive {
 		state = "Dead"
 	}
 
 	return OpenseaNFT{
-		Name:  *c.Name,
+		Name:  name,
 		Image: baseUrl + "v1/images/" + uintStr.String(),
 
 		Attributes: []OpenseaNFTAttribute{
 			{
 				TraitType:   "Birthday",
 				DisplayType: DateDisplayType,
-				Value:       c.CreatedAt.Unix(),
+				Value:       createdAt.Unix(),
 			},
 			{
 				TraitType: "State",
@@ -84,6 +84,10 @@ func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {
 				Value:     attributes.KoiType,
 			},
 		}}, nil
+}
+
+func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {
+	return ToOpenseaNFT(baseUrl, c.Id.String(), c.IsAlive(), *c.Name, c.CreatedAt)
 }
 
 // make sure to only call this function after the food value has been updated.

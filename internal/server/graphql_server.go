@@ -286,7 +286,7 @@ func (s *GraphqlServer) Start() {
 		AllowedOrigins: []string{"*"},
 		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
 		AllowedMethods:   []string{"*"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"*"},
 		ExposedHeaders:   []string{"*"},
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
@@ -349,6 +349,7 @@ func (s *GraphqlServer) Start() {
 		// gets called by their API and wallet applications.
 		r.Get("/tokens/{tokenId}", openseaController.GetCryptogotchi)
 		r.Get("/images/{tokenId}", s.imageHandlerFactory(350, false))
+		r.Get("/fakes/{tokenId}", openseaController.GetFakeCryptogotchi)
 	})
 
 	privateKey := os.Getenv("PRIVATE_KEY")
