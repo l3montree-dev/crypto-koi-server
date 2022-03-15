@@ -48,15 +48,9 @@ func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {
 		state = "Dead"
 	}
 
-	backgroundColor := util.Shade(attributes.PrimaryColor, -20)
-	if util.IsDark(attributes.PrimaryColor) {
-		backgroundColor = util.Shade(attributes.PrimaryColor, 20)
-	}
-
 	return OpenseaNFT{
-		Name:            *c.Name,
-		Image:           baseUrl + "v1/images/" + uintStr.String(),
-		BackgroundColor: util.ConvertColor2HexWithoutHash(backgroundColor),
+		Name:  *c.Name,
+		Image: baseUrl + "v1/images/" + uintStr.String(),
 
 		Attributes: []OpenseaNFTAttribute{
 			{
