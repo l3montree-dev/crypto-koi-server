@@ -1,6 +1,6 @@
 module gitlab.com/l3montree/crypto-koi/crypto-koi-api
 
-go 1.17
+go 1.18
 
 require (
 	github.com/99designs/gqlgen v0.15.1
