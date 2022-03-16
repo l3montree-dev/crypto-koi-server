@@ -10,10 +10,9 @@ import (
 )
 
 type CryptogotchiRepository interface {
+	Repository[models.Cryptogotchi]
 	GetCryptogotchiByUint256(tokenId string) (models.Cryptogotchi, error)
 	GetCryptogotchiesByUserId(userId string) ([]models.Cryptogotchi, error)
-	GetCryptogotchiById(id string) (models.Cryptogotchi, error)
-	Save(*models.Cryptogotchi) error
 	GetLeaderboard() ([]models.Cryptogotchi, error)
 	GetCachedLeaderboard(offset, limit int) ([]models.Cryptogotchi, error)
 	Create(m *models.Cryptogotchi) error
@@ -40,7 +39,7 @@ func (rep *GormCryptogotchiRepository) GetCryptogotchiByUint256(tokenId string) 
 		return models.Cryptogotchi{}, err
 	}
 
-	return rep.GetCryptogotchiById(id.String())
+	return rep.GetById(id.String())
 }
 
 func (rep *GormCryptogotchiRepository) Save(m *models.Cryptogotchi) error {
@@ -57,7 +56,7 @@ func (rep *GormCryptogotchiRepository) GetCryptogotchiesByUserId(userId string) 
 	return cryptogotchies, err
 }
 
-func (rep *GormCryptogotchiRepository) GetCryptogotchiById(id string) (models.Cryptogotchi, error) {
+func (rep *GormCryptogotchiRepository) GetById(id string) (models.Cryptogotchi, error) {
 	var cryptogotchi models.Cryptogotchi
 	err := rep.db.Where("id = ?", id).First(&cryptogotchi).Error
 	return cryptogotchi, err

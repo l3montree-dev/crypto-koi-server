@@ -6,10 +6,9 @@ import (
 )
 
 type UserRepository interface {
+	Repository[models.User]
 	GetByDeviceId(deviceId string) (models.User, error)
 	GetByWalletAddress(address string) (models.User, error)
-	GetById(id string) (models.User, error)
-	Save(*models.User) error
 	GetByRefreshToken(refreshToken string) (models.User, error)
 	Delete(*models.User) error
 }

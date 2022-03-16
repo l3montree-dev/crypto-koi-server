@@ -54,7 +54,7 @@ func NewResolver(
 
 func (r *Resolver) checkCryptogotchiInteractable(ctx context.Context, cryptogotchiId string) (models.Cryptogotchi, error) {
 	// check if we are allowed to interact
-	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiById(cryptogotchiId)
+	cryptogotchi, err := r.cryptogotchiSvc.GetById(cryptogotchiId)
 	if err != nil {
 		return cryptogotchi, err
 	}

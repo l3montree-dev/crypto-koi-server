@@ -188,7 +188,7 @@ func (r *mutationResolver) FinishGame(ctx context.Context, token string, score f
 }
 
 func (r *mutationResolver) ChangeCryptogotchiName(ctx context.Context, id string, newName string) (*models.Cryptogotchi, error) {
-	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiById(id)
+	cryptogotchi, err := r.cryptogotchiSvc.GetById(id)
 	if err != nil {
 		return nil, gqlerror.Errorf("could not find cryptogotchi with id %s", id)
 	}
@@ -300,7 +300,7 @@ func (r *queryResolver) Leaderboard(ctx context.Context, offset int, limit int) 
 }
 
 func (r *queryResolver) Events(ctx context.Context, cryptogotchiID string, offset int, limit int) ([]*models.Event, error) {
-	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiById(cryptogotchiID)
+	cryptogotchi, err := r.cryptogotchiSvc.GetById(cryptogotchiID)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +325,7 @@ func (r *queryResolver) Events(ctx context.Context, cryptogotchiID string, offse
 
 func (r *queryResolver) Cryptogotchi(ctx context.Context, cryptogotchiID string) (*models.Cryptogotchi, error) {
 	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
-	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiById(cryptogotchiID)
+	cryptogotchi, err := r.cryptogotchiSvc.GetById(cryptogotchiID)
 	if db.IsNotFound(err) {
 		return nil, gqlerror.Errorf("could not find cryptogotchi with id %s", cryptogotchiID)
 	}
