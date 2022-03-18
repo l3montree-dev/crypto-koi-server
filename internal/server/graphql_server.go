@@ -421,6 +421,11 @@ func (s *GraphqlServer) Start() {
 		r.Handle("/query", srv)
 	})
 
+	router.Group(func(r chi.Router) {
+		r.Use(s.authMiddleware)
+		r.Delete("/auth", authController.DestroyAccount)
+	})
+
 	s.logger.Infof("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

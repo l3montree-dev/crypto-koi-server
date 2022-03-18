@@ -63,6 +63,19 @@ func (c *AuthController) Refresh(w http.ResponseWriter, req *http.Request) {
 	http_util.WriteJSON(w, res)
 }
 
+func (c *AuthController) DestroyAccount(w http.ResponseWriter, req *http.Request) {
+	user := http_util.GetUserFromContext(req)
+	if user == nil {
+		c.logger.Warn("user is not authenticated")
+		http_util.WriteHttpError(w, http.StatusForbidden, "user is not authenticated")
+		return
+	}
+
+	// delete the user account.
+	c.authSvc.Delete(user)
+	http_util.WriteJSON(w, http.StatusOK)
+}
+
 func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 	// check if the user would
 	var loginRequest http_dto.LoginRequest

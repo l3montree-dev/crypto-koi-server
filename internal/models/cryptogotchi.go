@@ -12,7 +12,7 @@ import (
 type Cryptogotchi struct {
 	Base
 	Name    *string   `json:"name" gorm:"type:varchar(255);default:null"`
-	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36); not null"`
+	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36);not null"`
 
 	IsValidNft bool `json:"isValidNft" gorm:"default:false"`
 

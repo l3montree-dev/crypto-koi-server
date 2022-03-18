@@ -76,6 +76,6 @@ func (rep *GormCryptogotchiRepository) GetLeaderboard() ([]models.Cryptogotchi, 
 
 func (rep *GormCryptogotchiRepository) GetCachedLeaderboard(offset, limit int) ([]models.Cryptogotchi, error) {
 	var cryptogotchies []models.Cryptogotchi
-	err := rep.db.Where("predicted_death_date > ? AND 'rank' > -1", time.Now()).Order("'rank' ASC").Offset(offset).Limit(limit).Find(&cryptogotchies).Error
+	err := rep.db.Where("predicted_death_date > ? AND `rank` > -1", time.Now()).Order("`rank` asc").Offset(offset).Limit(limit).Find(&cryptogotchies).Error
 	return cryptogotchies, err
 }
