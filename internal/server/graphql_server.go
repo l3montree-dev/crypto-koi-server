@@ -335,11 +335,11 @@ func (s *GraphqlServer) Start() {
 	if isDev {
 		router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
-	router.Route("/auth", func(r chi.Router) {
+	router.Group(func(r chi.Router) {
 		// make sure to stop processing after 10 seconds.
 		r.Use(middleware.Timeout(10 * time.Second))
-		r.Post("/login", authController.Login)
-		r.Post("/refresh", authController.Refresh)
+		r.Post("/auth/login", authController.Login)
+		r.Post("/auth/refresh", authController.Refresh)
 	})
 
 	router.Route("/v1", func(r chi.Router) {

@@ -72,7 +72,12 @@ func (c *AuthController) DestroyAccount(w http.ResponseWriter, req *http.Request
 	}
 
 	// delete the user account.
-	c.authSvc.Delete(user)
+	err := c.authSvc.Delete(user)
+	if err != nil {
+		c.logger.Errorf("could not delete user: %e", err)
+		http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("could not delete user: %s", user.Id.String()))
+		return
+	}
 	http_util.WriteJSON(w, http.StatusOK)
 }
 

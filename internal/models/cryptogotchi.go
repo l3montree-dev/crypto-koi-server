@@ -24,8 +24,8 @@ type Cryptogotchi struct {
 	FoodDrain float64 `json:"foodDrain" gorm:"default:0.5"`
 	// the id of the token - might be changed in the future.
 	// mapping to the event struct.
-	Events    []Event    `json:"events"`
-	GameStats []GameStat `json:"game_stats" gorm:"foreignKey:cryptogotchi_id"`
+	Events    []Event    `json:"events" gorm:"constraint:OnDelete:CASCADE;"`
+	GameStats []GameStat `json:"game_stats" gorm:"foreignKey:cryptogotchi_id;constraint:OnDelete:CASCADE;"`
 	Active    bool       `json:"released" gorm:"default:true"`
 	// the timestamp of the current snapshot stored inside the database.
 	// in most cases this equals the LastFeed value. - nevertheless to build the struct a bit more
