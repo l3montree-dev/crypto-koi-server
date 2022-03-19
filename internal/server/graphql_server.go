@@ -196,7 +196,7 @@ func (s *GraphqlServer) imageHandlerFactory(size int, drawBackgroundColor bool) 
 func (s *GraphqlServer) getLeaderboardUpdateRoutine() leader.Listener {
 	sleepTime := os.Getenv("LEADERBOARD_UPDATE_INTERVAL")
 	if sleepTime == "" {
-		sleepTime = fmt.Sprint(60 * 5)
+		sleepTime = fmt.Sprint(30)
 	}
 	sleepTimeInt, err := strconv.Atoi(sleepTime)
 	orchardclient.FailOnError(err, "could not parse leaderboard update interval")
