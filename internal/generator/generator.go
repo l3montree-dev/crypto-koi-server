@@ -141,7 +141,7 @@ func (g *Generator) TokenId2Image(tokenId string) (image.Image, *cryptokoi.Crypt
 	close(imgProcessingChan)
 	close(imgResultChan)
 
-	resultImages = append(resultImages, g.preloader.GetImage("outline"))
+	resultImages = append(resultImages, g.preloader.GetImage("highlights_1"), g.preloader.GetImage("outline"))
 	// now we have all images in the collection.
 	// we need to draw them in the correct order.
 	result := recursiveBatchDraw(resultImages)

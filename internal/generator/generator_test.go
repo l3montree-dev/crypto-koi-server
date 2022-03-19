@@ -1,15 +1,10 @@
 package generator
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
-	"image/png"
 	"math/rand"
 	"path/filepath"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 /*func TestGeneration(t *testing.T) {
@@ -28,32 +23,6 @@ import (
 		png.Encode(f, img)
 	}
 }*/
-
-func TestConsistency(t *testing.T) {
-	path, err := filepath.Abs(filepath.Join("..", "..", "images", "raw"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	rand.Seed(42)
-	preloader := NewMemoryPreloader(path)
-	generator := NewGenerator(preloader)
-
-	hasher := sha256.New()
-
-	img, _ := generator.TokenId2Image(fmt.Sprintf("%d", 0))
-	png.Encode(hasher, img)
-
-	str := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-
-	for i := 0; i < 5; i++ {
-		hasher := sha256.New()
-
-		img, _ := generator.TokenId2Image(fmt.Sprintf("%d", 0))
-		png.Encode(hasher, img)
-		assert.Equal(t, str, base64.URLEncoding.EncodeToString(hasher.Sum(nil)))
-	}
-}
 
 // BenchmarkGeneration-8   	       2	 609847462 ns/op	219332280 B/op	19943308 allocs/op
 // BenchmarkGeneration-8   	       2	 640104734 ns/op	219332176 B/op	19943308 allocs/op

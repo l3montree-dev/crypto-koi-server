@@ -6,9 +6,8 @@ import (
 )
 
 type GameStatRepository interface {
-	Save(gameStat *models.GameStat) error
+	Repository[models.GameStat]
 	FindAllByUserId(userId string) ([]models.GameStat, error)
-	GetById(id string) (models.GameStat, error)
 }
 
 type GormGameStatRepository struct {

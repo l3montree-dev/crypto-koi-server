@@ -33,8 +33,7 @@ type OpenseaNFT struct {
 	Name string `json:"name"`
 	// These are the attributes for the item, which will show up on the OpenSea page for the item.
 	Attributes []OpenseaNFTAttribute `json:"attributes"`
-	// Background color of the item on OpenSea. Must be a six-character hexadecimal without a pre-pended #.
-	BackgroundColor string `json:"background_color"`
+
 	// A URL to a multi-media attachment for the item. The file extensions GLTF, GLB, WEBM, MP4, M4V, OGV, and OGG are supported,
 	// along with the audio-only extensions MP3, WAV, and OGA.
 	//

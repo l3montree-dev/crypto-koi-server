@@ -109,14 +109,14 @@ func (s *GraphqlServer) authMiddleware(next http.Handler) http.Handler {
 			if ve, ok := err.(*jwt.ValidationError); ok {
 				if ve.Errors&jwt.ValidationErrorMalformed != 0 {
 					s.logger.Errorf("invalid token: %s", err)
-					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e", err)
+					http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("invalid token: %e", err))
 				} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
 					// Token is either expired or not active yet
 					s.logger.Infof("token is either expired or not active yet: %s", err)
-					http_util.WriteHttpError(w, http.StatusUnauthorized, "token is either expired or not active yet: %e", err)
+					http_util.WriteHttpError(w, http.StatusUnauthorized, fmt.Sprintf("token is either expired or not active yet: %e", err))
 				} else {
 					s.logger.Errorf("invalid token: %s", err)
-					http_util.WriteHttpError(w, http.StatusInternalServerError, "invalid token: %e", err)
+					http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("invalid token: %e", err))
 				}
 			}
 			return
@@ -286,7 +286,7 @@ func (s *GraphqlServer) Start() {
 		AllowedOrigins: []string{"*"},
 		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
 		AllowedMethods:   []string{"*"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"*"},
 		ExposedHeaders:   []string{"*"},
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
@@ -335,11 +335,11 @@ func (s *GraphqlServer) Start() {
 	if isDev {
 		router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
-	router.Route("/auth", func(r chi.Router) {
+	router.Group(func(r chi.Router) {
 		// make sure to stop processing after 10 seconds.
 		r.Use(middleware.Timeout(10 * time.Second))
-		r.Post("/login", authController.Login)
-		r.Post("/refresh", authController.Refresh)
+		r.Post("/auth/login", authController.Login)
+		r.Post("/auth/refresh", authController.Refresh)
 	})
 
 	router.Route("/v1", func(r chi.Router) {
@@ -349,6 +349,7 @@ func (s *GraphqlServer) Start() {
 		// gets called by their API and wallet applications.
 		r.Get("/tokens/{tokenId}", openseaController.GetCryptogotchi)
 		r.Get("/images/{tokenId}", s.imageHandlerFactory(350, false))
+		r.Get("/fakes/{tokenId}", openseaController.GetFakeCryptogotchi)
 	})
 
 	privateKey := os.Getenv("PRIVATE_KEY")
@@ -418,6 +419,11 @@ func (s *GraphqlServer) Start() {
 		// attach the auth middleware to the router
 		r.Use(s.authMiddleware)
 		r.Handle("/query", srv)
+	})
+
+	router.Group(func(r chi.Router) {
+		r.Use(s.authMiddleware)
+		r.Delete("/auth", authController.DestroyAccount)
 	})
 
 	s.logger.Infof("connect to http://localhost:%s/ for GraphQL playground", port)

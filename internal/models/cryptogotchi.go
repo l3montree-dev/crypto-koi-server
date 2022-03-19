@@ -12,7 +12,7 @@ import (
 type Cryptogotchi struct {
 	Base
 	Name    *string   `json:"name" gorm:"type:varchar(255);default:null"`
-	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36); not null"`
+	OwnerId uuid.UUID `json:"owner" gorm:"type:char(36);not null"`
 
 	IsValidNft bool `json:"isValidNft" gorm:"default:false"`
 
@@ -24,8 +24,9 @@ type Cryptogotchi struct {
 	FoodDrain float64 `json:"foodDrain" gorm:"default:0.5"`
 	// the id of the token - might be changed in the future.
 	// mapping to the event struct.
-	Events    []Event    `json:"events"`
-	GameStats []GameStat `json:"game_stats" gorm:"foreignKey:cryptogotchi_id"`
+	Events    []Event    `json:"events" gorm:"constraint:OnDelete:CASCADE;"`
+	GameStats []GameStat `json:"game_stats" gorm:"foreignKey:cryptogotchi_id;constraint:OnDelete:CASCADE;"`
+	Active    bool       `json:"released" gorm:"default:true"`
 	// the timestamp of the current snapshot stored inside the database.
 	// in most cases this equals the LastFeed value. - nevertheless to build the struct a bit more
 	// future proof, we store the timestamp of the snapshot in the database as a separate column.
@@ -34,34 +35,24 @@ type Cryptogotchi struct {
 	Rank          int       `json:"rank" gorm:"default:-1"`
 }
 
-func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {
-	uintStr, err := util.UuidToUint256(c.Id.String())
-	koi := cryptokoi.NewKoi(c.Id.String())
+func ToOpenseaNFT(baseUrl, tokenIdUint string, isAlive bool, name string, createdAt time.Time) (OpenseaNFT, error) {
+	koi := cryptokoi.NewKoi(tokenIdUint)
 	attributes := koi.GetAttributes()
-	if err != nil {
-		return OpenseaNFT{}, err
-	}
 
 	state := "Alive"
-	if !c.IsAlive() {
+	if isAlive {
 		state = "Dead"
 	}
 
-	backgroundColor := util.Shade(attributes.PrimaryColor, -20)
-	if util.IsDark(attributes.PrimaryColor) {
-		backgroundColor = util.Shade(attributes.PrimaryColor, 20)
-	}
-
 	return OpenseaNFT{
-		Name:            *c.Name,
-		Image:           baseUrl + "v1/images/" + uintStr.String(),
-		BackgroundColor: util.ConvertColor2HexWithoutHash(backgroundColor),
+		Name:  name,
+		Image: baseUrl + "v1/images/" + tokenIdUint,
 
 		Attributes: []OpenseaNFTAttribute{
 			{
 				TraitType:   "Birthday",
 				DisplayType: DateDisplayType,
-				Value:       c.CreatedAt.Unix(),
+				Value:       createdAt.Unix(),
 			},
 			{
 				TraitType: "State",
@@ -89,6 +80,14 @@ func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {
 				Value:     attributes.KoiType,
 			},
 		}}, nil
+}
+
+func (c *Cryptogotchi) ToOpenseaNFT(baseUrl string) (OpenseaNFT, error) {
+	tokenIdUint, err := util.UuidToUint256(c.Id.String())
+	if err != nil {
+		return OpenseaNFT{}, err
+	}
+	return ToOpenseaNFT(baseUrl, tokenIdUint.String(), c.IsAlive(), *c.Name, c.CreatedAt)
 }
 
 // make sure to only call this function after the food value has been updated.

@@ -188,7 +188,7 @@ func (r *mutationResolver) FinishGame(ctx context.Context, token string, score f
 }
 
 func (r *mutationResolver) ChangeCryptogotchiName(ctx context.Context, id string, newName string) (*models.Cryptogotchi, error) {
-	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiById(id)
+	cryptogotchi, err := r.cryptogotchiSvc.GetById(id)
 	if err != nil {
 		return nil, gqlerror.Errorf("could not find cryptogotchi with id %s", id)
 	}
@@ -211,7 +211,11 @@ func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, addre
 		return nil, fmt.Errorf("could not find cryptogotchi with id %s", id)
 	}
 
-	user := ctx.Value(config.USER_CTX_KEY).(*models.User)
+	user, err := r.ConnectWallet(ctx, address)
+	if err != nil {
+		return nil, err
+	}
+
 	if user.Id.String() != cryptogotchi.OwnerId.String() {
 		// the current user is not the owner.
 		// only the owner is allowed to transform the cryptogotchi into an nft.
@@ -232,9 +236,18 @@ func (r *mutationResolver) GetNftSignature(ctx context.Context, id string, addre
 	}, nil
 }
 
-func (r *mutationResolver) CreateCryptogotchi(ctx context.Context, _ *string) (*models.Cryptogotchi, error) {
-	cryptogotchi, err := r.cryptogotchiSvc.GenerateCryptogotchiForUser(ctx.Value(config.USER_CTX_KEY).(*models.User))
-	return &cryptogotchi, err
+func (r *mutationResolver) CreateCryptogotchi(ctx context.Context, walletAddress string) (*input.NftData, error) {
+	user, err := r.ConnectWallet(ctx, walletAddress)
+	if err != nil {
+		return nil, err
+	}
+	// mark the cryptogotchi as "inactive" - the user first has to buy it.
+	cryptogotchi, err := r.cryptogotchiSvc.GenerateCryptogotchiForUser(user, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.GetNftSignature(ctx, cryptogotchi.Id.String(), walletAddress)
 }
 
 func (r *mutationResolver) ConnectWallet(ctx context.Context, walletAddress string) (*models.User, error) {
@@ -243,9 +256,8 @@ func (r *mutationResolver) ConnectWallet(ctx context.Context, walletAddress stri
 		r.logger.Errorf("could not find user in context")
 		return nil, fmt.Errorf("user not found")
 	}
-	if user.WalletAddress != nil {
-		r.logger.Info("wallet already connected")
-		return nil, fmt.Errorf("wallet: [%s] already connected", *user.WalletAddress)
+	if user.WalletAddress != nil && walletAddress == *user.WalletAddress {
+		return user, nil
 	}
 	// check if a user does already exist.
 	_, err := r.userSvc.GetByWalletAddress(walletAddress)
@@ -258,6 +270,19 @@ func (r *mutationResolver) ConnectWallet(ctx context.Context, walletAddress stri
 
 	user.WalletAddress = &walletAddress
 	err = r.userSvc.Save(user)
+	return user, err
+}
+
+func (r *mutationResolver) AcceptPushNotifications(ctx context.Context, pushNotificationToken string) (*models.User, error) {
+	user := ctx.Value(config.USER_CTX_KEY).(*models.User)
+	if user == nil {
+		r.logger.Errorf("could not find user in context")
+		return nil, fmt.Errorf("user not found")
+	}
+
+	user.PushNotificationToken = &pushNotificationToken
+	err := r.userSvc.Save(user)
+
 	return user, err
 }
 
@@ -275,7 +300,7 @@ func (r *queryResolver) Leaderboard(ctx context.Context, offset int, limit int) 
 }
 
 func (r *queryResolver) Events(ctx context.Context, cryptogotchiID string, offset int, limit int) ([]*models.Event, error) {
-	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiById(cryptogotchiID)
+	cryptogotchi, err := r.cryptogotchiSvc.GetById(cryptogotchiID)
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +325,7 @@ func (r *queryResolver) Events(ctx context.Context, cryptogotchiID string, offse
 
 func (r *queryResolver) Cryptogotchi(ctx context.Context, cryptogotchiID string) (*models.Cryptogotchi, error) {
 	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
-	cryptogotchi, err := r.cryptogotchiSvc.GetCryptogotchiById(cryptogotchiID)
+	cryptogotchi, err := r.cryptogotchiSvc.GetById(cryptogotchiID)
 	if db.IsNotFound(err) {
 		return nil, gqlerror.Errorf("could not find cryptogotchi with id %s", cryptogotchiID)
 	}

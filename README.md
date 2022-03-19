@@ -1,6 +1,25 @@
-# Clodhopper
+# CryptoKoi Api
 
 [![coverage report](https://gitlab.com/l3montree/crypto-koi/crypto-koi-api/badges/main/coverage.svg)](https://gitlab.com/l3montree/crypto-koi/crypto-koi-api/-/commits/main)
+
+# Addresses
+
+## Local Development
+
+Owner: `0x2bb6335AC37c468c626D18C9915A8Cc7c36D76e7` (managed by timbastin)
+
+Mumbai Testnet Smart-Contract Address: `0x5dF55eA9e0035d588F755d92f18bD207b1435bDc`
+
+## Dev Environment
+Owner: `0x2bb6335AC37c468c626D18C9915A8Cc7c36D76e7` (managed by timbastin)
+
+Mumbai Testnet Smart-Contract Address: `0x2f158340c811c37284748fD2FFE298ebEB2F8c0e`
+
+
+## Prod Environment
+Owner:
+
+Polygon Smart-Contract Address:
 
 ## Requirements
 

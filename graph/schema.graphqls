@@ -90,8 +90,9 @@ type Mutation {
   changeCryptogotchiName(id: ID!, newName: String!): Cryptogotchi!
   changeUserName(newName: String!): User!
   getNftSignature(id: ID!, address: String!): NftData!
-  createCryptogotchi(_: String): Cryptogotchi!
+  createCryptogotchi(walletAddress: String!): NftData!
   connectWallet(walletAddress: String!): User!
+  acceptPushNotifications(pushNotificationToken: String!): User!
 }
 
 type Query {

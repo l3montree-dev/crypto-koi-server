@@ -10,10 +10,9 @@ import (
 )
 
 type CryptogotchiRepository interface {
+	Repository[models.Cryptogotchi]
 	GetCryptogotchiByUint256(tokenId string) (models.Cryptogotchi, error)
 	GetCryptogotchiesByUserId(userId string) ([]models.Cryptogotchi, error)
-	GetCryptogotchiById(id string) (models.Cryptogotchi, error)
-	Save(*models.Cryptogotchi) error
 	GetLeaderboard() ([]models.Cryptogotchi, error)
 	GetCachedLeaderboard(offset, limit int) ([]models.Cryptogotchi, error)
 	Create(m *models.Cryptogotchi) error
@@ -28,6 +27,10 @@ func NewGormCryptogotchiRepository(db *gorm.DB) CryptogotchiRepository {
 	return &GormCryptogotchiRepository{db: db}
 }
 
+func onlyActive(db *gorm.DB) *gorm.DB {
+	return db.Where("active = ?", true)
+}
+
 func (rep *GormCryptogotchiRepository) GetCryptogotchiByUint256(tokenId string) (models.Cryptogotchi, error) {
 	bigInt := math.MustParseBig256(tokenId)
 
@@ -36,7 +39,7 @@ func (rep *GormCryptogotchiRepository) GetCryptogotchiByUint256(tokenId string) 
 		return models.Cryptogotchi{}, err
 	}
 
-	return rep.GetCryptogotchiById(id.String())
+	return rep.GetById(id.String())
 }
 
 func (rep *GormCryptogotchiRepository) Save(m *models.Cryptogotchi) error {
@@ -49,11 +52,11 @@ func (rep *GormCryptogotchiRepository) Create(m *models.Cryptogotchi) error {
 
 func (rep *GormCryptogotchiRepository) GetCryptogotchiesByUserId(userId string) ([]models.Cryptogotchi, error) {
 	var cryptogotchies []models.Cryptogotchi
-	err := rep.db.Where("user_id = ?", userId).Find(&cryptogotchies).Error
+	err := rep.db.Scopes(onlyActive).Where("user_id = ?", userId).Find(&cryptogotchies).Error
 	return cryptogotchies, err
 }
 
-func (rep *GormCryptogotchiRepository) GetCryptogotchiById(id string) (models.Cryptogotchi, error) {
+func (rep *GormCryptogotchiRepository) GetById(id string) (models.Cryptogotchi, error) {
 	var cryptogotchi models.Cryptogotchi
 	err := rep.db.Where("id = ?", id).First(&cryptogotchi).Error
 	return cryptogotchi, err
@@ -61,7 +64,7 @@ func (rep *GormCryptogotchiRepository) GetCryptogotchiById(id string) (models.Cr
 
 func (rep *GormCryptogotchiRepository) GetCryptogotchiesWithPredictedDeathDateBetween(start, end time.Time) ([]models.Cryptogotchi, error) {
 	var cryptogotchies []models.Cryptogotchi
-	err := rep.db.Where("predicted_death_date > ? AND predicted_death_date < ?", start, end).Order("'predicted_death_date' ASC").Find(&cryptogotchies).Error
+	err := rep.db.Where("predicted_death_date >= ? AND predicted_death_date < ?", start, end).Find(&cryptogotchies).Error
 	return cryptogotchies, err
 }
 
@@ -73,6 +76,6 @@ func (rep *GormCryptogotchiRepository) GetLeaderboard() ([]models.Cryptogotchi, 
 
 func (rep *GormCryptogotchiRepository) GetCachedLeaderboard(offset, limit int) ([]models.Cryptogotchi, error) {
 	var cryptogotchies []models.Cryptogotchi
-	err := rep.db.Where("predicted_death_date > ?", time.Now()).Order("'rank' ASC").Offset(offset).Limit(limit).Find(&cryptogotchies).Error
+	err := rep.db.Where("predicted_death_date > ? AND `rank` > -1", time.Now()).Order("`rank` asc").Offset(offset).Limit(limit).Find(&cryptogotchies).Error
 	return cryptogotchies, err
 }
