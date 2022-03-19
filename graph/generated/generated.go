@@ -63,6 +63,7 @@ type ComplexityRoot struct {
 		Name               func(childComplexity int) int
 		NextFeeding        func(childComplexity int) int
 		OwnerAddress       func(childComplexity int) int
+		OwnerID            func(childComplexity int) int
 		Rank               func(childComplexity int) int
 		SnapshotValid      func(childComplexity int) int
 		UpdatedAt          func(childComplexity int) int
@@ -149,6 +150,7 @@ type CryptogotchiResolver interface {
 
 	Color(ctx context.Context, obj *models.Cryptogotchi) (string, error)
 	OwnerAddress(ctx context.Context, obj *models.Cryptogotchi) (*string, error)
+	OwnerID(ctx context.Context, obj *models.Cryptogotchi) (string, error)
 
 	Attributes(ctx context.Context, obj *models.Cryptogotchi) (*input.CryptogotchiAttributes, error)
 }
@@ -290,6 +292,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Cryptogotchi.OwnerAddress(childComplexity), true
+
+	case "Cryptogotchi.ownerId":
+		if e.complexity.Cryptogotchi.OwnerID == nil {
+			break
+		}
+
+		return e.complexity.Cryptogotchi.OwnerID(childComplexity), true
 
 	case "Cryptogotchi.rank":
 		if e.complexity.Cryptogotchi.Rank == nil {
@@ -802,6 +811,7 @@ type Cryptogotchi {
   snapshotValid: Time!
   color: String!
   ownerAddress: String
+  ownerId: ID!
   rank: Int!
 
   attributes: CryptogotchiAttributes!
@@ -1629,6 +1639,41 @@ func (ec *executionContext) _Cryptogotchi_ownerAddress(ctx context.Context, fiel
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Cryptogotchi_ownerId(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Cryptogotchi",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Cryptogotchi().OwnerID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Cryptogotchi_rank(ctx context.Context, field graphql.CollectedField, obj *models.Cryptogotchi) (ret graphql.Marshaler) {
@@ -4779,6 +4824,26 @@ func (ec *executionContext) _Cryptogotchi(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._Cryptogotchi_ownerAddress(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "ownerId":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Cryptogotchi_ownerId(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
