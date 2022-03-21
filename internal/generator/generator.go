@@ -70,20 +70,17 @@ func (generator *Generator) applyColorToImage(c color.Color, img image.Image) im
 	result := image.NewRGBA(bounds)
 
 	for x := bounds.Min.X; x < bounds.Max.X; x++ {
-
 		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 			_, _, _, alphaChannel := img.At(x, y).RGBA()
-			if alphaChannel>>8 > 240 {
-				result.Set(x, y, color.RGBA{
-					R: uint8(r >> 8),
-					G: uint8(g >> 8),
-					B: uint8(b >> 8),
+			if alphaChannel > 0 {
+				result.Set(x, y, color.NRGBA{
+					R: uint8((r) >> 8),
+					G: uint8((g) >> 8),
+					B: uint8((b) >> 8),
 					A: uint8(alphaChannel >> 8),
 				})
 			}
-
 		}
-
 	}
 
 	return result
@@ -154,13 +151,9 @@ func combineImages(dest image.Image, other image.Image) image.Image {
 }
 
 func recursiveBatchDraw(images []image.Image) image.Image {
-	if len(images) == 1 {
-		// finished
-		return images[0]
+	result := image.NewRGBA(BOUNDS)
+	for i := 0; i < len(images); i++ {
+		combineImages(result, images[i])
 	}
-	if len(images) == 2 {
-		return combineImages(images[0], images[1])
-	}
-
-	return combineImages(images[0], recursiveBatchDraw(images[1:]))
+	return result
 }
