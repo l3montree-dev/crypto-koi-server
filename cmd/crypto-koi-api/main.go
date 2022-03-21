@@ -6,7 +6,6 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/joho/godotenv"
-	"github.com/sirupsen/logrus"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/db"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/server"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
@@ -14,20 +13,6 @@ import (
 )
 
 type SentryErrorLoggingHook struct {
-}
-
-func (hook *SentryErrorLoggingHook) Fire(entry *logrus.Entry) error {
-	sentry.CaptureMessage(entry.Message)
-	return nil
-}
-
-func (hook *SentryErrorLoggingHook) Levels() []logrus.Level {
-	return []logrus.Level{
-		logrus.PanicLevel,
-		logrus.FatalLevel,
-		logrus.ErrorLevel,
-		logrus.WarnLevel,
-	}
 }
 
 func main() {
@@ -38,16 +23,17 @@ func main() {
 	}
 
 	isDev := os.Getenv("DEV") == "true"
-	if !isDev {
+	sentryDsn := os.Getenv("SENTRY_DSN")
+
+	if !isDev && sentryDsn != "" {
+		mainLogger.Info("Sentry error tracking enabled")
 		err = sentry.Init(sentry.ClientOptions{
-			Dsn: "https://e56b8f4eedcf451e9b1cec93799f4443@sentry.l3montree.com/11",
+			Dsn: sentryDsn,
 		})
 		if err != nil {
 			mainLogger.Fatalf("sentry.Init: %s", err)
 		}
 	}
-
-	orchardclient.Logger.AddHook(&SentryErrorLoggingHook{})
 
 	db, err := db.NewMySQL(db.MySQLConfig{
 		User:     os.Getenv("DB_USER"),
