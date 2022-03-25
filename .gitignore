@@ -12,3 +12,9 @@ cache
 /*.abi
 
 google-services.json
+
+.DS_Store
+/images/.DS_Store
+/images/raw/.DS_Store
+/images/raw/koi/.DS_Store
+/images/raw/dragon/.DS_Store
