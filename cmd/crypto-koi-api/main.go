@@ -1,22 +1,31 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"path"
+	"runtime"
 	"strings"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/db"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/server"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 	"gitlab.com/l3montree/microservices/libs/orchardclient"
 )
 
-type SentryErrorLoggingHook struct {
-}
-
 func main() {
 	err := godotenv.Load()
+	orchardclient.Logger.SetReportCaller(true)
+	orchardclient.Logger.SetFormatter(&logrus.JSONFormatter{
+		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
+			s := strings.Split(f.Function, ".")
+			funcName := s[len(s)-1]
+			return funcName, fmt.Sprintf("%s:%d", path.Base(f.File), f.Line)
+		},
+	})
 	mainLogger := orchardclient.Logger.WithField("component", "Main")
 	if err != nil {
 		mainLogger.Fatal("Error loading .env file")
