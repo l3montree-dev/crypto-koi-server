@@ -11,7 +11,7 @@ import (
 )
 
 func BenchmarkNearestNeighbor(b *testing.B) {
-	basePath, err := filepath.Abs("../../images/raw")
+	basePath, err := filepath.Abs("../../images/koi")
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -28,7 +28,7 @@ func BenchmarkNearestNeighbor(b *testing.B) {
 }
 
 func BenchmarkBiLinear(b *testing.B) {
-	basePath, err := filepath.Abs("../../images/raw")
+	basePath, err := filepath.Abs("../../images/koi")
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -45,7 +45,7 @@ func BenchmarkBiLinear(b *testing.B) {
 }
 
 func BenchmarkApproxBiLinear(b *testing.B) {
-	basePath, err := filepath.Abs("../../images/raw")
+	basePath, err := filepath.Abs("../../images/koi")
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func BenchmarkApproxBiLinear(b *testing.B) {
 }
 
 func BenchmarkCatmullRom(b *testing.B) {
-	basePath, err := filepath.Abs("../../images/raw")
+	basePath, err := filepath.Abs("../../images/koi")
 	if err != nil {
 		b.Fatal(err)
 	}

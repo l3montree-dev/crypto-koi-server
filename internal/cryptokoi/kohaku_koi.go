@@ -32,7 +32,7 @@ func (koi KohakuKoi) getType() KoiType {
 }
 
 func (koi KohakuKoi) getFinImages(amount int, randomSeed int) []util.ImageWithColor {
-	return amountWithColor("fin", amount, randomSeed, 1, 2, koi.color)
+	return amountWithColor("fin", amount, randomSeed, 1, 3, koi.color)
 }
 
 func (koi KohakuKoi) amountFinImages() (int, int) {
@@ -57,7 +57,7 @@ func (koi KohakuKoi) getBodyColor(randomSeed int) color.Color {
 
 func (koi KohakuKoi) getBodyImages(amount int, randomSeed int) []util.ImageWithColor {
 	// generate the red color - so that all image patterns have the same red color
-	return amountWithColor("body", amount, randomSeed, 1, 10, koi.color)
+	return amountWithColor("body", amount, randomSeed, 1, 8, koi.color)
 }
 
 func (koi KohakuKoi) getHeadImages(amount int, randomSeed int) []util.ImageWithColor {

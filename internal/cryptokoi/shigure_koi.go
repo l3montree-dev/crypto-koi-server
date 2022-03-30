@@ -58,7 +58,7 @@ func (koi ShigureKoi) getBodyColor(randomSeed int) color.Color {
 
 func (koi ShigureKoi) getBodyImages(amount int, randomSeed int) []util.ImageWithColor {
 	// generate the red color - so that all image patterns have the same red color
-	return amountWithColor("body", amount, randomSeed, 1, 10, koi.blackColor)
+	return amountWithColor("body", amount, randomSeed, 1, 8, koi.blackColor)
 }
 
 func (koi ShigureKoi) getHeadImages(amount int, randomSeed int) []util.ImageWithColor {

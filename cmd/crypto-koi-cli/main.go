@@ -22,7 +22,7 @@ import (
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 )
 
-func registerRandomUser(g *generator.Generator, amount int) {
+func registerRandomUser(amount int) {
 	// register the user with the token id
 	db, err := db.NewMySQL(db.MySQLConfig{
 		User:     os.Getenv("DB_USER"),
@@ -131,15 +131,23 @@ func main() {
 	debug := flag.Bool("debug", false, "enable debug mode")
 	amount := flag.Int("amount", 1, "amount of users to register")
 
+	t := flag.String("type", "koi", "type of the cryptogotchi to generate [koi | dragon]")
+
 	flag.Parse()
 
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
+	pathSuffix := "koi"
+	if *t == "dragon" {
+		pathSuffix = "dragon"
+	}
 	// generate the image based on the token id
-	preloader := generator.NewMemoryPreloader(baseImagePath)
+	preloader := generator.NewMemoryPreloader(baseImagePath + "/" + pathSuffix)
+
 	g := generator.NewGenerator(preloader)
+
 	g.SetDebug(*debug)
 
 	command := flag.Arg(0)
@@ -151,7 +159,7 @@ func main() {
 	case "draw":
 		drawImage(&g, *drawPrimaryColor, flag.Arg(1))
 	case "register":
-		registerRandomUser(&g, *amount)
+		registerRandomUser(*amount)
 	case "sync-with-blockchain":
 		// syncWithBlockchain()
 	default:

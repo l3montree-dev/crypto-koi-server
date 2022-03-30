@@ -47,7 +47,8 @@ type GraphqlServer struct {
 	tokenSvc          service.TokenSvc
 	userSvc           service.UserSvc
 	cryptogotchiSvc   service.CryptogotchiSvc
-	generator         generator.Generator
+	koiGenerator      generator.Generator
+	dragonGenerator   generator.Generator
 	leaderElection    leader.LeaderElection
 	cryptokoiListener *cryptokoi.CryptoKoiEventListener
 	logger            *logrus.Entry
@@ -153,13 +154,23 @@ func graphqlTimeout(timeout time.Duration) func(next http.Handler) http.Handler 
 	}
 }
 func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
-	preloader := generator.NewMemoryPreloader(imagesBasePath)
-	return &GraphqlServer{db: db, generator: generator.NewGenerator(preloader), logger: orchardclient.Logger.WithField("component", "GraphqlServer")}
+	koiPreloader := generator.NewMemoryPreloader(imagesBasePath + "/koi")
+	dragonPreloader := generator.NewMemoryPreloader(imagesBasePath + "/dragon")
+	return &GraphqlServer{
+		db:              db,
+		koiGenerator:    generator.NewGenerator(koiPreloader),
+		dragonGenerator: generator.NewGenerator(dragonPreloader),
+		logger:          orchardclient.Logger.WithField("component", "GraphqlServer"),
+	}
 }
 
 func (s *GraphqlServer) imageHandlerFactory(size int, drawBackgroundColor bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenId := chi.URLParam(r, "tokenId")
+		t := r.URL.Query().Get("type")
+		if t == "" || !strings.EqualFold("dragon", t) {
+			t = "koi"
+		}
 		// check if hex.
 		if strings.IndexFunc(tokenId, util.IsNotDigit) > -1 {
 			// not only digits - use as hex.
@@ -172,7 +183,15 @@ func (s *GraphqlServer) imageHandlerFactory(size int, drawBackgroundColor bool) 
 			tokenId = tmp.String()
 		}
 
-		img, koi := s.generator.TokenId2Image(tokenId)
+		var img image.Image
+		var koi *cryptokoi.CryptoKoi
+
+		// decide wether to generate a koi or a dragon
+		if t == "koi" {
+			img, koi = s.koiGenerator.TokenId2Image(tokenId)
+		} else {
+			img, koi = s.dragonGenerator.TokenId2Image(tokenId)
+		}
 
 		scaledImg := image.NewRGBA(image.Rect(0, 0, size, size))
 
@@ -209,7 +228,12 @@ func (s *GraphqlServer) getLeaderboardUpdateRoutine() leader.Listener {
 				now := time.Now()
 				s.logger.Info("leaderboard update routine started")
 				err := s.cryptogotchiSvc.UpdateRanks()
-				s.logger.WithField("took", time.Since(now).String()).Infof("leaderboard update routine finished. Err: %v", err)
+				if err != nil {
+					s.logger.WithField("took", time.Since(now).String()).Errorf("leaderboard update routine finished. Err: %v", err)
+				} else {
+					s.logger.WithField("took", time.Since(now).String()).Info("leaderboard update routine finished")
+				}
+
 				time.Sleep(time.Second * time.Duration(sleepTimeInt))
 			}
 		}
@@ -409,7 +433,7 @@ func (s *GraphqlServer) Start() {
 	}
 
 	// attach the graphql handler to the router
-	resolver := graph.NewResolver(int(chainId), s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, cryptokoiApi, s.generator)
+	resolver := graph.NewResolver(int(chainId), s.userSvc, eventSvc, cryptogotchiSvc, gameSvc, authSvc, cryptokoiApi, s.koiGenerator)
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver}))
 
 	// authorized routes

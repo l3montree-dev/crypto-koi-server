@@ -14,10 +14,6 @@ const (
 	MAX_BODY_PATTERNS int = 4
 )
 
-var (
-	BOUNDS = image.Rect(0, 0, 1040, 1040)
-)
-
 type imageProcessingMessage struct {
 	baseImage image.Image
 	color     color.Color
@@ -70,20 +66,17 @@ func (generator *Generator) applyColorToImage(c color.Color, img image.Image) im
 	result := image.NewRGBA(bounds)
 
 	for x := bounds.Min.X; x < bounds.Max.X; x++ {
-
 		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 			_, _, _, alphaChannel := img.At(x, y).RGBA()
-			if alphaChannel>>8 > 240 {
-				result.Set(x, y, color.RGBA{
-					R: uint8(r >> 8),
-					G: uint8(g >> 8),
-					B: uint8(b >> 8),
+			if alphaChannel > 0 {
+				result.Set(x, y, color.NRGBA{
+					R: uint8((r) >> 8),
+					G: uint8((g) >> 8),
+					B: uint8((b) >> 8),
 					A: uint8(alphaChannel >> 8),
 				})
 			}
-
 		}
-
 	}
 
 	return result
@@ -141,7 +134,7 @@ func (g *Generator) TokenId2Image(tokenId string) (image.Image, *cryptokoi.Crypt
 	close(imgProcessingChan)
 	close(imgResultChan)
 
-	resultImages = append(resultImages, g.preloader.GetImage("highlights_1"), g.preloader.GetImage("outline"))
+	resultImages = append(resultImages, g.preloader.GetImage("outlines_highlights_combined"))
 	// now we have all images in the collection.
 	// we need to draw them in the correct order.
 	result := recursiveBatchDraw(resultImages)
@@ -149,18 +142,14 @@ func (g *Generator) TokenId2Image(tokenId string) (image.Image, *cryptokoi.Crypt
 }
 
 func combineImages(dest image.Image, other image.Image) image.Image {
-	draw.Draw(dest.(draw.Image), BOUNDS, other, BOUNDS.Min, draw.Over)
+	draw.Draw(dest.(draw.Image), dest.Bounds(), other, dest.Bounds().Min, draw.Over)
 	return dest
 }
 
 func recursiveBatchDraw(images []image.Image) image.Image {
-	if len(images) == 1 {
-		// finished
-		return images[0]
+	result := image.NewRGBA(images[0].Bounds())
+	for i := 0; i < len(images); i++ {
+		combineImages(result, images[i])
 	}
-	if len(images) == 2 {
-		return combineImages(images[0], images[1])
-	}
-
-	return combineImages(images[0], recursiveBatchDraw(images[1:]))
+	return result
 }

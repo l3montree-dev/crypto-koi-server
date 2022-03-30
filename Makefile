@@ -5,6 +5,10 @@ MAKEFLAGS += -j2
 run: docker codegen
 	go run cmd/crypto-koi-api/main.go
 
+test: codegen
+	go test ./...
+
+
 docker: 
 	docker-compose up -d
 

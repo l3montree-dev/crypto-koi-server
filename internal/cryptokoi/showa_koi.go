@@ -72,8 +72,8 @@ func (koi ShowaKoi) getBodyImages(amount int, randomSeed int) []util.ImageWithCo
 		amount,
 		randomSeed,
 		util.ConcatPreAllocate(
-			withColor("body", 1, 10, koi.redColor),
-			withColor("body", 1, 10, koi.blackColor),
+			withColor("body", 1, 8, koi.redColor),
+			withColor("body", 1, 8, koi.blackColor),
 		),
 	)
 }
