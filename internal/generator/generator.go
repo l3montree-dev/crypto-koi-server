@@ -82,7 +82,7 @@ func (generator *Generator) applyColorToImage(c color.Color, img image.Image) im
 	return result
 }
 
-func (g *Generator) TokenId2Image(tokenId string) (image.Image, *cryptokoi.CryptoKoi) {
+func (g *Generator) TokenId2Image(tokenId string, size int) (image.Image, *cryptokoi.CryptoKoi) {
 	koi := cryptokoi.NewKoi(tokenId)
 
 	attributes := koi.GetAttributes()
@@ -100,20 +100,20 @@ func (g *Generator) TokenId2Image(tokenId string) (image.Image, *cryptokoi.Crypt
 
 	imgProcessingChan <- imageProcessingMessage{
 		id:        0,
-		baseImage: g.preloader.GetImage("body"),
+		baseImage: g.preloader.GetImage("body", size),
 		color:     attributes.BodyColor,
 	}
 
 	imgProcessingChan <- imageProcessingMessage{
 		id:        1,
-		baseImage: g.preloader.GetImage("fins"),
+		baseImage: g.preloader.GetImage("fins", size),
 		color:     attributes.FinColor,
 	}
 
 	for i, img := range allImages {
 		imgProcessingChan <- imageProcessingMessage{
 			id:        i + 2,
-			baseImage: g.preloader.GetImage(img.ImageName),
+			baseImage: g.preloader.GetImage(img.ImageName, size),
 			color:     img.Color,
 		}
 	}
@@ -134,7 +134,7 @@ func (g *Generator) TokenId2Image(tokenId string) (image.Image, *cryptokoi.Crypt
 	close(imgProcessingChan)
 	close(imgResultChan)
 
-	resultImages = append(resultImages, g.preloader.GetImage("outlines_highlights_combined"))
+	resultImages = append(resultImages, g.preloader.GetImage("outlines_highlights_combined", size))
 	// now we have all images in the collection.
 	// we need to draw them in the correct order.
 	result := recursiveBatchDraw(resultImages)

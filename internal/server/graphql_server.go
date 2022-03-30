@@ -6,9 +6,6 @@ import (
 	"image"
 	"strconv"
 
-	imageDraw "golang.org/x/image/draw"
-
-	"image/draw"
 	"image/png"
 	"log"
 	"net/http"
@@ -154,8 +151,8 @@ func graphqlTimeout(timeout time.Duration) func(next http.Handler) http.Handler 
 	}
 }
 func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
-	koiPreloader := generator.NewMemoryPreloader(imagesBasePath + "/koi")
-	dragonPreloader := generator.NewMemoryPreloader(imagesBasePath + "/dragon")
+	koiPreloader := generator.NewMemoryPreloader(imagesBasePath+"/koi").BuildCachesForSizes(1024, 200)
+	dragonPreloader := generator.NewMemoryPreloader(imagesBasePath+"/dragon").BuildCachesForSizes(1024, 200)
 	return &GraphqlServer{
 		db:              db,
 		koiGenerator:    generator.NewGenerator(koiPreloader),
@@ -164,7 +161,7 @@ func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
 	}
 }
 
-func (s *GraphqlServer) imageHandlerFactory(size int, drawBackgroundColor bool) http.HandlerFunc {
+func (s *GraphqlServer) imageHandlerFactory(defaultSize int, drawBackgroundColor bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenId := chi.URLParam(r, "tokenId")
 		t := r.URL.Query().Get("type")
@@ -186,29 +183,36 @@ func (s *GraphqlServer) imageHandlerFactory(size int, drawBackgroundColor bool) 
 		var img image.Image
 		var koi *cryptokoi.CryptoKoi
 
-		// decide wether to generate a koi or a dragon
-		if t == "koi" {
-			img, koi = s.koiGenerator.TokenId2Image(tokenId)
-		} else {
-			img, koi = s.dragonGenerator.TokenId2Image(tokenId)
+		var err error
+		size := defaultSize
+		if sz := r.URL.Query().Get("size"); sz != "" {
+			size, err = strconv.Atoi(sz)
+			if err != nil {
+				http_util.WriteHttpError(w, http.StatusBadRequest, "invalid size")
+				return
+			}
+
 		}
 
-		scaledImg := image.NewRGBA(image.Rect(0, 0, size, size))
+		// decide wether to generate a koi or a dragon
+		if t == "koi" {
+			img, koi = s.koiGenerator.TokenId2Image(tokenId, size)
+		} else {
+			img, koi = s.dragonGenerator.TokenId2Image(tokenId, size)
+		}
 
 		if drawBackgroundColor {
 			primaryColor := koi.GetAttributes().PrimaryColor
-			for y := 0; y < scaledImg.Bounds().Max.Y; y++ {
-				for x := 0; x < scaledImg.Bounds().Max.X; x++ {
-					scaledImg.Set(x, y, primaryColor)
+			for y := 0; y < img.Bounds().Max.Y; y++ {
+				for x := 0; x < img.Bounds().Max.X; x++ {
+					img.(*image.RGBA).Set(x, y, primaryColor)
 				}
 			}
 		}
 
-		imageDraw.BiLinear.Scale(scaledImg, scaledImg.Rect, img, img.Bounds(), draw.Over, nil)
-
 		w.Header().Set("Content-Type", "image/png")
 
-		png.Encode(w, scaledImg)
+		png.Encode(w, img)
 	}
 }
 

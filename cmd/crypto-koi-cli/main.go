@@ -84,7 +84,7 @@ func drawImage(g *generator.Generator, drawPrimaryColor bool, tokenId string) {
 		tokenId = tmp.String()
 	}
 
-	img, koi := g.TokenId2Image(tokenId)
+	img, koi := g.TokenId2Image(tokenId, 1000)
 
 	if drawPrimaryColor {
 		primaryColor := koi.GetAttributes().PrimaryColor
