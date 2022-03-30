@@ -19,8 +19,9 @@ import (
 type MemoryPreloader struct {
 	images map[string]image.Image
 	// cached by size
-	cache  map[int]map[string]image.Image
-	logger *logrus.Entry
+	cache    map[int]map[string]image.Image
+	cacheMut sync.Mutex
+	logger   *logrus.Entry
 }
 
 type Preloader interface {
@@ -109,12 +110,16 @@ func (p *MemoryPreloader) GetImage(imageName string, size int) image.Image {
 		}
 		// the image does not exist in the size cache.
 		// create it and cache it.
+		p.cacheMut.Lock()
 		p.cache[size][imageName] = p.scaleImage(imageName, size)
+		p.cacheMut.Unlock()
 	} else {
+		p.cacheMut.Lock()
 		// there is no cache for the size.
 		// create one and cache it.
 		p.cache[size] = make(map[string]image.Image)
 		p.cache[size][imageName] = p.scaleImage(imageName, size)
+		p.cacheMut.Unlock()
 	}
 	return p.cache[size][imageName]
 }
