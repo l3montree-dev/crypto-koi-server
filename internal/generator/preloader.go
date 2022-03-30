@@ -83,7 +83,10 @@ func (p *MemoryPreloader) buildCacheForSize(size int) *MemoryPreloader {
 		p.cache[size] = make(map[string]image.Image)
 	}
 	for imageName := range p.images {
-		p.cache[size][imageName] = p.scaleImage(imageName, size)
+		img := p.scaleImage(imageName, size)
+		p.cacheMut.Lock()
+		p.cache[size][imageName] = img
+		p.cacheMut.Unlock()
 	}
 	return p
 }
@@ -110,15 +113,17 @@ func (p *MemoryPreloader) GetImage(imageName string, size int) image.Image {
 		}
 		// the image does not exist in the size cache.
 		// create it and cache it.
+		img := p.scaleImage(imageName, size)
 		p.cacheMut.Lock()
-		p.cache[size][imageName] = p.scaleImage(imageName, size)
+		p.cache[size][imageName] = img
 		p.cacheMut.Unlock()
 	} else {
+		img := p.scaleImage(imageName, size)
 		p.cacheMut.Lock()
 		// there is no cache for the size.
 		// create one and cache it.
 		p.cache[size] = make(map[string]image.Image)
-		p.cache[size][imageName] = p.scaleImage(imageName, size)
+		p.cache[size][imageName] = img
 		p.cacheMut.Unlock()
 	}
 	return p.cache[size][imageName]
