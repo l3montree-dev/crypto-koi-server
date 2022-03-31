@@ -154,9 +154,6 @@ func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
 	koiPreloader := generator.NewMemoryPreloader(imagesBasePath + "/koi")
 	dragonPreloader := generator.NewMemoryPreloader(imagesBasePath + "/dragon")
 
-	go koiPreloader.BuildCachesForSizes(1024, 200)
-	go dragonPreloader.BuildCachesForSizes(1024, 200)
-
 	return &GraphqlServer{
 		db:              db,
 		koiGenerator:    generator.NewGenerator(koiPreloader),
