@@ -10,6 +10,7 @@ type UserRepository interface {
 	GetByDeviceId(deviceId string) (models.User, error)
 	GetByWalletAddress(address string) (models.User, error)
 	GetByRefreshToken(refreshToken string) (models.User, error)
+	GetByEmail(email string) (models.User, error)
 	Delete(*models.User) error
 }
 
@@ -23,6 +24,11 @@ func NewGormUserRepository(db *gorm.DB) UserRepository {
 
 func (rep *GormUserRepository) Delete(u *models.User) error {
 	return rep.db.Delete(u).Error
+}
+
+func (rep *GormUserRepository) GetByEmail(email string) (models.User, error) {
+	var user models.User
+	return user, rep.db.Where("email = ?", email).First(&user).Error
 }
 
 func (rep *GormUserRepository) GetByDeviceId(deviceId string) (models.User, error) {

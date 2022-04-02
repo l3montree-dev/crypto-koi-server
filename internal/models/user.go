@@ -6,7 +6,8 @@ package models
 type User struct {
 	Base
 	Cryptogotchies []Cryptogotchi `json:"cryptogotchies" gorm:"foreignKey:OwnerId;references:Id;constraint:OnDelete:CASCADE;"`
-	Name           *string        `json:"name" gorm:"type:varchar(255);default:null"`
+	Email          string         `json:"email" gorm:"type:varchar(255);not null;unique"`
+	Name           string         `json:"name" gorm:"type:varchar(255);not null"`
 	// never return the wallet address of the user.
 	WalletAddress         *string `json:"-" gorm:"type:varchar(255);unique"`
 	DeviceId              *string `json:"-" gorm:"type:varchar(255);unique"`

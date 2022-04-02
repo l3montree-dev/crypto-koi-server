@@ -368,6 +368,7 @@ func (s *GraphqlServer) Start() {
 		// make sure to stop processing after 10 seconds.
 		r.Use(middleware.Timeout(10 * time.Second))
 		r.Post("/auth/login", authController.Login)
+		r.Post("/auth/register", authController.Register)
 		r.Post("/auth/refresh", authController.Refresh)
 	})
 

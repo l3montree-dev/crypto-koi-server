@@ -81,6 +81,89 @@ func (c *AuthController) DestroyAccount(w http.ResponseWriter, req *http.Request
 	http_util.WriteJSON(w, http.StatusOK)
 }
 
+func (c *AuthController) Register(w http.ResponseWriter, req *http.Request) {
+	var registerRequest http_dto.RegisterRequest
+	err := http_util.ParseBody(req, &registerRequest)
+	if err != nil {
+		c.logger.Errorf("could not parse body: %e", err)
+		http_util.WriteHttpError(w, http.StatusBadRequest, fmt.Sprintf("could not parse body: %e", err))
+		return
+	}
+	// check if the request is valid by checking if name and email is not an empty string.
+	if registerRequest.Name == "" || registerRequest.Email == "" {
+		c.logger.Warn("name and email is required")
+		http_util.WriteHttpError(w, http.StatusBadRequest, "name and email is required")
+		return
+	}
+
+	// check if the email does already exist in the database.
+	existingUser, err := c.authSvc.GetByEmail(registerRequest.Email)
+	if err == nil {
+		// the user does already exist.
+		// check if the wallet address or the device id matches - if so
+		// we can log him in.
+		if existingUser.WalletAddress == registerRequest.WalletAddress || existingUser.DeviceId == registerRequest.DeviceId {
+			// the user is already registered.
+			c.logger.Infof("user %s is already registered", registerRequest.Email)
+			res, err := c.authSvc.CreateTokenForUser(&existingUser)
+			if err != nil {
+				c.logger.Errorf("could not generate tokens: %e", err)
+				http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("could not generate tokens: %e", err))
+				return
+			}
+			http_util.WriteJSON(w, res)
+			return
+		}
+	} else if !db.IsNotFound(err) {
+		// an error occured which is not the user not found error.
+		// no way to recover
+		c.logger.Errorf("could not get user: %e", err)
+		http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("could not get user: %e", err))
+		return
+	}
+
+	// the user does not exist.
+	// register the user and create a cryptogotchi for him.
+	var user models.User
+	user.Name = registerRequest.Name
+	user.Email = registerRequest.Email
+
+	if registerRequest.WalletAddress != nil {
+		user.WalletAddress = registerRequest.WalletAddress
+	} else {
+		user.DeviceId = registerRequest.DeviceId
+	}
+
+	err = c.authSvc.Save(&user)
+
+	if err != nil {
+		c.logger.Errorf("could not save user: %e", err)
+		http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("could not save user: %e", err))
+		return
+	}
+
+	// generate a new cryptogotchi for the user.
+	_, err = c.cryptogotchiSvc.GenerateCryptogotchiForUser(&user, true)
+
+	if err != nil {
+		c.logger.Errorf("could not generate cryptogotchi: %e", err)
+		// delete the created user to avoid having a user without a cryptogotchi.
+		c.authSvc.Delete(&user)
+		http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("could not generate cryptogotchi: %e", err))
+		return
+	}
+
+	// return a token for the user.
+	res, err := c.authSvc.CreateTokenForUser(&user)
+	if err != nil {
+		c.logger.Errorf("could not generate tokens: %e", err)
+		http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("could not generate tokens: %e", err))
+		return
+	}
+
+	http_util.WriteJSON(w, res)
+}
+
 func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 	// check if the user would
 	var loginRequest http_dto.LoginRequest
@@ -104,35 +187,7 @@ func (c *AuthController) Login(w http.ResponseWriter, req *http.Request) {
 		user, err = c.authSvc.GetByDeviceId(*loginRequest.DeviceId)
 	}
 
-	if db.IsNotFound(err) {
-		// first time the user logs in.
-		// create the user
-		user = models.User{}
-		if loginRequest.WalletAddress != nil {
-			user.WalletAddress = loginRequest.WalletAddress
-		} else {
-			user.DeviceId = loginRequest.DeviceId
-		}
-
-		err := c.authSvc.Save(&user)
-
-		if err != nil {
-			c.logger.Errorf("could not save user: %e", err)
-			http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("could not save user: %e", err))
-			return
-		}
-
-		// generate a new cryptogotchi for the user.
-		_, err = c.cryptogotchiSvc.GenerateCryptogotchiForUser(&user, true)
-
-		if err != nil {
-			c.logger.Errorf("could not generate cryptogotchi: %e", err)
-			// delete the created user to avoid having a user without a cryptogotchi.
-			c.authSvc.Delete(&user)
-			http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("could not generate cryptogotchi: %e", err))
-			return
-		}
-	} else if err != nil {
+	if err != nil {
 		c.logger.Errorf("could not get user: %e", err)
 		http_util.WriteHttpError(w, http.StatusInternalServerError, fmt.Sprintf("could not get user: %e", err))
 		return

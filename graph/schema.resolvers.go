@@ -204,7 +204,7 @@ func (r *mutationResolver) ChangeCryptogotchiName(ctx context.Context, id string
 
 func (r *mutationResolver) ChangeUserName(ctx context.Context, newName string) (*models.User, error) {
 	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
-	currentUser.Name = &newName
+	currentUser.Name = newName
 	err := r.userSvc.Save(currentUser)
 	return currentUser, err
 }
