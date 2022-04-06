@@ -68,17 +68,11 @@ func NewMemoryPreloader(basePath string) Preloader {
 }
 
 func (p *MemoryPreloader) BuildCachesForSizes(sizes []int) Preloader {
-	wg := sync.WaitGroup{}
-	wg.Add(len(sizes))
 	for _, size := range sizes {
-		go func(s int) {
-			defer wg.Done()
-			p.buildCacheForSize(s)
-		}(size)
+		p.buildCacheForSize(size)
+		// call the garbage collector - otherwise the makeTmpBuffer will consume lots of memory.
+		runtime.GC()
 	}
-	wg.Wait()
-	// call the garbage collector - otherwise the makeTmpBuffer will consume lots of memory.
-	runtime.GC()
 	return p
 }
 
