@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"log"
 	"net/http"
+
 	"os"
 	"strings"
 	"time"
@@ -153,6 +154,10 @@ func graphqlTimeout(timeout time.Duration) func(next http.Handler) http.Handler 
 func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
 	koiPreloader := generator.NewMemoryPreloader(imagesBasePath + "/koi")
 	dragonPreloader := generator.NewMemoryPreloader(imagesBasePath + "/dragon")
+
+	// build the caches during bootstrap in a non blocking way
+	go koiPreloader.BuildCachesForSizes([]int{200, 350, 1024})
+	go dragonPreloader.BuildCachesForSizes([]int{200, 350, 1024})
 
 	return &GraphqlServer{
 		db:              db,
