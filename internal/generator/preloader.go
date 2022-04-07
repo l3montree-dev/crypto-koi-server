@@ -3,7 +3,6 @@ package generator
 import (
 	"image"
 	"image/png"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -19,7 +18,8 @@ import (
 
 // preload all images into ram for faster generation
 type MemoryPreloader struct {
-	images map[string]image.Image
+	availableImages []string
+	basePath        string
 	// cached by size
 	cache    sync.Map
 	cacheMut sync.Mutex
@@ -32,6 +32,10 @@ type Preloader interface {
 }
 
 func loadImage(basePath string, name string) image.Image {
+	if !strings.HasSuffix(name, ".png") {
+		name += ".png"
+	}
+
 	abs, err := filepath.Abs(filepath.Join(basePath, name))
 	if err != nil {
 		orchardclient.Logger.Fatal(err)
@@ -50,9 +54,10 @@ func loadImage(basePath string, name string) image.Image {
 func NewMemoryPreloader(basePath string) Preloader {
 	// load all images into ram
 	preloader := MemoryPreloader{
-		images: make(map[string]image.Image),
-		cache:  sync.Map{},
-		logger: orchardclient.Logger.WithField("component", "preloader"),
+		basePath:        basePath,
+		availableImages: make([]string, 0),
+		cache:           sync.Map{},
+		logger:          orchardclient.Logger.WithField("component", "preloader"),
 	}
 	entries, err := os.ReadDir(basePath)
 	if err != nil {
@@ -62,7 +67,7 @@ func NewMemoryPreloader(basePath string) Preloader {
 		if entry.IsDir() || filepath.Ext(entry.Name()) != ".png" {
 			continue
 		}
-		preloader.images[strings.TrimSuffix(entry.Name(), ".png")] = loadImage(basePath, entry.Name())
+		preloader.availableImages = append(preloader.availableImages, strings.TrimSuffix(entry.Name(), ".png"))
 	}
 	return &preloader
 }
@@ -73,6 +78,7 @@ func (p *MemoryPreloader) BuildCachesForSizes(sizes []int) Preloader {
 		// call the garbage collector - otherwise the makeTmpBuffer will consume lots of memory.
 		runtime.GC()
 	}
+
 	return p
 }
 
@@ -83,7 +89,7 @@ func (p *MemoryPreloader) buildCacheForSize(size int) *MemoryPreloader {
 	cache, loaded := p.cache.LoadOrStore(size, &sync.Map{})
 	if !loaded {
 		// build the cache.
-		for imageName := range p.images {
+		for _, imageName := range p.availableImages {
 			wg.Add(1)
 			go func(imgName string) {
 				defer wg.Done()
@@ -101,10 +107,7 @@ func (p *MemoryPreloader) buildCacheForSize(size int) *MemoryPreloader {
 func (p *MemoryPreloader) scaleImage(imageName string, size int) image.Image {
 	now := time.Now()
 	// the image is not cached.
-	rawImage, ok := p.images[imageName]
-	if !ok {
-		log.Fatalf("image: %s not preloaded", imageName)
-	}
+	rawImage := loadImage(p.basePath, imageName)
 
 	// scale the image down.
 	scaledImg := image.NewRGBA(image.Rect(0, 0, size, size))
