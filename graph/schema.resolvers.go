@@ -343,9 +343,18 @@ func (r *queryResolver) Cryptogotchi(ctx context.Context, cryptogotchiID string)
 	return &cryptogotchi, err
 }
 
-func (r *queryResolver) User(ctx context.Context) (*models.User, error) {
-	user := ctx.Value(config.USER_CTX_KEY).(*models.User)
-	return user, nil
+func (r *queryResolver) User(ctx context.Context, id string) (*models.User, error) {
+	user, err := r.userSvc.GetById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *queryResolver) Self(ctx context.Context) (*models.User, error) {
+
+	return ctx.Value(config.USER_CTX_KEY).(*models.User), nil
 }
 
 func (r *userResolver) ID(ctx context.Context, obj *models.User) (string, error) {

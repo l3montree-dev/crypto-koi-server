@@ -100,5 +100,6 @@ type Query {
     leaderboard(offset: Int!, limit: Int!): [Cryptogotchi!]!
     events(cryptogotchiId: ID!, offset: Int!, limit: Int!): [Event!]!
     cryptogotchi(cryptogotchiId: ID!): Cryptogotchi
-    user: User!
+    user(id: ID!): User
+    self: User!
 }

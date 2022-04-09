@@ -1,0 +1,12 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/timbastin/Schreibtisch/l3montree/crypto-koi/crypto-koi-api'
+docker-compose up -d
+gqlgen generate
+npm install
+npx solc --include-path node_modules/ --base-path . --bin contracts/CryptoKoi.sol
+npx solc --include-path node_modules/ --base-path . --abi contracts/CryptoKoi.sol
+rm -f @*
+abigen --bin=./contracts_CryptoKoi_sol_CryptoKoi.bin --abi=./contracts_CryptoKoi_sol_CryptoKoi.abi --pkg=cryptokoi --type=CryptoKoiBinding --out=internal/cryptokoi/cryptokoi_binding.go
+go run cmd/crypto-koi-api/main.go
+make: Leaving directory '/home/timbastin/Schreibtisch/l3montree/crypto-koi/crypto-koi-api'
+ 
