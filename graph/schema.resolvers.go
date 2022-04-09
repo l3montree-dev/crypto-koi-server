@@ -343,6 +343,19 @@ func (r *queryResolver) Cryptogotchi(ctx context.Context, cryptogotchiID string)
 	return &cryptogotchi, err
 }
 
+func (r *queryResolver) Cryptogotchies(ctx context.Context, query *input.SearchQuery, offset int, limit int) ([]*models.Cryptogotchi, error) {
+	cryptogotchis, err := r.cryptogotchiSvc.GetCryptogotchies(query, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*models.Cryptogotchi, len(cryptogotchis))
+	for i, c := range cryptogotchis {
+		tmp := c
+		res[i] = &tmp
+	}
+	return res, nil
+}
+
 func (r *queryResolver) User(ctx context.Context, id string) (*models.User, error) {
 	user, err := r.userSvc.GetById(id)
 	if err != nil {
@@ -350,6 +363,19 @@ func (r *queryResolver) User(ctx context.Context, id string) (*models.User, erro
 	}
 
 	return &user, nil
+}
+
+func (r *queryResolver) Users(ctx context.Context, query *input.SearchQuery, offset int, limit int) ([]*models.User, error) {
+	users, err := r.userSvc.GetUsers(query, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*models.User, len(users))
+	for i, c := range users {
+		tmp := c
+		res[i] = &tmp
+	}
+	return res, nil
 }
 
 func (r *queryResolver) Self(ctx context.Context) (*models.User, error) {

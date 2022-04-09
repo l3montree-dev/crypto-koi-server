@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common/math"
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph/input"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 	"gorm.io/gorm"
@@ -15,6 +16,7 @@ type CryptogotchiRepository interface {
 	GetCryptogotchiesByUserId(userId string) ([]models.Cryptogotchi, error)
 	GetLeaderboard() ([]models.Cryptogotchi, error)
 	GetCachedLeaderboard(offset, limit int) ([]models.Cryptogotchi, error)
+	GetCryptogotchies(query *input.SearchQuery, offset, limit int) ([]models.Cryptogotchi, error)
 	Create(m *models.Cryptogotchi) error
 	GetCryptogotchiesWithPredictedDeathDateBetween(start, end time.Time) ([]models.Cryptogotchi, error)
 }
@@ -29,6 +31,16 @@ func NewGormCryptogotchiRepository(db *gorm.DB) CryptogotchiRepository {
 
 func onlyActive(db *gorm.DB) *gorm.DB {
 	return db.Where("active = ?", true)
+}
+
+func (rep *GormCryptogotchiRepository) GetCryptogotchies(query *input.SearchQuery, offset, limit int) ([]models.Cryptogotchi, error) {
+	var cryptogotchies []models.Cryptogotchi
+	q := rep.db.Scopes(onlyActive).Order("`rank` asc").Offset(offset).Limit(limit)
+	if query != nil {
+		q.Where("name LIKE ?", "%"+query.Name+"%")
+	}
+	err := q.Find(&cryptogotchies).Error
+	return cryptogotchies, err
 }
 
 func (rep *GormCryptogotchiRepository) GetCryptogotchiByUint256(tokenId string) (models.Cryptogotchi, error) {

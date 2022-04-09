@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph/input"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gorm.io/gorm"
 )
@@ -10,6 +11,7 @@ type UserRepository interface {
 	GetByDeviceId(deviceId string) (models.User, error)
 	GetByWalletAddress(address string) (models.User, error)
 	GetByRefreshToken(refreshToken string) (models.User, error)
+	GetUsers(query *input.SearchQuery, offset, limit int) ([]models.User, error)
 	GetByEmail(email string) (models.User, error)
 	Delete(*models.User) error
 }
@@ -20,6 +22,17 @@ type GormUserRepository struct {
 
 func NewGormUserRepository(db *gorm.DB) UserRepository {
 	return &GormUserRepository{db: db}
+}
+
+func (rep *GormUserRepository) GetUsers(query *input.SearchQuery, offset, limit int) ([]models.User, error) {
+	var users []models.User
+	q := rep.db.Order("`name` asc").Offset(offset).Limit(limit)
+	if query != nil {
+		q.Where("name LIKE ?", "%"+query.Name+"%")
+	}
+	err := q.Find(&users).Error
+	return users, err
+
 }
 
 func (rep *GormUserRepository) Delete(u *models.User) error {

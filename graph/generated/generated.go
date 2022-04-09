@@ -122,11 +122,13 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Cryptogotchi func(childComplexity int, cryptogotchiID string) int
-		Events       func(childComplexity int, cryptogotchiID string, offset int, limit int) int
-		Leaderboard  func(childComplexity int, offset int, limit int) int
-		Self         func(childComplexity int) int
-		User         func(childComplexity int, id string) int
+		Cryptogotchi   func(childComplexity int, cryptogotchiID string) int
+		Cryptogotchies func(childComplexity int, query *input.SearchQuery, offset int, limit int) int
+		Events         func(childComplexity int, cryptogotchiID string, offset int, limit int) int
+		Leaderboard    func(childComplexity int, offset int, limit int) int
+		Self           func(childComplexity int) int
+		User           func(childComplexity int, id string) int
+		Users          func(childComplexity int, query *input.SearchQuery, offset int, limit int) int
 	}
 
 	User struct {
@@ -183,7 +185,9 @@ type QueryResolver interface {
 	Leaderboard(ctx context.Context, offset int, limit int) ([]*models.Cryptogotchi, error)
 	Events(ctx context.Context, cryptogotchiID string, offset int, limit int) ([]*models.Event, error)
 	Cryptogotchi(ctx context.Context, cryptogotchiID string) (*models.Cryptogotchi, error)
+	Cryptogotchies(ctx context.Context, query *input.SearchQuery, offset int, limit int) ([]*models.Cryptogotchi, error)
 	User(ctx context.Context, id string) (*models.User, error)
+	Users(ctx context.Context, query *input.SearchQuery, offset int, limit int) ([]*models.User, error)
 	Self(ctx context.Context) (*models.User, error)
 }
 type UserResolver interface {
@@ -619,6 +623,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Cryptogotchi(childComplexity, args["cryptogotchiId"].(string)), true
 
+	case "Query.cryptogotchies":
+		if e.complexity.Query.Cryptogotchies == nil {
+			break
+		}
+
+		args, err := ec.field_Query_cryptogotchies_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Cryptogotchies(childComplexity, args["query"].(*input.SearchQuery), args["offset"].(int), args["limit"].(int)), true
+
 	case "Query.events":
 		if e.complexity.Query.Events == nil {
 			break
@@ -661,6 +677,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.User(childComplexity, args["id"].(string)), true
+
+	case "Query.users":
+		if e.complexity.Query.Users == nil {
+			break
+		}
+
+		args, err := ec.field_Query_users_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Users(childComplexity, args["query"].(*input.SearchQuery), args["offset"].(int), args["limit"].(int)), true
 
 	case "User.createdAt":
 		if e.complexity.User.CreatedAt == nil {
@@ -861,6 +889,10 @@ type NftData {
     chainId: Int!
 }
 
+input SearchQuery {
+    name: String!
+}
+
 type Mutation {
     # regular feed event
   feed(cryptogotchiId: ID!): Cryptogotchi!
@@ -878,7 +910,9 @@ type Query {
     leaderboard(offset: Int!, limit: Int!): [Cryptogotchi!]!
     events(cryptogotchiId: ID!, offset: Int!, limit: Int!): [Event!]!
     cryptogotchi(cryptogotchiId: ID!): Cryptogotchi
+    cryptogotchies(query: SearchQuery, offset: Int!, limit: Int!): [Cryptogotchi!]!
     user(id: ID!): User
+    users(query: SearchQuery, offset:Int!, limit: Int!): [User!]!
     self: User!
 }`, BuiltIn: false},
 }
@@ -1089,6 +1123,39 @@ func (ec *executionContext) field_Query_cryptogotchi_args(ctx context.Context, r
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_cryptogotchies_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *input.SearchQuery
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+		arg0, err = ec.unmarshalOSearchQuery2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐSearchQuery(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	var arg2 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_events_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1158,6 +1225,39 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *input.SearchQuery
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+		arg0, err = ec.unmarshalOSearchQuery2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐSearchQuery(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	var arg2 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg2
 	return args, nil
 }
 
@@ -3155,6 +3255,48 @@ func (ec *executionContext) _Query_cryptogotchi(ctx context.Context, field graph
 	return ec.marshalOCryptogotchi2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchi(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_cryptogotchies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_cryptogotchies_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Cryptogotchies(rctx, args["query"].(*input.SearchQuery), args["offset"].(int), args["limit"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Cryptogotchi)
+	fc.Result = res
+	return ec.marshalNCryptogotchi2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐCryptogotchiᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3192,6 +3334,48 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	res := resTmp.(*models.User)
 	fc.Result = res
 	return ec.marshalOUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_users_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Users(rctx, args["query"].(*input.SearchQuery), args["offset"].(int), args["limit"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_self(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4725,6 +4909,29 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputSearchQuery(ctx context.Context, obj interface{}) (input.SearchQuery, error) {
+	var it input.SearchQuery
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -5619,6 +5826,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "cryptogotchies":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_cryptogotchies(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "user":
 			field := field
 
@@ -5629,6 +5859,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_user(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "users":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_users(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -6518,6 +6771,50 @@ func (ec *executionContext) marshalNUser2gitlabᚗcomᚋl3montreeᚋcryptoᚑkoi
 	return ec._User(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNUser2ᚕᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.User) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐUser(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNUser2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋinternalᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -6828,6 +7125,14 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) unmarshalOSearchQuery2ᚖgitlabᚗcomᚋl3montreeᚋcryptoᚑkoiᚋcryptoᚑkoiᚑapiᚋgraphᚋinputᚐSearchQuery(ctx context.Context, v interface{}) (*input.SearchQuery, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputSearchQuery(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

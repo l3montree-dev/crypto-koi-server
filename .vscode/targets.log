@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sat Apr  9 16:24:44 2022
+# Make data base, printed on Sat Apr  9 20:03:49 2022
 
 # Variables
 
@@ -23,11 +23,9 @@ GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
 SSH_AGENT_LAUNCHER = gnome-keyring
 # environment
-GJS_DEBUG_OUTPUT = stderr
-# environment
 UUID = db47ae1d-cad0-41cc-8b86-20922bc283be
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-b02752c2-9efb-4e9e-b9fc-893ef44d62f0.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-a89ce28d-804d-4a4c-beeb-d9dd7826e0cb.sock
 # environment
 MANDATORY_PATH = /usr/share/gconf/ubuntu-xorg.mandatory.path
 # environment
@@ -79,7 +77,7 @@ XAUTHORITY = /run/user/1000/gdm/Xauthority
 # default
 .INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
 # environment
-GNOME_TERMINAL_SERVICE = :1.111
+GNOME_TERMINAL_SERVICE = :1.113
 # makefile
 MAKEFLAGS = pqrR -j2 --jobserver-auth=3,4
 # makefile
@@ -115,13 +113,13 @@ ZSH = /home/timbastin/.oh-my-zsh
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 6247
+VSCODE_PID = 4805
 # environment
 XDG_SESSION_TYPE = x11
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # environment
-SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/3004,unix/avocado:/tmp/.ICE-unix/3004
+SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/2921,unix/avocado:/tmp/.ICE-unix/2921
 # automatic
 *F = $(notdir $*)
 # environment
@@ -145,11 +143,9 @@ MAKECMDGOALS := all
 # environment
 XMODIFIERS = @im=ibus
 # environment
-GJS_DEBUG_TOPICS = JS ERROR;JS LOG
-# environment
 SHLVL = 1
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/45ab8e1c_0122_4992_8362_fd4c95e00964
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/24d6ae93_1f52_45d0_b74e_a052269466f7
 # environment
 MAKELEVEL := 0
 # default
@@ -187,7 +183,7 @@ LOGNAME = timbastin
 # makefile
 .DEFAULT_GOAL := run
 # environment
-SYSTEMD_EXEC_PID = 3024
+SYSTEMD_EXEC_PID = 3111
 # environment
 DISPLAY = :0
 # environment
@@ -253,7 +249,7 @@ XDG_MENU_PREFIX = gnome-
 # environment
 GDMSESSION = ubuntu-xorg
 # variable set hash-table stats:
-# Load=121/1024=12%, Rehash=0, Collisions=15/153=10%
+# Load=119/1024=12%, Rehash=0, Collisions=14/151=9%
 
 # Pattern-specific Variable Values
 
@@ -292,9 +288,6 @@ contracts_CryptoKoi_sol_CryptoKoi.bin: contracts/CryptoKoi.sol node_modules
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 23):
 	npx solc --include-path node_modules/ --base-path . --bin contracts/CryptoKoi.sol
- 
-make: *** No rule to make target 'all'.  Stop.
-
 
 docker:
 #  Phony target (prerequisite of .PHONY).
@@ -303,6 +296,9 @@ docker:
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 12):
 	docker-compose up -d
+ 
+make: *** No rule to make target 'all'.  Stop.
+
 
 # Not a target:
 Makefile:
@@ -417,6 +413,6 @@ blockchain: node_modules
 # strcache performance: lookups = 102 / hit rate = 39%
 # hash-table stats:
 # Load=62/8192=1%, Rehash=0, Collisions=2/102=2%
-# Finished Make data base on Sat Apr  9 16:24:44 2022
+# Finished Make data base on Sat Apr  9 20:03:50 2022
 
  

@@ -84,6 +84,10 @@ type NftData {
     chainId: Int!
 }
 
+input SearchQuery {
+    name: String!
+}
+
 type Mutation {
     # regular feed event
   feed(cryptogotchiId: ID!): Cryptogotchi!
@@ -101,6 +105,8 @@ type Query {
     leaderboard(offset: Int!, limit: Int!): [Cryptogotchi!]!
     events(cryptogotchiId: ID!, offset: Int!, limit: Int!): [Event!]!
     cryptogotchi(cryptogotchiId: ID!): Cryptogotchi
+    cryptogotchies(query: SearchQuery, offset: Int!, limit: Int!): [Cryptogotchi!]!
     user(id: ID!): User
+    users(query: SearchQuery, offset:Int!, limit: Int!): [User!]!
     self: User!
 }
