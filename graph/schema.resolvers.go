@@ -353,7 +353,6 @@ func (r *queryResolver) User(ctx context.Context, id string) (*models.User, erro
 }
 
 func (r *queryResolver) Self(ctx context.Context) (*models.User, error) {
-
 	return ctx.Value(config.USER_CTX_KEY).(*models.User), nil
 }
 

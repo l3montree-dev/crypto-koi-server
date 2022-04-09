@@ -92,6 +92,7 @@ func (s *GraphqlServer) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// get the token from the header
 		token := r.Header.Get("Authorization")
+		fmt.Println(token)
 		if token == "" {
 			s.logger.Warn("auth middleware called without token")
 			next.ServeHTTP(w, r)

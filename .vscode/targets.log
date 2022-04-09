@@ -1,6 +1,4 @@
 make all --print-data-base --no-builtin-variables --no-builtin-rules --question
-make: *** No rule to make target 'all'.  Stop.
-
 # GNU Make 4.3
 # Built for x86_64-pc-linux-gnu
 # Copyright (C) 1988-2020 Free Software Foundation, Inc.
@@ -8,7 +6,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sat Apr  9 08:11:22 2022
+# Make data base, printed on Sat Apr  9 16:24:44 2022
 
 # Variables
 
@@ -21,15 +19,15 @@ GDK_BACKEND = x11
 # environment
 LC_ALL = C
 # environment
-NO_AT_BRIDGE = 1
-# environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
 SSH_AGENT_LAUNCHER = gnome-keyring
 # environment
+GJS_DEBUG_OUTPUT = stderr
+# environment
 UUID = db47ae1d-cad0-41cc-8b86-20922bc283be
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-7b017663-2de0-4fa3-a5ef-b733581073f9.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-b02752c2-9efb-4e9e-b9fc-893ef44d62f0.sock
 # environment
 MANDATORY_PATH = /usr/share/gconf/ubuntu-xorg.mandatory.path
 # environment
@@ -81,7 +79,7 @@ XAUTHORITY = /run/user/1000/gdm/Xauthority
 # default
 .INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
 # environment
-GNOME_TERMINAL_SERVICE = :1.115
+GNOME_TERMINAL_SERVICE = :1.111
 # makefile
 MAKEFLAGS = pqrR -j2 --jobserver-auth=3,4
 # makefile
@@ -117,13 +115,13 @@ ZSH = /home/timbastin/.oh-my-zsh
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 11236
+VSCODE_PID = 6247
 # environment
 XDG_SESSION_TYPE = x11
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # environment
-SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/3231,unix/avocado:/tmp/.ICE-unix/3231
+SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/3004,unix/avocado:/tmp/.ICE-unix/3004
 # automatic
 *F = $(notdir $*)
 # environment
@@ -147,9 +145,11 @@ MAKECMDGOALS := all
 # environment
 XMODIFIERS = @im=ibus
 # environment
+GJS_DEBUG_TOPICS = JS ERROR;JS LOG
+# environment
 SHLVL = 1
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/d131e22c_480c_49e5_934e_a652ed6a98d9
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/45ab8e1c_0122_4992_8362_fd4c95e00964
 # environment
 MAKELEVEL := 0
 # default
@@ -187,7 +187,7 @@ LOGNAME = timbastin
 # makefile
 .DEFAULT_GOAL := run
 # environment
-SYSTEMD_EXEC_PID = 3428
+SYSTEMD_EXEC_PID = 3024
 # environment
 DISPLAY = :0
 # environment
@@ -253,7 +253,7 @@ XDG_MENU_PREFIX = gnome-
 # environment
 GDMSESSION = ubuntu-xorg
 # variable set hash-table stats:
-# Load=120/1024=12%, Rehash=0, Collisions=14/152=9%
+# Load=121/1024=12%, Rehash=0, Collisions=15/153=10%
 
 # Pattern-specific Variable Values
 
@@ -293,6 +293,8 @@ contracts_CryptoKoi_sol_CryptoKoi.bin: contracts/CryptoKoi.sol node_modules
 #  recipe to execute (from 'Makefile', line 23):
 	npx solc --include-path node_modules/ --base-path . --bin contracts/CryptoKoi.sol
  
+make: *** No rule to make target 'all'.  Stop.
+
 
 docker:
 #  Phony target (prerequisite of .PHONY).
@@ -415,6 +417,6 @@ blockchain: node_modules
 # strcache performance: lookups = 102 / hit rate = 39%
 # hash-table stats:
 # Load=62/8192=1%, Rehash=0, Collisions=2/102=2%
-# Finished Make data base on Sat Apr  9 08:11:22 2022
+# Finished Make data base on Sat Apr  9 16:24:44 2022
 
  
