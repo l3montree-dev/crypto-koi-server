@@ -379,6 +379,9 @@ func (r *queryResolver) Users(ctx context.Context, query *input.SearchQuery, off
 }
 
 func (r *queryResolver) Self(ctx context.Context) (*models.User, error) {
+	if ctx.Value(config.USER_CTX_KEY) == nil {
+		return nil, gqlerror.Errorf("user not found")
+	}
 	return ctx.Value(config.USER_CTX_KEY).(*models.User), nil
 }
 
