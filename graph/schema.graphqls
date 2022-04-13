@@ -70,6 +70,7 @@ type User {
     cryptogotchies: [Cryptogotchi!]!
     createdAt: Time!
     updatedAt: Time!
+    name: String!
 }
 
 type GameStartResponse {
@@ -81,6 +82,10 @@ type NftData {
     address: String!
     tokenId: String!
     chainId: Int!
+}
+
+input SearchQuery {
+    name: String!
 }
 
 type Mutation {
@@ -100,5 +105,8 @@ type Query {
     leaderboard(offset: Int!, limit: Int!): [Cryptogotchi!]!
     events(cryptogotchiId: ID!, offset: Int!, limit: Int!): [Event!]!
     cryptogotchi(cryptogotchiId: ID!): Cryptogotchi
-    user: User!
+    cryptogotchies(query: SearchQuery, offset: Int!, limit: Int!): [Cryptogotchi!]!
+    user(id: ID!): User
+    users(query: SearchQuery, offset:Int!, limit: Int!): [User!]!
+    self: User!
 }

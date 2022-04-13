@@ -22,7 +22,7 @@ func BenchmarkGeneration(b *testing.B) {
 	path, _ := filepath.Abs(filepath.Join("..", "..", "images", "koi"))
 
 	rand.Seed(42)
-	preloader := NewMemoryPreloader(path).BuildCachesForSizes(500)
+	preloader := NewMemoryPreloader(path).BuildCachesForSizes([]int{500})
 	generator := NewGenerator(preloader)
 
 	for i := 0; i < b.N; i++ {

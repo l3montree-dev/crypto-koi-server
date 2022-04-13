@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"log"
 	"net/http"
+
 	"os"
 	"strings"
 	"time"
@@ -91,6 +92,7 @@ func (s *GraphqlServer) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// get the token from the header
 		token := r.Header.Get("Authorization")
+
 		if token == "" {
 			s.logger.Warn("auth middleware called without token")
 			next.ServeHTTP(w, r)
@@ -153,6 +155,10 @@ func graphqlTimeout(timeout time.Duration) func(next http.Handler) http.Handler 
 func NewGraphqlServer(db *gorm.DB, imagesBasePath string) Server {
 	koiPreloader := generator.NewMemoryPreloader(imagesBasePath + "/koi")
 	dragonPreloader := generator.NewMemoryPreloader(imagesBasePath + "/dragon")
+
+	// build the caches during bootstrap in a non blocking way
+	go koiPreloader.BuildCachesForSizes([]int{200, 350, 1024})
+	go dragonPreloader.BuildCachesForSizes([]int{200, 350, 1024})
 
 	return &GraphqlServer{
 		db:              db,
@@ -310,16 +316,7 @@ func (s *GraphqlServer) Start() {
 	router.Use(loggerMiddleware)
 
 	// allow cross origin request
-	router.Use(cors.Handler(cors.Options{
-		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins: []string{"*"},
-		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
-		AllowedMethods:   []string{"*"},
-		AllowedHeaders:   []string{"*"},
-		ExposedHeaders:   []string{"*"},
-		AllowCredentials: false,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	}))
+	router.Use(cors.AllowAll().Handler)
 
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.AllowContentType("application/json"))
@@ -368,6 +365,7 @@ func (s *GraphqlServer) Start() {
 		// make sure to stop processing after 10 seconds.
 		r.Use(middleware.Timeout(10 * time.Second))
 		r.Post("/auth/login", authController.Login)
+		r.Post("/auth/register", authController.Register)
 		r.Post("/auth/refresh", authController.Refresh)
 	})
 

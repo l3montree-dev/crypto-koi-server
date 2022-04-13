@@ -204,7 +204,7 @@ func (r *mutationResolver) ChangeCryptogotchiName(ctx context.Context, id string
 
 func (r *mutationResolver) ChangeUserName(ctx context.Context, newName string) (*models.User, error) {
 	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
-	currentUser.Name = &newName
+	currentUser.Name = newName
 	err := r.userSvc.Save(currentUser)
 	return currentUser, err
 }
@@ -343,9 +343,46 @@ func (r *queryResolver) Cryptogotchi(ctx context.Context, cryptogotchiID string)
 	return &cryptogotchi, err
 }
 
-func (r *queryResolver) User(ctx context.Context) (*models.User, error) {
-	user := ctx.Value(config.USER_CTX_KEY).(*models.User)
-	return user, nil
+func (r *queryResolver) Cryptogotchies(ctx context.Context, query *input.SearchQuery, offset int, limit int) ([]*models.Cryptogotchi, error) {
+	cryptogotchis, err := r.cryptogotchiSvc.GetCryptogotchies(query, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*models.Cryptogotchi, len(cryptogotchis))
+	for i, c := range cryptogotchis {
+		tmp := c
+		res[i] = &tmp
+	}
+	return res, nil
+}
+
+func (r *queryResolver) User(ctx context.Context, id string) (*models.User, error) {
+	user, err := r.userSvc.GetById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *queryResolver) Users(ctx context.Context, query *input.SearchQuery, offset int, limit int) ([]*models.User, error) {
+	users, err := r.userSvc.GetUsers(query, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*models.User, len(users))
+	for i, c := range users {
+		tmp := c
+		res[i] = &tmp
+	}
+	return res, nil
+}
+
+func (r *queryResolver) Self(ctx context.Context) (*models.User, error) {
+	if ctx.Value(config.USER_CTX_KEY) == nil {
+		return nil, gqlerror.Errorf("user not found")
+	}
+	return ctx.Value(config.USER_CTX_KEY).(*models.User), nil
 }
 
 func (r *userResolver) ID(ctx context.Context, obj *models.User) (string, error) {

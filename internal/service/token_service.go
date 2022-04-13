@@ -54,5 +54,9 @@ func (svc *TokenService) ParseToken(token string) (jwt.Claims, error) {
 		return svc.publicKey, nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodES256.Alg()}))
 
+	if err != nil {
+		return nil, err
+	}
+
 	return t.Claims, err
 }

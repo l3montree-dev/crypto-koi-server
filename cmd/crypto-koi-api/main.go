@@ -17,6 +17,7 @@ import (
 )
 
 func main() {
+	// defer profile.Start(profile.MemProfile, profile.ProfilePath("./profiles")).Stop()
 	err := godotenv.Load()
 	orchardclient.Logger.SetReportCaller(true)
 	orchardclient.Logger.SetFormatter(&logrus.JSONFormatter{

@@ -22,3 +22,7 @@ type NftData struct {
 	TokenID   string `json:"tokenId"`
 	ChainID   int    `json:"chainId"`
 }
+
+type SearchQuery struct {
+	Name string `json:"name"`
+}

@@ -8,7 +8,6 @@ run: docker codegen
 test: codegen
 	go test ./...
 
-
 docker: 
 	docker-compose up -d
 

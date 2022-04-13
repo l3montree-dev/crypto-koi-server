@@ -1,0 +1,1 @@
+{"buildTargets":["abi","blockchain","codegen","contracts","contracts_CryptoKoi_sol_CryptoKoi.abi","contracts_CryptoKoi_sol_CryptoKoi.bin","deploy","docker","graphql","node_modules","run","test"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}
