@@ -7,6 +7,7 @@ import (
 	"image/draw"
 	"image/png"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,6 +22,16 @@ import (
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/service"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/util"
 )
+
+func randomString(n int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+	s := make([]rune, n)
+	for i := range s {
+		s[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(s)
+}
 
 func registerRandomUser(amount int) {
 	// register the user with the token id
@@ -40,6 +51,8 @@ func registerRandomUser(amount int) {
 	refreshToken, _ := uuid.NewRandom()
 	newUser := models.User{
 		RefreshToken: refreshToken.String(),
+		Name:         refreshToken.String(),
+		Email:        refreshToken.String(),
 	}
 	userRep.Save(&newUser)
 

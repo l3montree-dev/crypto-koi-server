@@ -1,6 +1,4 @@
 make all --print-data-base --no-builtin-variables --no-builtin-rules --question
-make: *** No rule to make target 'all'.  Stop.
-
 # GNU Make 4.3
 # Built for x86_64-pc-linux-gnu
 # Copyright (C) 1988-2020 Free Software Foundation, Inc.
@@ -8,7 +6,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Mon Apr 11 12:04:34 2022
+# Make data base, printed on Wed Apr 13 17:10:02 2022
 
 # Variables
 
@@ -21,15 +19,13 @@ GDK_BACKEND = x11
 # environment
 LC_ALL = C
 # environment
-NO_AT_BRIDGE = 1
-# environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
 SSH_AGENT_LAUNCHER = gnome-keyring
 # environment
 UUID = db47ae1d-cad0-41cc-8b86-20922bc283be
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-a20e71b5-9c60-4a32-bb49-8a683014e530.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-ecb94692-c64c-442d-a7d8-37b22d36b5bc.sock
 # environment
 MANDATORY_PATH = /usr/share/gconf/ubuntu-xorg.mandatory.path
 # environment
@@ -71,7 +67,7 @@ VSCODE_LOG_STACK = false
 # environment
 NVM_INC = /home/timbastin/.nvm/versions/node/v14.17.0/include/node
 # environment
-VSCODE_CODE_CACHE_PATH = /home/timbastin/.config/Code/CachedData/e18005f0f1b33c29e81d732535d8c0e47cafb0b5
+VSCODE_CODE_CACHE_PATH = /home/timbastin/.config/Code/CachedData/dfd34e8260c270da74b5c2d86d61aee4b6d56977
 # environment
 LANG = C
 # environment
@@ -81,7 +77,7 @@ XAUTHORITY = /run/user/1000/gdm/Xauthority
 # default
 .INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
 # environment
-GNOME_TERMINAL_SERVICE = :1.112
+GNOME_TERMINAL_SERVICE = :1.114
 # makefile
 MAKEFLAGS = pqrR -j2 --jobserver-auth=3,4
 # makefile
@@ -117,13 +113,13 @@ ZSH = /home/timbastin/.oh-my-zsh
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 10371
+VSCODE_PID = 8365
 # environment
 XDG_SESSION_TYPE = x11
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # environment
-SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/3080,unix/avocado:/tmp/.ICE-unix/3080
+SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/3099,unix/avocado:/tmp/.ICE-unix/3099
 # automatic
 *F = $(notdir $*)
 # environment
@@ -149,7 +145,7 @@ XMODIFIERS = @im=ibus
 # environment
 SHLVL = 1
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/198e5950_a707_4788_bdc8_c133efdde01d
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/4b2c6f11_bc7f_4b94_88d8_3d482c2b509c
 # environment
 MAKELEVEL := 0
 # default
@@ -187,7 +183,7 @@ LOGNAME = timbastin
 # makefile
 .DEFAULT_GOAL := run
 # environment
-SYSTEMD_EXEC_PID = 3273
+SYSTEMD_EXEC_PID = 3297
 # environment
 DISPLAY = :0
 # environment
@@ -225,7 +221,7 @@ QT_IM_MODULE = ibus
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK = /run/user/1000/vscode-4227052e-1.66.0-main.sock
+VSCODE_IPC_HOOK = /run/user/1000/vscode-4227052e-1.66.2-main.sock
 # environment
 TERM = xterm-256color
 # environment
@@ -253,7 +249,7 @@ XDG_MENU_PREFIX = gnome-
 # environment
 GDMSESSION = ubuntu-xorg
 # variable set hash-table stats:
-# Load=120/1024=12%, Rehash=0, Collisions=14/152=9%
+# Load=119/1024=12%, Rehash=0, Collisions=14/151=9%
 
 # Pattern-specific Variable Values
 
@@ -280,6 +276,9 @@ deploy: node_modules
 	npm run deploy
 
 contracts_CryptoKoi_sol_CryptoKoi.abi: contracts/CryptoKoi.sol node_modules
+ 
+make: *** No rule to make target 'all'.  Stop.
+
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -303,7 +302,6 @@ docker:
 
 # Not a target:
 Makefile:
- 
 #  Implicit rule search has been done.
 #  Last modified 2022-04-07 17:29:11.435696612
 #  File has been updated.
@@ -415,6 +413,6 @@ blockchain: node_modules
 # strcache performance: lookups = 102 / hit rate = 39%
 # hash-table stats:
 # Load=62/8192=1%, Rehash=0, Collisions=2/102=2%
-# Finished Make data base on Mon Apr 11 12:04:34 2022
+# Finished Make data base on Wed Apr 13 17:10:04 2022
 
  
