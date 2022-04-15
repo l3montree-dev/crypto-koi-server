@@ -2,7 +2,10 @@ MAKEFLAGS += -j2
 
 .PHONY: run docker codegen deploy
 
-run: docker codegen
+all: docker codegen
+	go run cmd/crypto-koi-api/main.go
+
+run::
 	go run cmd/crypto-koi-api/main.go
 
 test: codegen
