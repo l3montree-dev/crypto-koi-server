@@ -16,7 +16,7 @@ const (
 )
 
 // the time between feedings
-const TIME_BETWEEN_FEEDINGS = 1 * time.Second
+const TIME_BETWEEN_FEEDINGS = 1 * time.Hour
 
 // the amount of food the cryptogotchi eats per feeding
 const DEFAULT_FEED_VALUE = 50
