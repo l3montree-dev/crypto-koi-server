@@ -62,9 +62,26 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
     1.466 * Math.pow(10, 9),
   ]);
 
-  console.log(
-    (await provider.estimateGas({ data: deploymentData })).toBigInt(),
-  );
+  const gasUnitsNeeded = (
+    await provider.estimateGas({
+      data: deploymentData,
+    })
+  ).toNumber();
+
+  const pricePerUnitInGwei = (
+    await provider.getGasPrice()
+  ).toNumber();
+
+  const gasEstimateCoin =
+    (gasUnitsNeeded * pricePerUnitInGwei) / (1000000000 * 1000000000);
+
+  console.log(`Gas estimate: ${gasEstimateCoin.toString()} MATIC
+
+Gas Units needed: ${gasUnitsNeeded}
+Price per unit in Gwei: ${pricePerUnitInGwei}
+
+${(1000000000 * 1000000000).toString()} Gwei = 1 Matic
+`);
 
   return;
   const contract = await deployContract(
