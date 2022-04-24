@@ -48,7 +48,25 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
 
   const provider = ethers.getDefaultProvider(url);
   const signer = new ethers.Wallet(privateKey, provider);
+  const c = new ContractFactory(
+    CryptoKoi.abi,
+    CryptoKoi.bytecode,
+    signer,
+  );
 
+  const deploymentData = c.interface.encodeDeploy([
+    'CryptoKoi',
+    'CK',
+    'https://dev.api.crypto-koi.io/v1/tokens/',
+    // MATIC calculation
+    1.466 * Math.pow(10, 9),
+  ]);
+
+  console.log(
+    (await provider.estimateGas({ data: deploymentData })).toBigInt(),
+  );
+
+  return;
   const contract = await deployContract(
     CryptoKoi.abi,
     CryptoKoi.bytecode,
