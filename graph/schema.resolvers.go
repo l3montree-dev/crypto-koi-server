@@ -328,14 +328,14 @@ func (r *queryResolver) Events(ctx context.Context, cryptogotchiID string, offse
 }
 
 func (r *queryResolver) Cryptogotchi(ctx context.Context, cryptogotchiID string) (*models.Cryptogotchi, error) {
-	currentUser := ctx.Value(config.USER_CTX_KEY).(*models.User)
+	currentUser := ctx.Value(config.USER_CTX_KEY)
 	cryptogotchi, err := r.cryptogotchiSvc.GetById(cryptogotchiID)
 	if db.IsNotFound(err) {
 		return nil, gqlerror.Errorf("could not find cryptogotchi with id %s", cryptogotchiID)
 	}
 
 	// check if the cryptogotchi belongs to the current user
-	if cryptogotchi.OwnerId != currentUser.Id {
+	if currentUser == nil || cryptogotchi.OwnerId != currentUser.(*models.User).Id {
 		// remove the events from the history
 		// privacy policy :-)
 		cryptogotchi.Events = nil

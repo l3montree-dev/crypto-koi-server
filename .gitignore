@@ -20,3 +20,5 @@ google-services.json
 /images/raw/dragon/.DS_Store
 
 /profiles
+
+*.pem

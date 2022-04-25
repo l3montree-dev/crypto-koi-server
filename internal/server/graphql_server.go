@@ -455,4 +455,6 @@ func (s *GraphqlServer) Start() {
 
 	s.logger.Infof("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
+	// comment in for https
+	// log.Fatal(http.ListenAndServeTLS(":"+port, "localhost.pem", "localhost-key.pem", router))
 }

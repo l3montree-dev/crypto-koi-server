@@ -28,7 +28,7 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
       name: string;
       symbol: string;
       baseURI: string;
-      priceInGwei: number;
+      priceInMatic: number;
     },
   ): Promise<ethers.Contract> => {
     const contract = new ContractFactory(abi, bytecode, signer);
@@ -36,7 +36,7 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
       options.name,
       options.symbol,
       options.baseURI,
-      options.priceInGwei,
+      ethers.utils.parseEther(options.priceInMatic.toString()),
     );
   };
 
@@ -48,6 +48,40 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
 
   const provider = ethers.getDefaultProvider(url);
   const signer = new ethers.Wallet(privateKey, provider);
+  const c = new ContractFactory(
+    CryptoKoi.abi,
+    CryptoKoi.bytecode,
+    signer,
+  );
+
+  const deploymentData = c.interface.encodeDeploy([
+    'CryptoKoi',
+    'CK',
+    'https://api.crypto-koi.io/v1/tokens/',
+    // MATIC calculation
+    1.466 * Math.pow(10, 9),
+  ]);
+
+  const gasUnitsNeeded = (
+    await provider.estimateGas({
+      data: deploymentData,
+    })
+  ).toNumber();
+
+  const pricePerUnitInGwei = (
+    await provider.getGasPrice()
+  ).toNumber();
+
+  const gasEstimateCoin =
+    (gasUnitsNeeded * pricePerUnitInGwei) / (1000000000 * 1000000000);
+
+  console.log(`Gas estimate: ${gasEstimateCoin.toString()} MATIC
+
+Gas Units needed: ${gasUnitsNeeded}
+Price per unit in Gwei: ${pricePerUnitInGwei}
+
+${(1000000000 * 1000000000).toString()} Wei = 1 Matic
+`);
 
   const contract = await deployContract(
     CryptoKoi.abi,
@@ -56,11 +90,13 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
     {
       name: 'CryptoKoi',
       symbol: 'CK',
-      baseURI: 'https://dev.api.crypto-koi.io/v1/tokens/',
+      baseURI: 'https://api.crypto-koi.io/v1/tokens/',
       // MATIC calculation
-      priceInGwei: 1.466 * Math.pow(10, 9), // around 1,99€
+      priceInMatic: 1.6, // around 1,99€
     },
   );
+
+  console.log('DEPLOY TRANSACTION', contract.deployTransaction);
 
   const contractAddress = (await contract.deployTransaction.wait())
     .contractAddress;
