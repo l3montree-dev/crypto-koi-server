@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Wed Apr 13 17:10:02 2022
+# Make data base, printed on Sun Apr 24 16:17:17 2022
 
 # Variables
 
@@ -25,7 +25,7 @@ SSH_AGENT_LAUNCHER = gnome-keyring
 # environment
 UUID = db47ae1d-cad0-41cc-8b86-20922bc283be
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-ecb94692-c64c-442d-a7d8-37b22d36b5bc.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-6461c21e-86e7-4d75-8ad0-4e8b7ead75ba.sock
 # environment
 MANDATORY_PATH = /usr/share/gconf/ubuntu-xorg.mandatory.path
 # environment
@@ -55,7 +55,7 @@ PWD = /home/timbastin/Schreibtisch/l3montree/crypto-koi/crypto-koi-api
 # environment
 LSCOLORS = Gxfxcxdxbxegedabagacad
 # environment
-XDG_DATA_DIRS = /usr/share/ubuntu-xorg:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
+XDG_DATA_DIRS = /usr/share/ubuntu-xorg:/usr/share/gnome:/home/timbastin/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
 # environment
 OLDPWD = /home/timbastin
 # automatic
@@ -77,7 +77,7 @@ XAUTHORITY = /run/user/1000/gdm/Xauthority
 # default
 .INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
 # environment
-GNOME_TERMINAL_SERVICE = :1.114
+GNOME_TERMINAL_SERVICE = :1.113
 # makefile
 MAKEFLAGS = pqrR -j2 --jobserver-auth=3,4
 # makefile
@@ -113,13 +113,13 @@ ZSH = /home/timbastin/.oh-my-zsh
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 8365
+VSCODE_PID = 4502
 # environment
 XDG_SESSION_TYPE = x11
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # environment
-SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/3099,unix/avocado:/tmp/.ICE-unix/3099
+SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/2326,unix/avocado:/tmp/.ICE-unix/2326
 # automatic
 *F = $(notdir $*)
 # environment
@@ -145,7 +145,7 @@ XMODIFIERS = @im=ibus
 # environment
 SHLVL = 1
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/4b2c6f11_bc7f_4b94_88d8_3d482c2b509c
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/8f3792a1_c518_4259_be3b_a07ca0f555c5
 # environment
 MAKELEVEL := 0
 # default
@@ -181,9 +181,9 @@ GNUMAKEFLAGS :=
 # environment
 LOGNAME = timbastin
 # makefile
-.DEFAULT_GOAL := run
+.DEFAULT_GOAL := all
 # environment
-SYSTEMD_EXEC_PID = 3297
+SYSTEMD_EXEC_PID = 2553
 # environment
 DISPLAY = :0
 # environment
@@ -241,7 +241,7 @@ TELEMETRY_ID = 2ba7c192-a2f5-46f6-8779-cde9eef73a86
 # environment
 ELECTRON_NO_ATTACH_CONSOLE = 1
 # environment
-VTE_VERSION = 6402
+VTE_VERSION = 6800
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
 # environment
@@ -249,7 +249,7 @@ XDG_MENU_PREFIX = gnome-
 # environment
 GDMSESSION = ubuntu-xorg
 # variable set hash-table stats:
-# Load=119/1024=12%, Rehash=0, Collisions=14/151=9%
+# Load=119/1024=12%, Rehash=0, Collisions=14/154=9%
 
 # Pattern-specific Variable Values
 
@@ -257,9 +257,9 @@ GDMSESSION = ubuntu-xorg
 
 # Directories
 
-# . (device 64769, inode 37624143): 47 files, no impossibilities.
+# . (device 64769, inode 37624143): 49 files, no impossibilities.
 
-# 47 files, no impossibilities in 1 directories.
+# 49 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -272,38 +272,56 @@ deploy: node_modules
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 32):
+#  recipe to execute (from 'Makefile', line 35):
 	npm run deploy
 
 contracts_CryptoKoi_sol_CryptoKoi.abi: contracts/CryptoKoi.sol node_modules
  
-make: *** No rule to make target 'all'.  Stop.
-
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 26):
+#  recipe to execute (from 'Makefile', line 29):
 	npx solc --include-path node_modules/ --base-path . --abi contracts/CryptoKoi.sol
 
 contracts_CryptoKoi_sol_CryptoKoi.bin: contracts/CryptoKoi.sol node_modules
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 23):
+#  recipe to execute (from 'Makefile', line 26):
 	npx solc --include-path node_modules/ --base-path . --bin contracts/CryptoKoi.sol
 
 docker:
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
+#  Implicit/static pattern stem: ''
 #  File does not exist.
-#  File has not been updated.
-#  recipe to execute (from 'Makefile', line 12):
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# automatic
+# @ := docker
+# automatic
+# * := 
+# automatic
+# < := 
+# automatic
+# + := 
+# automatic
+# % := 
+# automatic
+# ^ := 
+# automatic
+# ? := 
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=1/11=9%
+#  recipe to execute (from 'Makefile', line 15):
 	docker-compose up -d
 
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-04-07 17:29:11.435696612
+#  Last modified 2022-04-15 20:36:12.751213702
 #  File has been updated.
 #  Successfully updated.
 
@@ -311,14 +329,14 @@ abi: contracts
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 17):
+#  recipe to execute (from 'Makefile', line 20):
 	abigen --bin=./contracts_CryptoKoi_sol_CryptoKoi.bin --abi=./contracts_CryptoKoi_sol_CryptoKoi.abi --pkg=cryptokoi --type=CryptoKoiBinding --out=internal/cryptokoi/cryptokoi_binding.go
 
 contracts: contracts_CryptoKoi_sol_CryptoKoi.bin contracts_CryptoKoi_sol_CryptoKoi.abi
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 20):
+#  recipe to execute (from 'Makefile', line 23):
 	rm -f @*
 
 # Not a target:
@@ -339,40 +357,44 @@ graph/schema.graphqls:
 #  Modification time never checked.
 #  File has not been updated.
 
-# Not a target:
-all:
+all: docker codegen
 #  Command line target.
-#  Implicit rule search has been done.
+#  Implicit rule search has not been done.
 #  File does not exist.
-#  File has not been updated.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/3=0%
+#  recipe to execute (from 'Makefile', line 6):
+	go run cmd/crypto-koi-api/main.go
 
-run: docker codegen
+run::
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 6):
+#  recipe to execute (from 'Makefile', line 9):
 	go run cmd/crypto-koi-api/main.go
 
 graphql: graph/schema.graphqls
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 29):
+#  recipe to execute (from 'Makefile', line 32):
 	gqlgen generate
 
 node_modules: package.json
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 38):
+#  recipe to execute (from 'Makefile', line 41):
 	npm install
 
 test: codegen
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 9):
+#  recipe to execute (from 'Makefile', line 12):
 	go test ./...
 
 # Not a target:
@@ -391,8 +413,14 @@ blockchain: node_modules
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 35):
+#  recipe to execute (from 'Makefile', line 38):
 	npm run start
+
+# Not a target:
+.SUFFIXES:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
 
 .PHONY: run docker codegen deploy
 #  Implicit rule search has not been done.
@@ -400,19 +428,19 @@ blockchain: node_modules
 #  File has not been updated.
 
 # files hash-table stats:
-# Load=20/1024=2%, Rehash=0, Collisions=0/60=0%
+# Load=20/1024=2%, Rehash=0, Collisions=0/63=0%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 62 / storage = 690 B / avg = 11 B
-# current buf: size = 8162 B / used = 690 B / count = 62 / avg = 11 B
+# strcache buffers: 1 (0) / strings = 64 / storage = 722 B / avg = 11 B
+# current buf: size = 8162 B / used = 722 B / count = 64 / avg = 11 B
 
-# strcache performance: lookups = 102 / hit rate = 39%
+# strcache performance: lookups = 107 / hit rate = 40%
 # hash-table stats:
-# Load=62/8192=1%, Rehash=0, Collisions=2/102=2%
-# Finished Make data base on Wed Apr 13 17:10:04 2022
+# Load=64/8192=1%, Rehash=0, Collisions=2/107=2%
+# Finished Make data base on Sun Apr 24 16:17:17 2022
 
  
