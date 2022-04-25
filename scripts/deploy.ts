@@ -28,7 +28,7 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
       name: string;
       symbol: string;
       baseURI: string;
-      priceInGwei: number;
+      priceInMatic: number;
     },
   ): Promise<ethers.Contract> => {
     const contract = new ContractFactory(abi, bytecode, signer);
@@ -36,7 +36,7 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
       options.name,
       options.symbol,
       options.baseURI,
-      options.priceInGwei,
+      ethers.utils.parseEther(options.priceInMatic.toString()),
     );
   };
 
@@ -57,7 +57,7 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
   const deploymentData = c.interface.encodeDeploy([
     'CryptoKoi',
     'CK',
-    'https://dev.api.crypto-koi.io/v1/tokens/',
+    'https://api.crypto-koi.io/v1/tokens/',
     // MATIC calculation
     1.466 * Math.pow(10, 9),
   ]);
@@ -80,10 +80,9 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
 Gas Units needed: ${gasUnitsNeeded}
 Price per unit in Gwei: ${pricePerUnitInGwei}
 
-${(1000000000 * 1000000000).toString()} Gwei = 1 Matic
+${(1000000000 * 1000000000).toString()} Wei = 1 Matic
 `);
 
-  return;
   const contract = await deployContract(
     CryptoKoi.abi,
     CryptoKoi.bytecode,
@@ -91,11 +90,13 @@ ${(1000000000 * 1000000000).toString()} Gwei = 1 Matic
     {
       name: 'CryptoKoi',
       symbol: 'CK',
-      baseURI: 'https://dev.api.crypto-koi.io/v1/tokens/',
+      baseURI: 'https://api.crypto-koi.io/v1/tokens/',
       // MATIC calculation
-      priceInGwei: 1.466 * Math.pow(10, 9), // around 1,99€
+      priceInMatic: 1.6, // around 1,99€
     },
   );
+
+  console.log('DEPLOY TRANSACTION', contract.deployTransaction);
 
   const contractAddress = (await contract.deployTransaction.wait())
     .contractAddress;

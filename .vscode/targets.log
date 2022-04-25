@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sun Apr 24 13:31:39 2022
+# Make data base, printed on Sun Apr 24 16:17:17 2022
 
 # Variables
 
@@ -25,7 +25,7 @@ SSH_AGENT_LAUNCHER = gnome-keyring
 # environment
 UUID = db47ae1d-cad0-41cc-8b86-20922bc283be
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-44d897e7-2e35-4a26-80ff-9b78a3552a6c.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-6461c21e-86e7-4d75-8ad0-4e8b7ead75ba.sock
 # environment
 MANDATORY_PATH = /usr/share/gconf/ubuntu-xorg.mandatory.path
 # environment
@@ -77,7 +77,7 @@ XAUTHORITY = /run/user/1000/gdm/Xauthority
 # default
 .INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
 # environment
-GNOME_TERMINAL_SERVICE = :1.137
+GNOME_TERMINAL_SERVICE = :1.113
 # makefile
 MAKEFLAGS = pqrR -j2 --jobserver-auth=3,4
 # makefile
@@ -113,13 +113,13 @@ ZSH = /home/timbastin/.oh-my-zsh
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 7016
+VSCODE_PID = 4502
 # environment
 XDG_SESSION_TYPE = x11
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # environment
-SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/2339,unix/avocado:/tmp/.ICE-unix/2339
+SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/2326,unix/avocado:/tmp/.ICE-unix/2326
 # automatic
 *F = $(notdir $*)
 # environment
@@ -145,7 +145,7 @@ XMODIFIERS = @im=ibus
 # environment
 SHLVL = 1
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/5c592e0b_db3d_405d_983e_0cf578023e99
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/8f3792a1_c518_4259_be3b_a07ca0f555c5
 # environment
 MAKELEVEL := 0
 # default
@@ -183,7 +183,7 @@ LOGNAME = timbastin
 # makefile
 .DEFAULT_GOAL := all
 # environment
-SYSTEMD_EXEC_PID = 2569
+SYSTEMD_EXEC_PID = 2553
 # environment
 DISPLAY = :0
 # environment
@@ -441,6 +441,6 @@ blockchain: node_modules
 # strcache performance: lookups = 107 / hit rate = 40%
 # hash-table stats:
 # Load=64/8192=1%, Rehash=0, Collisions=2/107=2%
-# Finished Make data base on Sun Apr 24 13:31:39 2022
+# Finished Make data base on Sun Apr 24 16:17:17 2022
 
  

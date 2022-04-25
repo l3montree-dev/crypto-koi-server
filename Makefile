@@ -31,7 +31,7 @@ contracts_CryptoKoi_sol_CryptoKoi.abi: contracts/CryptoKoi.sol node_modules
 graphql: graph/schema.graphqls
 	gqlgen generate
 
-deploy: node_modules
+deploy:
 	npm run deploy
 
 blockchain: node_modules
@@ -39,3 +39,9 @@ blockchain: node_modules
 
 node_modules: package.json
 	npm install
+
+compile-contracts: contracts/CryptoKoi.sol
+	npx hardhat compile
+
+withdraw:
+	npm run withdraw

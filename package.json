@@ -6,6 +6,7 @@
     "scripts": {
         "start": "npx kill-port 8545 && npx hardhat node --hostname 0.0.0.0",
         "deploy": "ts-node scripts/deploy.ts",
+        "withdraw": "ts-node scripts/withdraw-all.ts",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
