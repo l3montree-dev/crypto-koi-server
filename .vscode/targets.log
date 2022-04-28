@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sun Apr 24 16:17:17 2022
+# Make data base, printed on Thu Apr 28 10:28:50 2022
 
 # Variables
 
@@ -25,7 +25,7 @@ SSH_AGENT_LAUNCHER = gnome-keyring
 # environment
 UUID = db47ae1d-cad0-41cc-8b86-20922bc283be
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-6461c21e-86e7-4d75-8ad0-4e8b7ead75ba.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-a894fae5-1cf3-47d0-8430-0f83ea3ec31c.sock
 # environment
 MANDATORY_PATH = /usr/share/gconf/ubuntu-xorg.mandatory.path
 # environment
@@ -77,7 +77,7 @@ XAUTHORITY = /run/user/1000/gdm/Xauthority
 # default
 .INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
 # environment
-GNOME_TERMINAL_SERVICE = :1.113
+GNOME_TERMINAL_SERVICE = :1.138
 # makefile
 MAKEFLAGS = pqrR -j2 --jobserver-auth=3,4
 # makefile
@@ -113,13 +113,13 @@ ZSH = /home/timbastin/.oh-my-zsh
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 4502
+VSCODE_PID = 13200
 # environment
 XDG_SESSION_TYPE = x11
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # environment
-SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/2326,unix/avocado:/tmp/.ICE-unix/2326
+SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/2774,unix/avocado:/tmp/.ICE-unix/2774
 # automatic
 *F = $(notdir $*)
 # environment
@@ -145,7 +145,7 @@ XMODIFIERS = @im=ibus
 # environment
 SHLVL = 1
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/8f3792a1_c518_4259_be3b_a07ca0f555c5
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/68b2f0d1_28ec_4acf_9296_afc46d81ea69
 # environment
 MAKELEVEL := 0
 # default
@@ -183,9 +183,9 @@ LOGNAME = timbastin
 # makefile
 .DEFAULT_GOAL := all
 # environment
-SYSTEMD_EXEC_PID = 2553
+SYSTEMD_EXEC_PID = 2972
 # environment
-DISPLAY = :0
+DISPLAY = :1
 # environment
 USER = timbastin
 # environment
@@ -267,7 +267,7 @@ GDMSESSION = ubuntu-xorg
 
 # Files
 
-deploy: node_modules
+deploy:
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
@@ -282,6 +282,13 @@ contracts_CryptoKoi_sol_CryptoKoi.abi: contracts/CryptoKoi.sol node_modules
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 29):
 	npx solc --include-path node_modules/ --base-path . --abi contracts/CryptoKoi.sol
+
+withdraw:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 47):
+	npm run withdraw
 
 contracts_CryptoKoi_sol_CryptoKoi.bin: contracts/CryptoKoi.sol node_modules
 #  Implicit rule search has not been done.
@@ -321,7 +328,7 @@ docker:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-04-15 20:36:12.751213702
+#  Last modified 2022-04-25 07:54:01.116750659
 #  File has been updated.
 #  Successfully updated.
 
@@ -338,6 +345,13 @@ contracts: contracts_CryptoKoi_sol_CryptoKoi.bin contracts_CryptoKoi_sol_CryptoK
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 23):
 	rm -f @*
+
+compile-contracts: contracts/CryptoKoi.sol
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 44):
+	npx hardhat compile
 
 # Not a target:
 contracts/CryptoKoi.sol:
@@ -428,19 +442,19 @@ blockchain: node_modules
 #  File has not been updated.
 
 # files hash-table stats:
-# Load=20/1024=2%, Rehash=0, Collisions=0/63=0%
+# Load=22/1024=2%, Rehash=0, Collisions=0/65=0%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 64 / storage = 722 B / avg = 11 B
-# current buf: size = 8162 B / used = 722 B / count = 64 / avg = 11 B
+# strcache buffers: 1 (0) / strings = 66 / storage = 749 B / avg = 11 B
+# current buf: size = 8162 B / used = 749 B / count = 66 / avg = 11 B
 
-# strcache performance: lookups = 107 / hit rate = 40%
+# strcache performance: lookups = 111 / hit rate = 40%
 # hash-table stats:
-# Load=64/8192=1%, Rehash=0, Collisions=2/107=2%
-# Finished Make data base on Sun Apr 24 16:17:17 2022
+# Load=66/8192=1%, Rehash=0, Collisions=2/111=2%
+# Finished Make data base on Thu Apr 28 10:28:51 2022
 
  

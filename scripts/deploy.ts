@@ -29,6 +29,7 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
       symbol: string;
       baseURI: string;
       priceInMatic: number;
+      gasPrice: number;
     },
   ): Promise<ethers.Contract> => {
     const contract = new ContractFactory(abi, bytecode, signer);
@@ -37,6 +38,10 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
       options.symbol,
       options.baseURI,
       ethers.utils.parseEther(options.priceInMatic.toString()),
+      {
+        maxFeePerGas: options.gasPrice,
+        maxPriorityFeePerGas: options.gasPrice,
+      },
     );
   };
 
@@ -46,6 +51,7 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
     throw new Error('PRIVATE_KEY environment variable is undefined');
   }
 
+  const gasPrice = ethers.utils.parseUnits('250', 'gwei').toNumber();
   const provider = ethers.getDefaultProvider(url);
   const signer = new ethers.Wallet(privateKey, provider);
   const c = new ContractFactory(
@@ -59,7 +65,7 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
     'CK',
     'https://api.crypto-koi.io/v1/tokens/',
     // MATIC calculation
-    1.466 * Math.pow(10, 9),
+    ethers.utils.parseEther((1.66).toString()),
   ]);
 
   const gasUnitsNeeded = (
@@ -68,19 +74,18 @@ import CryptoKoi from '../artifacts/contracts/CryptoKoi.sol/CryptoKoi.json';
     })
   ).toNumber();
 
-  const pricePerUnitInGwei = (
-    await provider.getGasPrice()
-  ).toNumber();
+  const pricePerUnitInGwei = gasPrice;
 
   const gasEstimateCoin =
     (gasUnitsNeeded * pricePerUnitInGwei) / (1000000000 * 1000000000);
 
   console.log(`Gas estimate: ${gasEstimateCoin.toString()} MATIC
 
-Gas Units needed: ${gasUnitsNeeded}
-Price per unit in Gwei: ${pricePerUnitInGwei}
 
-${(1000000000 * 1000000000).toString()} Wei = 1 Matic
+Gas Units needed: ${gasUnitsNeeded}
+Price per unit in Wei: ${pricePerUnitInGwei}
+
+${(1000000000 * 1000000000).toString()} Gwei = 1 Matic
 `);
 
   const contract = await deployContract(
@@ -93,6 +98,7 @@ ${(1000000000 * 1000000000).toString()} Wei = 1 Matic
       baseURI: 'https://api.crypto-koi.io/v1/tokens/',
       // MATIC calculation
       priceInMatic: 1.6, // around 1,99€
+      gasPrice: gasPrice,
     },
   );
 
