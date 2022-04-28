@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"strings"
+
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/graph/input"
 	"gitlab.com/l3montree/crypto-koi/crypto-koi-api/internal/models"
 	"gorm.io/gorm"
@@ -52,7 +54,7 @@ func (rep *GormUserRepository) GetByDeviceId(deviceId string) (models.User, erro
 
 func (rep *GormUserRepository) GetByWalletAddress(address string) (models.User, error) {
 	var user models.User
-	err := rep.db.Preload("Cryptogotchies").Preload("Cryptogotchies.Events", orderEventsASC).Preload("Cryptogotchies.GameStats").Where("wallet_address = ?", address).First(&user).Error
+	err := rep.db.Preload("Cryptogotchies").Preload("Cryptogotchies.Events", orderEventsASC).Preload("Cryptogotchies.GameStats").Where("wallet_address = ?", strings.ToLower(address)).First(&user).Error
 	return user, err
 }
 
