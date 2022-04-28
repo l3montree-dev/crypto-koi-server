@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Thu Apr 28 10:28:50 2022
+# Make data base, printed on Thu Apr 28 20:25:30 2022
 
 # Variables
 
@@ -19,13 +19,15 @@ GDK_BACKEND = x11
 # environment
 LC_ALL = C
 # environment
+NO_AT_BRIDGE = 1
+# environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
 SSH_AGENT_LAUNCHER = gnome-keyring
 # environment
 UUID = db47ae1d-cad0-41cc-8b86-20922bc283be
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-a894fae5-1cf3-47d0-8430-0f83ea3ec31c.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-798c6aaa-ea26-4e52-bc9d-b6a4b7c24fc1.sock
 # environment
 MANDATORY_PATH = /usr/share/gconf/ubuntu-xorg.mandatory.path
 # environment
@@ -77,7 +79,7 @@ XAUTHORITY = /run/user/1000/gdm/Xauthority
 # default
 .INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
 # environment
-GNOME_TERMINAL_SERVICE = :1.138
+GNOME_TERMINAL_SERVICE = :1.490
 # makefile
 MAKEFLAGS = pqrR -j2 --jobserver-auth=3,4
 # makefile
@@ -113,13 +115,13 @@ ZSH = /home/timbastin/.oh-my-zsh
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 13200
+VSCODE_PID = 69314
 # environment
 XDG_SESSION_TYPE = x11
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # environment
-SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/2774,unix/avocado:/tmp/.ICE-unix/2774
+SESSION_MANAGER = local/avocado:@/tmp/.ICE-unix/2450,unix/avocado:/tmp/.ICE-unix/2450
 # automatic
 *F = $(notdir $*)
 # environment
@@ -145,7 +147,7 @@ XMODIFIERS = @im=ibus
 # environment
 SHLVL = 1
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/68b2f0d1_28ec_4acf_9296_afc46d81ea69
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/d37756e1_1f85_479a_af21_8d6c20333f27
 # environment
 MAKELEVEL := 0
 # default
@@ -183,7 +185,7 @@ LOGNAME = timbastin
 # makefile
 .DEFAULT_GOAL := all
 # environment
-SYSTEMD_EXEC_PID = 2972
+SYSTEMD_EXEC_PID = 2641
 # environment
 DISPLAY = :1
 # environment
@@ -249,7 +251,7 @@ XDG_MENU_PREFIX = gnome-
 # environment
 GDMSESSION = ubuntu-xorg
 # variable set hash-table stats:
-# Load=119/1024=12%, Rehash=0, Collisions=14/154=9%
+# Load=120/1024=12%, Rehash=0, Collisions=14/155=9%
 
 # Pattern-specific Variable Values
 
@@ -276,7 +278,6 @@ deploy:
 	npm run deploy
 
 contracts_CryptoKoi_sol_CryptoKoi.abi: contracts/CryptoKoi.sol node_modules
- 
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -295,6 +296,7 @@ contracts_CryptoKoi_sol_CryptoKoi.bin: contracts/CryptoKoi.sol node_modules
 #  Modification time never checked.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 26):
+ 
 	npx solc --include-path node_modules/ --base-path . --bin contracts/CryptoKoi.sol
 
 docker:
@@ -328,7 +330,7 @@ docker:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-04-25 07:54:01.116750659
+#  Last modified 2022-04-28 10:36:26.438574916
 #  File has been updated.
 #  Successfully updated.
 
@@ -455,6 +457,6 @@ blockchain: node_modules
 # strcache performance: lookups = 111 / hit rate = 40%
 # hash-table stats:
 # Load=66/8192=1%, Rehash=0, Collisions=2/111=2%
-# Finished Make data base on Thu Apr 28 10:28:51 2022
+# Finished Make data base on Thu Apr 28 20:25:30 2022
 
  
