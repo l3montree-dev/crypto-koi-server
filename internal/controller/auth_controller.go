@@ -102,7 +102,7 @@ func (c *AuthController) Register(w http.ResponseWriter, req *http.Request) {
 		// the user does already exist.
 		// check if the wallet address or the device id matches - if so
 		// we can log him in.
-		if existingUser.WalletAddress == registerRequest.WalletAddress || existingUser.DeviceId == registerRequest.DeviceId {
+		if (existingUser.WalletAddress != nil && existingUser.WalletAddress == registerRequest.WalletAddress) || (existingUser.DeviceId != nil && existingUser.DeviceId == registerRequest.DeviceId) {
 			// the user is already registered.
 			c.logger.Infof("user %s is already registered", registerRequest.Email)
 			res, err := c.authSvc.CreateTokenForUser(&existingUser)
