@@ -113,6 +113,11 @@ func (c *AuthController) Register(w http.ResponseWriter, req *http.Request) {
 			}
 			http_util.WriteJSON(w, res)
 			return
+		} else {
+			// the email address is already taken
+			c.logger.Warnf("email %s is already taken", registerRequest.Email)
+			http_util.WriteHttpError(w, http.StatusBadRequest, fmt.Sprintf("email %s is already taken", registerRequest.Email))
+			return
 		}
 	} else if !db.IsNotFound(err) {
 		// an error occured which is not the user not found error.
