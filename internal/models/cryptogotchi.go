@@ -40,7 +40,7 @@ func ToOpenseaNFT(baseUrl, tokenIdUint string, isAlive bool, name string, create
 	attributes := koi.GetAttributes()
 
 	state := "Alive"
-	if isAlive {
+	if !isAlive {
 		state = "Dead"
 	}
 
